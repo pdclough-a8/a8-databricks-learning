@@ -1,0 +1,2 @@
+mkdocs-material==9.6.21
+-r app/event_assistant/requirements.txt

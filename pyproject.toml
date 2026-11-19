@@ -1,0 +1,8 @@
+[project]
+name = "a8-databricks-learning"
+version = "0.1.0"
+description = "A8 browser-first data-to-AI learning pilot"
+requires-python = ">=3.12,<3.14"
+
+[tool.ruff]
+line-length = 100

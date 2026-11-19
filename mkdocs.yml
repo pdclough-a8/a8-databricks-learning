@@ -1,0 +1,39 @@
+site_name: A8 | Data to working AI
+site_description: Build, check and explain an Event Operations Assistant.
+theme:
+  name: material
+  font: false
+  palette:
+    primary: custom
+    accent: custom
+  features:
+    - navigation.sections
+    - navigation.footer
+    - content.code.copy
+extra_css:
+  - stylesheets/a8.css
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+plugins:
+  - search
+nav:
+  - The journey: index.md
+  - Readiness: start.md
+  - Build the assistant:
+      - 1. Trust the data: lessons/01-data.md
+      - 2. Ask with evidence: lessons/02-model.md
+      - 3. Put it to work: lessons/03-app.md
+  - Keep control:
+      - Pause, resume and finish: operations.md
+      - Evidence of progress: progress.md
+      - Optional AI tutor: tutor.md
+  - Behind the course:
+      - Reference and glossary: reference.md
+      - Add an application path: authoring.md
+      - A8 brand application: brand.md
+      - Validation: validation.md
+      - Issues: issues.md
