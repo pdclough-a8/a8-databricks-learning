@@ -1,7 +1,0 @@
-event_id,event_name,city,capacity,booked
-E101,Analytics Breakfast,Leeds,60,42
-E102,AI Builders Workshop,Manchester,30,27
-E103,Data Leaders Forum,London,100,65
-E104,Analytics Clinic,Leeds,40,18
-E105,AI Safety Roundtable,Bristol,25,20
-E106,Data Engineering Lab,Manchester,50,35

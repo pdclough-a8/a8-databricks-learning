@@ -1,0 +1,407 @@
+"""Helpers shared by the A8 course notebooks.
+
+Notebooks load this through `notebooks/_config`. Nothing here runs a cloud action at
+import time; every write is an explicit method call made from a notebook cell.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import re
+from dataclasses import asdict, dataclass, fields
+from datetime import datetime, timezone
+from pathlib import Path
+
+from . import exercises
+
+COURSE_ID = "a8-databricks-learning"
+SIMPLE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+TAG = re.compile(r"[a-z][a-z0-9]{1,11}")
+
+# Logical object -> (object type, module that creates it). Physical name: a8_<tag>_<key>.
+OBJECTS = {
+    "raw": ("volume", "01_lakehouse_data"),
+    "events": ("table", "01_lakehouse_data"),
+    "bookings": ("table", "01_lakehouse_data"),
+    "feedback": ("table", "01_lakehouse_data"),
+    "event_availability": ("view", "01_lakehouse_data"),
+    "bookings_governed": ("table", "02_governance"),
+    "mask_email": ("function", "02_governance"),
+    "city_filter": ("function", "02_governance"),
+    "booking_features": ("table", "03_predictive_ml"),
+    "attendance_model": ("model", "03_predictive_ml"),
+    "attendance_predictions": ("table", "03_predictive_ml"),
+    "event_forecast": ("view", "03_predictive_ml"),
+}
+
+
+def derive_tag(email: str) -> str:
+    """Suggest a learner tag from an email address, e.g. pdclough1974@... -> pdclough1974."""
+    local = re.sub(r"[^a-z0-9]", "", (email or "").split("@")[0].lower())
+    if not local or not local[0].isalpha():
+        local = "learner" + local
+    return local[:12] if len(local) >= 2 else "learner"
+
+
+def validate_tag(tag: str) -> str:
+    if not isinstance(tag, str) or not TAG.fullmatch(tag):
+        raise ValueError(
+            "Learner tag: 2-12 characters, lowercase letters and digits only, starting with a letter "
+            f"(got {tag!r})."
+        )
+    return tag
+
+
+def quote(part: str) -> str:
+    """Quote one Unity Catalog name part. Backticks are rejected rather than escaped."""
+    if not isinstance(part, str) or not part or "`" in part or "." in part:
+        raise ValueError(f"Invalid catalog, schema or object name: {part!r}")
+    return part if SIMPLE_NAME.fullmatch(part) else f"`{part}`"
+
+
+def sql_string(value: str) -> str:
+    return "'" + str(value).replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+@dataclass
+class Config:
+    catalog: str
+    schema: str
+    tag: str
+    user: str
+    host: str
+    chat_model: str = ""
+    embedding_model: str = ""
+    warehouse_id: str = ""
+    saved_at: str = ""
+
+    def validate(self) -> "Config":
+        quote(self.catalog)
+        quote(self.schema)
+        validate_tag(self.tag)
+        if self.catalog in {"system", "samples", "dbacademy"}:
+            raise ValueError("Choose your own writable catalog, not a system or sample catalog.")
+        return self
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Config":
+        known = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in known}).validate()
+
+
+def config_path(user: str, profile: str = "default") -> Path:
+    if not re.fullmatch(r"[a-z0-9_-]{1,32}", profile or ""):
+        raise ValueError("Profile names use lowercase letters, digits, hyphens and underscores.")
+    return Path("/Workspace/Users") / user / "a8learn" / f"{profile}.json"
+
+
+class Course:
+    """The course context for one learner: names, links, checks and safe writes."""
+
+    def __init__(self, config: Config, spark=None, display=None, display_html=None, dbutils=None,
+                 root: Path | None = None, answers: str = ""):
+        self.cfg = config.validate()
+        self.spark, self._display, self._html, self.dbutils = spark, display, display_html, dbutils
+        self.root = root
+        self.test_with_solutions = answers == "solutions"
+
+    # ---------- configuration ----------
+    @staticmethod
+    def save(config: Config, profile: str = "default") -> Path:
+        config.validate()
+        config.saved_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        path = config_path(config.user, profile)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(asdict(config), indent=2), encoding="utf-8")
+        return path
+
+    @classmethod
+    def load(cls, spark, user: str, profile: str = "default", **kwargs) -> "Course":
+        path = config_path(user, profile)
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"No course configuration found at {path}. Open notebooks/00_setup and run it first."
+            )
+        return cls(Config.from_dict(json.loads(path.read_text(encoding="utf-8"))), spark=spark, **kwargs)
+
+    # ---------- names ----------
+    @property
+    def prefix(self) -> str:
+        return f"a8_{self.cfg.tag}_"
+
+    def name(self, key: str) -> str:
+        if key not in OBJECTS and key != "setup_probe":
+            raise KeyError(f"Unknown course object {key!r}")
+        return self.prefix + key
+
+    def t(self, key: str) -> str:
+        """Fully qualified, quoted name, ready for SQL."""
+        return ".".join(quote(p) for p in (self.cfg.catalog, self.cfg.schema, self.name(key)))
+
+    @property
+    def schema_fqn(self) -> str:
+        return f"{quote(self.cfg.catalog)}.{quote(self.cfg.schema)}"
+
+    @property
+    def volume_path(self) -> str:
+        return f"/Volumes/{self.cfg.catalog}/{self.cfg.schema}/{self.name('raw')}"
+
+    @property
+    def experiment_path(self) -> str:
+        return f"/Users/{self.cfg.user}/a8learn_{self.cfg.tag}_attendance"
+
+    @property
+    def endpoint_name(self) -> str:
+        return f"a8-{self.cfg.tag}-attendance"
+
+    def fmt(self, sql: str) -> str:
+        """Replace {events}, {bookings}, {volume_path}, {schema}, {tag} ... with real names."""
+        extras = {"schema": self.schema_fqn, "catalog": quote(self.cfg.catalog), "tag": self.cfg.tag,
+                  "volume_path": self.volume_path, "user": self.cfg.user,
+                  "chat_model": self.cfg.chat_model, "endpoint": self.endpoint_name}
+
+        def replace(match):
+            key = match.group(1)
+            if key in OBJECTS:
+                return self.t(key)
+            return extras.get(key, match.group(0))
+
+        return re.sub(r"\{([a-z_]+)\}", replace, sql)
+
+    def declare_variables(self):
+        """SQL session variables so %sql cells can use IDENTIFIER(a8_events) etc."""
+        statements = [f"DECLARE OR REPLACE VARIABLE a8_{key} STRING DEFAULT {sql_string(self.t(key))}"
+                      for key in OBJECTS]
+        statements.append(f"DECLARE OR REPLACE VARIABLE a8_schema STRING DEFAULT {sql_string(self.schema_fqn)}")
+        for statement in statements:
+            self.spark.sql(statement)
+
+    # ---------- reading state ----------
+    def _info(self, key: str):
+        kind = OBJECTS[key][0]
+        catalog = quote(self.cfg.catalog)
+        name = sql_string(self.name(key))
+        schema = sql_string(self.cfg.schema)
+        query = {
+            "table": f"SELECT table_owner AS owner FROM {catalog}.information_schema.tables "
+                     f"WHERE table_schema = {schema} AND table_name = {name}",
+            "view": f"SELECT table_owner AS owner FROM {catalog}.information_schema.tables "
+                    f"WHERE table_schema = {schema} AND table_name = {name}",
+            "volume": f"SELECT volume_owner AS owner FROM {catalog}.information_schema.volumes "
+                      f"WHERE volume_schema = {schema} AND volume_name = {name}",
+            "function": f"SELECT routine_owner AS owner FROM {catalog}.information_schema.routines "
+                        f"WHERE routine_schema = {schema} AND routine_name = {name}",
+        }.get(kind)
+        if query is None:
+            return None
+        rows = self.spark.sql(query).collect()
+        return rows[0]["owner"] if rows else None
+
+    def exists(self, key: str) -> bool:
+        if OBJECTS[key][0] == "model":
+            from databricks.sdk import WorkspaceClient
+            from databricks.sdk.errors import NotFound
+            try:
+                WorkspaceClient().registered_models.get(
+                    f"{self.cfg.catalog}.{self.cfg.schema}.{self.name(key)}")
+                return True
+            except NotFound:
+                return False
+        return self._info(key) is not None
+
+    def guard(self, key: str):
+        """Stop before replacing an object somebody else owns."""
+        owner = self._info(key)
+        if owner is not None and owner != self.cfg.user:
+            raise PermissionError(
+                f"{self.t(key)} already exists and is owned by {owner}, not you. "
+                "Nothing was changed. Choose a different learner tag in 00_setup."
+            )
+        if owner is not None:
+            kind = OBJECTS[key][0]
+            source, schema_col, name_col, comment_col = {
+                "table": ("tables", "table_schema", "table_name", "comment"),
+                "view": ("tables", "table_schema", "table_name", "comment"),
+                "volume": ("volumes", "volume_schema", "volume_name", "comment"),
+                "function": ("routines", "routine_schema", "routine_name", "comment"),
+            }[kind]
+            rows = self.spark.sql(
+                f"SELECT {comment_col} AS marker FROM {quote(self.cfg.catalog)}.information_schema.{source} "
+                f"WHERE {schema_col} = {sql_string(self.cfg.schema)} "
+                f"AND {name_col} = {sql_string(self.name(key))}"
+            ).collect()
+            if not rows or not (rows[0]["marker"] or "").startswith(COURSE_ID + " "):
+                raise PermissionError(f"{self.t(key)} is not marked as course work. Choose another tag.")
+
+    def require(self, *keys: str):
+        missing = [k for k in keys if not self.exists(k)]
+        if not missing:
+            return
+        items = "".join(f"<li><code>{html.escape(self.name(k))}</code>, created in "
+                        f"<b>{OBJECTS[k][1]}</b></li>" for k in missing)
+        self.card("This module needs earlier work",
+                  f"<p>These objects are missing:</p><ul>{items}</ul>"
+                  "<p>Run the named notebook(s) first, then come back. Your configuration is fine.</p>",
+                  tone="warn")
+        raise RuntimeError("Missing prerequisites: " + ", ".join(self.name(k) for k in missing))
+
+    # ---------- running SQL ----------
+    def sql(self, sql: str):
+        return self.spark.sql(self.fmt(sql))
+
+    def run(self, sql: str, show_sql: bool = True):
+        """Run one statement and show the exact SQL that ran, with your real names."""
+        resolved = self.fmt(sql).strip()
+        if show_sql:
+            self.code(resolved)
+        return self.spark.sql(resolved)
+
+    def create_table(self, key: str, select_sql: str, comment: str):
+        self.guard(key)
+        statement = (
+            f"CREATE OR REPLACE TABLE {self.t(key)}\n"
+            f"COMMENT {sql_string(comment)}\n"
+            f"TBLPROPERTIES ('a8learn.course' = '{COURSE_ID}', 'a8learn.tag' = '{self.cfg.tag}')\n"
+            f"AS {self.fmt(select_sql).strip()}"
+        )
+        self.code(statement)
+        self.spark.sql(statement)
+        return self.t(key)
+
+    # ---------- display ----------
+    def html(self, body: str):
+        if self._html is None:
+            print(re.sub(r"<[^>]+>", "", body))
+        else:
+            self._html(body)
+
+    def card(self, title: str, body_html: str, tone: str = "info"):
+        accent = {"info": "#1d2225", "ok": "#1b7f3b", "warn": "#a93614", "bad": "#b00020"}[tone]
+        self.html(
+            f'<div style="border-left:6px solid {accent};background:#f7f7f7;padding:12px 16px;'
+            f'margin:6px 0;font-family:Arial,Helvetica,sans-serif;color:#1d2225;line-height:1.5">'
+            f'<div style="font-weight:700;font-size:15px;margin-bottom:4px">{html.escape(title)}</div>'
+            f"{body_html}</div>"
+        )
+
+    def code(self, text: str):
+        self.html('<pre style="background:#1d2225;color:#f2f2f2;padding:10px 12px;border-radius:4px;'
+                  'font-size:12px;white-space:pre-wrap">' + html.escape(text) + "</pre>")
+
+    def url(self, kind: str, name: str = "") -> str:
+        h, c, s = self.cfg.host.rstrip("/"), self.cfg.catalog, self.cfg.schema
+        return {
+            "schema": f"{h}/explore/data/{c}/{s}",
+            "table": f"{h}/explore/data/{c}/{s}/{name}",
+            "volume": f"{h}/explore/data/volumes/{c}/{s}/{name}",
+            "function": f"{h}/explore/data/functions/{c}/{s}/{name}",
+            "model": f"{h}/explore/data/models/{c}/{s}/{name}",
+            "experiment": f"{h}/ml/experiments/{name}",
+            "endpoint": f"{h}/ml/endpoints/{name}",
+            "sql_editor": f"{h}/sql/editor",
+            "playground": f"{h}/ml/playground",
+            "serving": f"{h}/ml/endpoints",
+            "apps": f"{h}/apps",
+            "jobs": f"{h}/jobs",
+        }[kind]
+
+    def links(self, *items):
+        """items: (label, kind, key_or_name). key may be a course object key."""
+        parts = []
+        for label, kind, name in items:
+            target = self.name(name) if name in OBJECTS else name
+            parts.append(f'<li><a href="{html.escape(self.url(kind, target))}" target="_blank" '
+                         f'style="color:#a93614;font-weight:700">{html.escape(label)}</a></li>')
+        self.card("Open in the Databricks UI", "<ul style='margin:4px 0'>" + "".join(parts) + "</ul>")
+
+    # ---------- exercises ----------
+    def check(self, exercise_id: str, answer=None) -> bool:
+        ex = exercises.get(exercise_id)
+        blank = answer is None or (isinstance(answer, str) and not answer.strip())
+        if blank and self.test_with_solutions:
+            answer = ex["solution"]
+            blank = False
+        if blank:
+            self.card(f"{exercise_id}: not attempted yet",
+                      f"<p>{html.escape(ex['task'])}</p><p><b>Hint:</b> {html.escape(ex['hint'])}</p>"
+                      f"<p>Stuck? Run <code>A8.solution('{exercise_id}')</code>.</p>", tone="warn")
+            return False
+        try:
+            actual = self._rows(answer)
+            expected = self._rows(ex["solution"])
+        except Exception as error:  # learner SQL errors are expected while learning
+            self.card(f"{exercise_id}: your answer did not run",
+                      f"<pre style='white-space:pre-wrap'>{html.escape(str(error)[:600])}</pre>"
+                      f"<p><b>Hint:</b> {html.escape(ex['hint'])}</p>", tone="bad")
+            return False
+        ok, detail = compare(actual, expected, ordered=ex.get("ordered", False))
+        if ok:
+            self.card(f"{exercise_id}: correct", f"<p>{html.escape(ex['explain'])}</p>", tone="ok")
+        else:
+            self.card(f"{exercise_id}: not quite",
+                      f"<p>{html.escape(detail)}</p><p><b>Hint:</b> {html.escape(ex['hint'])}</p>",
+                      tone="bad")
+        if self.test_with_solutions and not ok:
+            raise AssertionError(f"Instructor validation failed for {exercise_id}: {detail}")
+        return ok
+
+    def _rows(self, answer):
+        if isinstance(answer, str):
+            answer = self.sql(answer)
+        if hasattr(answer, "collect"):
+            columns = list(answer.columns)
+            return columns, [tuple(r) for r in answer.collect()]
+        return ["value"], [(answer,)]
+
+    def solution(self, exercise_id: str):
+        ex = exercises.get(exercise_id)
+        self.card(f"Solution, {exercise_id}", f"<p>{html.escape(ex['explain'])}</p>")
+        self.code(ex["solution"].strip())
+
+    def gate(self, name: str, label: str) -> bool:
+        """A yes/no switch for billable or destructive steps. Defaults to no."""
+        try:
+            self.dbutils.widgets.dropdown(name, "no", ["no", "yes"], label)
+        except Exception:
+            pass
+        try:
+            return self.dbutils.widgets.get(name) == "yes"
+        except Exception:
+            return False
+
+    def next_step(self, built: list[str], next_notebook: str | None, next_title: str = ""):
+        items = "".join(f"<li>{html.escape(b)}</li>" for b in built)
+        nxt = (f"<p><b>Next:</b> open <code>notebooks/{html.escape(next_notebook)}</code>"
+               f"{' – ' + html.escape(next_title) if next_title else ''}.</p>") if next_notebook else ""
+        self.card("Module complete", f"<p>You built:</p><ul>{items}</ul>{nxt}"
+                  "<p>Pausing? Optional serving endpoints remain billable until deleted, even if "
+                  "compute idles. See <code>notebooks/99_pause_and_cleanup</code>.</p>", tone="ok")
+
+
+def _normal(value):
+    if isinstance(value, float):
+        return round(value, 2)
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return value
+
+
+def compare(actual, expected, ordered=False):
+    """Compare (columns, rows) pairs. Column names are not compared, only count and values."""
+    a_cols, a_rows = actual
+    e_cols, e_rows = expected
+    if len(a_cols) != len(e_cols):
+        return False, (f"Expected {len(e_cols)} column(s) ({', '.join(e_cols)}), "
+                       f"got {len(a_cols)} ({', '.join(a_cols)}).")
+    a = [tuple(_normal(v) for v in r) for r in a_rows]
+    e = [tuple(_normal(v) for v in r) for r in e_rows]
+    if not ordered:
+        a, e = sorted(a, key=repr), sorted(e, key=repr)
+    if len(a) != len(e):
+        return False, f"Expected {len(e)} row(s), got {len(a)}."
+    for i, (x, y) in enumerate(zip(a, e)):
+        if x != y:
+            where = "in row" if ordered else "in sorted row"
+            return False, f"First difference {where} {i + 1}: got {x}, expected {y}."
+    return True, ""

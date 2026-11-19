@@ -1,0 +1,396 @@
+feedback_id,event_id,booking_id,submitted_date,rating,comment
+F5001,E101,B10002,2025-01-09,5,Booking was quick and the joining instructions were clear.
+F5002,E101,B10003,2025-01-09,5,Clear explanations and a good pace throughout.
+F5003,E101,B10005,2025-01-08,3,Booking was quick and the joining instructions were clear.
+F5004,E101,B10008,2025-01-06,4,Really practical content I can use at work tomorrow.
+F5005,E101,B10009,2025-01-11,3,Brilliant Q&A session with the speakers.
+F5006,E101,B10013,2025-01-11,5,Clear explanations and a good pace throughout.
+F5007,E101,B10027,2025-01-08,4,Brilliant Q&A session with the speakers.
+F5008,E101,B10044,2025-01-11,2,The panel ran over and cut the Q&A.
+F5009,E101,B10054,2025-01-10,3,Confirmation email arrived very late.
+F5010,E101,B10063,2025-01-09,5,The online chat was well moderated.
+F5011,E101,B10068,2025-01-11,3,Hard to change my booking to a colleague.
+F5012,E101,B10074,2025-01-08,3,Excellent worked examples.
+F5013,E101,B10078,2025-01-10,5,Clear explanations and a good pace throughout.
+F5014,E101,B10084,2025-01-06,2,Audio dropped out several times online.
+F5015,E101,B10094,2025-01-06,2,Too introductory for the advertised level.
+F5016,E101,B10109,2025-01-11,2,Confirmation email arrived very late.
+F5017,E101,B10122,2025-01-09,5,Booking was quick and the joining instructions were clear.
+F5018,E101,B10131,2025-01-10,3,Audio dropped out several times online.
+F5019,E101,B10134,2025-01-08,2,Would have liked more hands-on exercises.
+F5020,E101,B10164,2025-01-07,2,Would have liked more hands-on exercises.
+F5021,E101,B10165,2025-01-12,3,Clear explanations and a good pace throughout.
+F5022,E101,B10167,2025-01-11,3,Hard to change my booking to a colleague.
+F5023,E102,B10187,2025-01-25,5,Booking was quick and the joining instructions were clear.
+F5024,E102,B10188,2025-01-23,5,Catering was excellent with good vegetarian options.
+F5025,E102,B10195,2025-01-25,5,Speakers were knowledgeable and engaging.
+F5026,E102,B10214,2025-01-26,5,Lovely room with plenty of space.
+F5027,E103,B10251,2025-02-08,4,Booking was quick and the joining instructions were clear.
+F5028,E103,B10254,2025-02-10,3,Booking was quick and the joining instructions were clear.
+F5029,E103,B10273,2025-02-11,3,"Hard to find the entrance, signage was poor."
+F5030,E103,B10274,2025-02-08,5,Good coffee and a decent lunch.
+F5031,E103,B10279,2025-02-07,3,Clear explanations and a good pace throughout.
+F5032,E103,B10286,2025-02-09,3,Catering was excellent with good vegetarian options.
+F5033,E103,B10290,2025-02-06,5,Speakers were knowledgeable and engaging.
+F5034,E103,B10308,2025-02-09,2,One speaker read straight from the slides.
+F5035,E103,B10309,2025-02-11,3,Too introductory for the advertised level.
+F5036,E103,B10313,2025-02-08,2,Would have liked more hands-on exercises.
+F5037,E104,B10325,2025-02-25,4,"Great venue, easy to reach from the station."
+F5038,E104,B10334,2025-02-22,4,Booking was quick and the joining instructions were clear.
+F5039,E104,B10339,2025-02-25,5,Good coffee and a decent lunch.
+F5040,E104,B10343,2025-02-21,4,Speakers were knowledgeable and engaging.
+F5041,E104,B10346,2025-02-25,3,Catering was excellent with good vegetarian options.
+F5042,E104,B10347,2025-02-19,4,Catering was excellent with good vegetarian options.
+F5043,E105,B10358,2025-03-09,2,Content felt rushed at the end.
+F5044,E105,B10365,2025-03-08,2,Too introductory for the advertised level.
+F5045,E105,B10387,2025-03-14,3,Hard to change my booking to a colleague.
+F5046,E105,B10390,2025-03-13,2,Too introductory for the advertised level.
+F5047,E105,B10392,2025-03-13,1,Audio dropped out several times online.
+F5048,E105,B10397,2025-03-10,2,Confirmation email arrived very late.
+F5049,E105,B10405,2025-03-12,4,Booking was quick and the joining instructions were clear.
+F5050,E105,B10417,2025-03-09,3,Hard to change my booking to a colleague.
+F5051,E105,B10425,2025-03-10,4,Speakers were knowledgeable and engaging.
+F5052,E105,B10428,2025-03-12,4,Booking was quick and the joining instructions were clear.
+F5053,E105,B10438,2025-03-13,2,Hard to change my booking to a colleague.
+F5054,E105,B10449,2025-03-12,3,The online chat was well moderated.
+F5055,E105,B10456,2025-03-11,4,Clear explanations and a good pace throughout.
+F5056,E105,B10462,2025-03-11,3,Stream quality was excellent.
+F5057,E105,B10477,2025-03-11,5,Brilliant Q&A session with the speakers.
+F5058,E105,B10481,2025-03-13,3,The stream kept buffering.
+F5059,E105,B10489,2025-03-08,1,One speaker read straight from the slides.
+F5060,E105,B10494,2025-03-08,4,The online chat was well moderated.
+F5061,E105,B10505,2025-03-11,3,The stream kept buffering.
+F5062,E105,B10506,2025-03-08,3,Content felt rushed at the end.
+F5063,E106,B10516,2025-03-23,1,The panel ran over and cut the Q&A.
+F5064,E106,B10526,2025-03-20,4,Speakers were knowledgeable and engaging.
+F5065,E106,B10529,2025-03-24,2,Would have liked more hands-on exercises.
+F5066,E107,B10566,2025-04-05,1,No gluten-free options at lunch.
+F5067,E107,B10568,2025-04-09,1,Hard to change my booking to a colleague.
+F5068,E107,B10569,2025-04-04,1,Too introductory for the advertised level.
+F5069,E107,B10575,2025-04-10,2,One speaker read straight from the slides.
+F5070,E107,B10598,2025-04-07,1,Too introductory for the advertised level.
+F5071,E108,B10627,2025-04-19,3,Stream quality was excellent.
+F5072,E108,B10629,2025-04-22,2,Hard to change my booking to a colleague.
+F5073,E108,B10672,2025-04-19,2,Would have liked more hands-on exercises.
+F5074,E108,B10676,2025-04-21,2,One speaker read straight from the slides.
+F5075,E108,B10678,2025-04-17,2,Audio dropped out several times online.
+F5076,E108,B10690,2025-04-21,1,Hard to change my booking to a colleague.
+F5077,E108,B10693,2025-04-21,2,Would have liked more hands-on exercises.
+F5078,E108,B10694,2025-04-20,3,Content felt rushed at the end.
+F5079,E108,B10695,2025-04-22,3,Speakers were knowledgeable and engaging.
+F5080,E108,B10715,2025-04-22,1,Hard to change my booking to a colleague.
+F5081,E108,B10726,2025-04-17,3,Audio dropped out several times online.
+F5082,E108,B10747,2025-04-17,1,Content felt rushed at the end.
+F5083,E108,B10760,2025-04-18,3,Confirmation email arrived very late.
+F5084,E108,B10789,2025-04-23,3,Booking was quick and the joining instructions were clear.
+F5085,E108,B10790,2025-04-21,2,Hard to change my booking to a colleague.
+F5086,E108,B10792,2025-04-23,2,One speaker read straight from the slides.
+F5087,E109,B10831,2025-05-03,4,"The venue was bright, comfortable and well signposted."
+F5088,E109,B10838,2025-04-30,4,Clear explanations and a good pace throughout.
+F5089,E109,B10848,2025-04-28,5,Lovely room with plenty of space.
+F5090,E109,B10850,2025-04-29,4,Brilliant Q&A session with the speakers.
+F5091,E110,B10874,2025-05-16,3,One speaker read straight from the slides.
+F5092,E110,B10879,2025-05-11,4,Really practical content I can use at work tomorrow.
+F5093,E110,B10887,2025-05-15,2,Would have liked more hands-on exercises.
+F5094,E110,B10893,2025-05-16,3,The panel ran over and cut the Q&A.
+F5095,E110,B10896,2025-05-15,3,Booking was quick and the joining instructions were clear.
+F5096,E111,B10917,2025-05-27,5,Really practical content I can use at work tomorrow.
+F5097,E111,B10918,2025-05-31,4,The online chat was well moderated.
+F5098,E111,B10923,2025-06-01,5,Brilliant Q&A session with the speakers.
+F5099,E111,B10940,2025-06-01,4,Booking was quick and the joining instructions were clear.
+F5100,E112,B10943,2025-06-15,4,"The venue was bright, comfortable and well signposted."
+F5101,E112,B10955,2025-06-17,5,Booking was quick and the joining instructions were clear.
+F5102,E112,B10976,2025-06-16,4,Good coffee and a decent lunch.
+F5103,E113,B10994,2025-07-01,4,Speakers were knowledgeable and engaging.
+F5104,E113,B10997,2025-07-01,4,"Great venue, easy to reach from the station."
+F5105,E113,B11005,2025-06-30,4,"The venue was bright, comfortable and well signposted."
+F5106,E113,B11017,2025-06-28,4,Really practical content I can use at work tomorrow.
+F5107,E113,B11026,2025-06-27,2,"Hard to find the entrance, signage was poor."
+F5108,E114,B11035,2025-07-11,5,Lovely room with plenty of space.
+F5109,E115,B11063,2025-07-26,5,Brilliant Q&A session with the speakers.
+F5110,E115,B11072,2025-07-24,3,Hard to change my booking to a colleague.
+F5111,E115,B11076,2025-07-25,4,Brilliant Q&A session with the speakers.
+F5112,E115,B11079,2025-07-27,5,Speakers were knowledgeable and engaging.
+F5113,E115,B11092,2025-07-26,3,Hard to change my booking to a colleague.
+F5114,E115,B11096,2025-07-24,5,The online chat was well moderated.
+F5115,E115,B11103,2025-07-24,4,The online chat was well moderated.
+F5116,E115,B11113,2025-07-24,5,Booking was quick and the joining instructions were clear.
+F5117,E115,B11118,2025-07-27,5,Booking was quick and the joining instructions were clear.
+F5118,E115,B11125,2025-07-21,5,Booking was quick and the joining instructions were clear.
+F5119,E115,B11126,2025-07-24,5,Speakers were knowledgeable and engaging.
+F5120,E115,B11134,2025-07-22,3,Booking was quick and the joining instructions were clear.
+F5121,E115,B11139,2025-07-22,5,Stream quality was excellent.
+F5122,E115,B11142,2025-07-25,5,Speakers were knowledgeable and engaging.
+F5123,E115,B11147,2025-07-23,4,Excellent worked examples.
+F5124,E115,B11167,2025-07-25,4,Speakers were knowledgeable and engaging.
+F5125,E115,B11179,2025-07-21,5,Excellent worked examples.
+F5126,E115,B11190,2025-07-26,4,Speakers were knowledgeable and engaging.
+F5127,E115,B11196,2025-07-21,5,Booking was quick and the joining instructions were clear.
+F5128,E115,B11198,2025-07-27,5,Excellent worked examples.
+F5129,E115,B11203,2025-07-27,5,Booking was quick and the joining instructions were clear.
+F5130,E115,B11208,2025-07-27,3,Hard to change my booking to a colleague.
+F5131,E116,B11224,2025-08-04,2,Audio dropped out several times online.
+F5132,E116,B11232,2025-08-06,3,Brilliant Q&A session with the speakers.
+F5133,E116,B11233,2025-08-06,4,Really practical content I can use at work tomorrow.
+F5134,E116,B11237,2025-08-08,3,Brilliant Q&A session with the speakers.
+F5135,E116,B11243,2025-08-05,2,Hard to change my booking to a colleague.
+F5136,E116,B11250,2025-08-07,1,Confirmation email arrived very late.
+F5137,E116,B11251,2025-08-07,2,One speaker read straight from the slides.
+F5138,E116,B11266,2025-08-03,3,The stream kept buffering.
+F5139,E116,B11273,2025-08-06,1,The stream kept buffering.
+F5140,E116,B11278,2025-08-05,4,Booking was quick and the joining instructions were clear.
+F5141,E117,B11283,2025-08-22,5,Brilliant Q&A session with the speakers.
+F5142,E117,B11301,2025-08-23,5,Lovely room with plenty of space.
+F5143,E117,B11302,2025-08-22,2,"Hard to find the entrance, signage was poor."
+F5144,E117,B11308,2025-08-26,4,Good coffee and a decent lunch.
+F5145,E117,B11318,2025-08-23,4,Speakers were knowledgeable and engaging.
+F5146,E117,B11321,2025-08-23,3,"Great venue, easy to reach from the station."
+F5147,E117,B11328,2025-08-22,2,The panel ran over and cut the Q&A.
+F5148,E117,B11330,2025-08-26,3,Clear explanations and a good pace throughout.
+F5149,E117,B11333,2025-08-22,3,No gluten-free options at lunch.
+F5150,E117,B11341,2025-08-24,3,Lovely room with plenty of space.
+F5151,E117,B11348,2025-08-21,5,"Great venue, easy to reach from the station."
+F5152,E118,B11359,2025-08-31,4,Speakers were knowledgeable and engaging.
+F5153,E118,B11367,2025-09-03,4,Booking was quick and the joining instructions were clear.
+F5154,E118,B11369,2025-09-01,4,"The venue was bright, comfortable and well signposted."
+F5155,E118,B11392,2025-09-02,3,Would have liked more hands-on exercises.
+F5156,E118,B11408,2025-09-01,4,Really practical content I can use at work tomorrow.
+F5157,E118,B11412,2025-09-01,5,Speakers were knowledgeable and engaging.
+F5158,E118,B11413,2025-09-02,3,Hard to change my booking to a colleague.
+F5159,E118,B11414,2025-09-04,5,Good coffee and a decent lunch.
+F5160,E118,B11422,2025-09-04,5,Catering was excellent with good vegetarian options.
+F5161,E119,B11448,2025-09-17,5,Catering was excellent with good vegetarian options.
+F5162,E119,B11451,2025-09-17,5,Brilliant Q&A session with the speakers.
+F5163,E119,B11452,2025-09-20,4,Good coffee and a decent lunch.
+F5164,E119,B11455,2025-09-16,5,Good coffee and a decent lunch.
+F5165,E119,B11456,2025-09-20,5,Brilliant Q&A session with the speakers.
+F5166,E119,B11463,2025-09-21,5,Really practical content I can use at work tomorrow.
+F5167,E120,B11521,2025-10-03,3,The stream kept buffering.
+F5168,E120,B11538,2025-10-02,3,Speakers were knowledgeable and engaging.
+F5169,E120,B11573,2025-10-04,3,The panel ran over and cut the Q&A.
+F5170,E120,B11586,2025-10-02,5,Stream quality was excellent.
+F5171,E120,B11599,2025-09-30,4,The online chat was well moderated.
+F5172,E120,B11602,2025-10-04,5,Booking was quick and the joining instructions were clear.
+F5173,E121,B11616,2025-10-16,3,The online chat was well moderated.
+F5174,E121,B11623,2025-10-18,5,Clear explanations and a good pace throughout.
+F5175,E121,B11633,2025-10-15,4,Speakers were knowledgeable and engaging.
+F5176,E121,B11636,2025-10-18,3,Audio dropped out several times online.
+F5177,E121,B11658,2025-10-12,2,Would have liked more hands-on exercises.
+F5178,E122,B11674,2025-10-30,4,Stream quality was excellent.
+F5179,E122,B11692,2025-11-04,3,Confirmation email arrived very late.
+F5180,E122,B11695,2025-10-30,3,Confirmation email arrived very late.
+F5181,E122,B11711,2025-11-01,3,The online chat was well moderated.
+F5182,E122,B11725,2025-10-30,4,Booking was quick and the joining instructions were clear.
+F5183,E122,B11740,2025-11-04,2,The stream kept buffering.
+F5184,E122,B11764,2025-11-01,2,One speaker read straight from the slides.
+F5185,E122,B11769,2025-10-31,5,Booking was quick and the joining instructions were clear.
+F5186,E122,B11786,2025-10-31,4,Excellent worked examples.
+F5187,E122,B11788,2025-10-30,5,Booking was quick and the joining instructions were clear.
+F5188,E123,B11807,2025-11-14,5,Good coffee and a decent lunch.
+F5189,E123,B11812,2025-11-12,5,Really practical content I can use at work tomorrow.
+F5190,E123,B11814,2025-11-12,5,Really practical content I can use at work tomorrow.
+F5191,E123,B11818,2025-11-12,5,Really practical content I can use at work tomorrow.
+F5192,E123,B11826,2025-11-15,4,Catering was excellent with good vegetarian options.
+F5193,E123,B11843,2025-11-09,5,"Great venue, easy to reach from the station."
+F5194,E123,B11846,2025-11-13,5,Really practical content I can use at work tomorrow.
+F5195,E123,B11849,2025-11-13,5,Brilliant Q&A session with the speakers.
+F5196,E124,B11853,2025-12-03,2,"Hard to find the entrance, signage was poor."
+F5197,E124,B11856,2025-12-03,1,"Hard to find the entrance, signage was poor."
+F5198,E124,B11858,2025-12-02,3,Lunch ran out before everyone was served.
+F5199,E124,B11861,2025-11-27,2,Confirmation email arrived very late.
+F5200,E124,B11862,2025-12-03,3,Brilliant Q&A session with the speakers.
+F5201,E124,B11867,2025-11-29,3,Confirmation email arrived very late.
+F5202,E124,B11870,2025-12-01,2,Would have liked more hands-on exercises.
+F5203,E124,B11871,2025-11-27,1,Lunch ran out before everyone was served.
+F5204,E125,B11890,2025-12-08,3,Speakers were knowledgeable and engaging.
+F5205,E125,B11891,2025-12-11,2,One speaker read straight from the slides.
+F5206,E125,B11907,2025-12-12,3,Would have liked more hands-on exercises.
+F5207,E125,B11918,2025-12-09,3,Confirmation email arrived very late.
+F5208,E125,B11925,2025-12-10,1,The stream kept buffering.
+F5209,E125,B11926,2025-12-11,3,The stream kept buffering.
+F5210,E125,B11927,2025-12-08,1,Content felt rushed at the end.
+F5211,E125,B11940,2025-12-11,5,Brilliant Q&A session with the speakers.
+F5212,E125,B11953,2025-12-09,3,Brilliant Q&A session with the speakers.
+F5213,E125,B11972,2025-12-11,1,The stream kept buffering.
+F5214,E125,B11995,2025-12-11,2,Too introductory for the advertised level.
+F5215,E125,B12022,2025-12-08,2,Content felt rushed at the end.
+F5216,E125,B12033,2025-12-08,5,Booking was quick and the joining instructions were clear.
+F5217,E125,B12054,2025-12-10,2,The panel ran over and cut the Q&A.
+F5218,E126,B12067,2025-12-29,3,Booking was quick and the joining instructions were clear.
+F5219,E126,B12081,2025-12-26,1,Too introductory for the advertised level.
+F5220,E126,B12097,2025-12-28,2,Content felt rushed at the end.
+F5221,E127,B12111,2026-01-08,5,Booking was quick and the joining instructions were clear.
+F5222,E127,B12118,2026-01-14,4,Good coffee and a decent lunch.
+F5223,E127,B12122,2026-01-10,5,Good coffee and a decent lunch.
+F5224,E127,B12164,2026-01-10,5,Speakers were knowledgeable and engaging.
+F5225,E128,B12173,2026-01-26,4,Clear explanations and a good pace throughout.
+F5226,E128,B12181,2026-01-22,3,One speaker read straight from the slides.
+F5227,E128,B12193,2026-01-28,4,Good coffee and a decent lunch.
+F5228,E128,B12198,2026-01-22,1,Too introductory for the advertised level.
+F5229,E128,B12204,2026-01-27,4,Really practical content I can use at work tomorrow.
+F5230,E128,B12225,2026-01-26,3,Excellent worked examples.
+F5231,E128,B12239,2026-01-22,4,Excellent worked examples.
+F5232,E129,B12262,2026-02-08,2,Audio dropped out several times online.
+F5233,E129,B12271,2026-02-03,4,Clear explanations and a good pace throughout.
+F5234,E129,B12273,2026-02-07,1,Hard to change my booking to a colleague.
+F5235,E129,B12278,2026-02-05,3,Speakers were knowledgeable and engaging.
+F5236,E129,B12289,2026-02-06,2,One speaker read straight from the slides.
+F5237,E129,B12292,2026-02-05,4,Booking was quick and the joining instructions were clear.
+F5238,E129,B12302,2026-02-04,4,The online chat was well moderated.
+F5239,E129,B12306,2026-02-03,4,Booking was quick and the joining instructions were clear.
+F5240,E129,B12307,2026-02-06,3,The online chat was well moderated.
+F5241,E129,B12314,2026-02-05,5,Booking was quick and the joining instructions were clear.
+F5242,E129,B12328,2026-02-07,3,Audio dropped out several times online.
+F5243,E129,B12341,2026-02-05,3,Stream quality was excellent.
+F5244,E129,B12343,2026-02-08,3,Content felt rushed at the end.
+F5245,E129,B12351,2026-02-08,4,Excellent worked examples.
+F5246,E129,B12358,2026-02-03,5,Booking was quick and the joining instructions were clear.
+F5247,E129,B12368,2026-02-03,3,Really practical content I can use at work tomorrow.
+F5248,E129,B12395,2026-02-06,5,Clear explanations and a good pace throughout.
+F5249,E129,B12398,2026-02-05,4,Brilliant Q&A session with the speakers.
+F5250,E129,B12399,2026-02-06,3,The stream kept buffering.
+F5251,E129,B12408,2026-02-02,2,Audio dropped out several times online.
+F5252,E129,B12411,2026-02-06,4,Booking was quick and the joining instructions were clear.
+F5253,E129,B12418,2026-02-07,3,Speakers were knowledgeable and engaging.
+F5254,E129,B12420,2026-02-04,2,Audio dropped out several times online.
+F5255,E129,B12424,2026-02-06,4,Really practical content I can use at work tomorrow.
+F5256,E130,B12453,2026-02-17,5,Clear explanations and a good pace throughout.
+F5257,E130,B12454,2026-02-17,5,The online chat was well moderated.
+F5258,E130,B12484,2026-02-20,3,Really practical content I can use at work tomorrow.
+F5259,E130,B12507,2026-02-23,5,Clear explanations and a good pace throughout.
+F5260,E130,B12530,2026-02-22,3,Brilliant Q&A session with the speakers.
+F5261,E130,B12534,2026-02-20,5,Booking was quick and the joining instructions were clear.
+F5262,E131,B12544,2026-03-11,3,Booking was quick and the joining instructions were clear.
+F5263,E131,B12570,2026-03-09,3,Would have liked more hands-on exercises.
+F5264,E131,B12571,2026-03-11,5,Booking was quick and the joining instructions were clear.
+F5265,E131,B12577,2026-03-11,4,Speakers were knowledgeable and engaging.
+F5266,E131,B12578,2026-03-07,5,Stream quality was excellent.
+F5267,E132,B12596,2026-03-19,3,Lovely room with plenty of space.
+F5268,E132,B12601,2026-03-20,2,The room was too warm and quite cramped.
+F5269,E132,B12608,2026-03-18,4,Brilliant Q&A session with the speakers.
+F5270,E133,B12620,2026-04-07,3,Lovely room with plenty of space.
+F5271,E133,B12621,2026-04-05,3,Clear explanations and a good pace throughout.
+F5272,E133,B12637,2026-04-04,2,One speaker read straight from the slides.
+F5273,E133,B12641,2026-04-07,3,Hard to change my booking to a colleague.
+F5274,E133,B12653,2026-04-08,4,Booking was quick and the joining instructions were clear.
+F5275,E133,B12666,2026-04-04,3,Lunch ran out before everyone was served.
+F5276,E133,B12670,2026-04-02,3,Catering was excellent with good vegetarian options.
+F5277,E133,B12679,2026-04-05,4,Lovely room with plenty of space.
+F5278,E133,B12708,2026-04-04,3,"Great venue, easy to reach from the station."
+F5279,E133,B12717,2026-04-03,5,Booking was quick and the joining instructions were clear.
+F5280,E134,B12732,2026-04-17,3,Excellent worked examples.
+F5281,E134,B12733,2026-04-18,4,Booking was quick and the joining instructions were clear.
+F5282,E134,B12736,2026-04-18,3,Hard to change my booking to a colleague.
+F5283,E135,B12763,2026-04-27,2,The stream kept buffering.
+F5284,E135,B12768,2026-04-30,3,One speaker read straight from the slides.
+F5285,E135,B12779,2026-04-29,3,Booking was quick and the joining instructions were clear.
+F5286,E135,B12782,2026-05-02,3,Booking was quick and the joining instructions were clear.
+F5287,E135,B12811,2026-04-29,3,Booking was quick and the joining instructions were clear.
+F5288,E135,B12812,2026-04-29,3,Confirmation email arrived very late.
+F5289,E135,B12814,2026-04-29,5,Speakers were knowledgeable and engaging.
+F5290,E135,B12817,2026-04-29,3,Would have liked more hands-on exercises.
+F5291,E135,B12824,2026-05-03,4,The online chat was well moderated.
+F5292,E135,B12833,2026-05-02,3,Really practical content I can use at work tomorrow.
+F5293,E135,B12836,2026-04-29,5,The online chat was well moderated.
+F5294,E135,B12854,2026-05-01,2,Content felt rushed at the end.
+F5295,E135,B12855,2026-04-29,3,Speakers were knowledgeable and engaging.
+F5296,E135,B12858,2026-04-30,2,Content felt rushed at the end.
+F5297,E135,B12862,2026-04-27,2,Too introductory for the advertised level.
+F5298,E135,B12879,2026-04-30,3,Hard to change my booking to a colleague.
+F5299,E135,B12881,2026-04-30,5,Really practical content I can use at work tomorrow.
+F5300,E135,B12898,2026-04-30,4,Booking was quick and the joining instructions were clear.
+F5301,E135,B12901,2026-04-30,1,The panel ran over and cut the Q&A.
+F5302,E135,B12903,2026-04-29,3,Speakers were knowledgeable and engaging.
+F5303,E135,B12917,2026-04-27,2,Too introductory for the advertised level.
+F5304,E135,B12922,2026-04-28,3,One speaker read straight from the slides.
+F5305,E136,B12946,2026-05-17,5,The online chat was well moderated.
+F5306,E136,B12954,2026-05-17,3,Booking was quick and the joining instructions were clear.
+F5307,E136,B12957,2026-05-16,4,Really practical content I can use at work tomorrow.
+F5308,E136,B12966,2026-05-17,5,Stream quality was excellent.
+F5309,E136,B12970,2026-05-21,4,Really practical content I can use at work tomorrow.
+F5310,E136,B12999,2026-05-21,4,Booking was quick and the joining instructions were clear.
+F5311,E136,B13011,2026-05-20,5,Booking was quick and the joining instructions were clear.
+F5312,E137,B13065,2026-05-28,4,Really practical content I can use at work tomorrow.
+F5313,E137,B13066,2026-06-03,4,"The venue was bright, comfortable and well signposted."
+F5314,E137,B13073,2026-05-31,3,One speaker read straight from the slides.
+F5315,E138,B13083,2026-06-09,5,Clear explanations and a good pace throughout.
+F5316,E138,B13106,2026-06-09,3,Really practical content I can use at work tomorrow.
+F5317,E138,B13129,2026-06-13,5,Really practical content I can use at work tomorrow.
+F5318,E138,B13136,2026-06-09,3,Really practical content I can use at work tomorrow.
+F5319,E139,B13144,2026-06-30,2,One speaker read straight from the slides.
+F5320,E139,B13163,2026-07-01,2,Seating was uncomfortable for a full day.
+F5321,E140,B13179,2026-07-12,4,Booking was quick and the joining instructions were clear.
+F5322,E140,B13189,2026-07-14,2,Confirmation email arrived very late.
+F5323,E140,B13208,2026-07-16,3,The online chat was well moderated.
+F5324,E140,B13210,2026-07-13,4,Brilliant Q&A session with the speakers.
+F5325,E140,B13224,2026-07-10,3,Hard to change my booking to a colleague.
+F5326,E140,B13225,2026-07-11,5,Booking was quick and the joining instructions were clear.
+F5327,E140,B13257,2026-07-11,4,Clear explanations and a good pace throughout.
+F5328,E140,B13300,2026-07-11,4,Stream quality was excellent.
+F5329,E140,B13333,2026-07-13,4,Booking was quick and the joining instructions were clear.
+F5330,E141,B13345,2026-07-26,4,Speakers were knowledgeable and engaging.
+F5331,E141,B13354,2026-07-30,3,Would have liked more hands-on exercises.
+F5332,E141,B13359,2026-07-28,3,The stream kept buffering.
+F5333,E141,B13361,2026-07-28,3,Too introductory for the advertised level.
+F5334,E141,B13371,2026-07-26,3,The stream kept buffering.
+F5335,E142,B13373,2026-08-11,5,Speakers were knowledgeable and engaging.
+F5336,E142,B13375,2026-08-11,5,Catering was excellent with good vegetarian options.
+F5337,E142,B13391,2026-08-12,3,Brilliant Q&A session with the speakers.
+F5338,E142,B13413,2026-08-07,5,Booking was quick and the joining instructions were clear.
+F5339,E143,B13424,2026-08-16,2,One speaker read straight from the slides.
+F5340,E143,B13441,2026-08-20,4,The online chat was well moderated.
+F5341,E143,B13459,2026-08-20,5,Brilliant Q&A session with the speakers.
+F5342,E143,B13490,2026-08-16,3,Hard to change my booking to a colleague.
+F5343,E143,B13496,2026-08-20,5,Really practical content I can use at work tomorrow.
+F5344,E143,B13499,2026-08-19,5,Speakers were knowledgeable and engaging.
+F5345,E143,B13502,2026-08-19,3,The panel ran over and cut the Q&A.
+F5346,E143,B13520,2026-08-21,3,One speaker read straight from the slides.
+F5347,E143,B13529,2026-08-20,5,The online chat was well moderated.
+F5348,E143,B13537,2026-08-17,4,Excellent worked examples.
+F5349,E143,B13560,2026-08-22,3,Clear explanations and a good pace throughout.
+F5350,E143,B13566,2026-08-18,5,Excellent worked examples.
+F5351,E143,B13576,2026-08-18,4,Excellent worked examples.
+F5352,E143,B13590,2026-08-19,5,Stream quality was excellent.
+F5353,E144,B13598,2026-09-10,3,Catering was excellent with good vegetarian options.
+F5354,E144,B13602,2026-09-06,5,Brilliant Q&A session with the speakers.
+F5355,E144,B13609,2026-09-07,5,"The venue was bright, comfortable and well signposted."
+F5356,E144,B13613,2026-09-05,5,Good coffee and a decent lunch.
+F5357,E144,B13617,2026-09-06,4,Brilliant Q&A session with the speakers.
+F5358,E144,B13622,2026-09-07,3,"Hard to find the entrance, signage was poor."
+F5359,E144,B13624,2026-09-04,4,Excellent worked examples.
+F5360,E144,B13629,2026-09-09,5,Booking was quick and the joining instructions were clear.
+F5361,E145,B13664,2026-09-17,3,Brilliant Q&A session with the speakers.
+F5362,E145,B13674,2026-09-13,2,Confirmation email arrived very late.
+F5363,E145,B13676,2026-09-19,2,Hard to change my booking to a colleague.
+F5364,E145,B13701,2026-09-17,3,Speakers were knowledgeable and engaging.
+F5365,E145,B13704,2026-09-15,2,Audio dropped out several times online.
+F5366,E145,B13726,2026-09-13,3,The panel ran over and cut the Q&A.
+F5367,E145,B13740,2026-09-17,3,Hard to change my booking to a colleague.
+F5368,E145,B13749,2026-09-15,3,Brilliant Q&A session with the speakers.
+F5369,E145,B13751,2026-09-17,2,Confirmation email arrived very late.
+F5370,E145,B13756,2026-09-14,5,Excellent worked examples.
+F5371,E145,B13764,2026-09-19,4,Stream quality was excellent.
+F5372,E145,B13805,2026-09-15,2,Hard to change my booking to a colleague.
+F5373,E145,B13807,2026-09-13,5,Booking was quick and the joining instructions were clear.
+F5374,E145,B13813,2026-09-17,1,Hard to change my booking to a colleague.
+F5375,E145,B13834,2026-09-13,2,Hard to change my booking to a colleague.
+F5376,E145,B13852,2026-09-17,3,Booking was quick and the joining instructions were clear.
+F5377,E146,B13863,2026-10-07,5,The online chat was well moderated.
+F5378,E146,B13866,2026-10-04,2,The panel ran over and cut the Q&A.
+F5379,E146,B13873,2026-10-05,3,Really practical content I can use at work tomorrow.
+F5380,E146,B13880,2026-10-03,2,Confirmation email arrived very late.
+F5381,E146,B13885,2026-10-01,3,Hard to change my booking to a colleague.
+F5382,E146,B13889,2026-10-06,2,Confirmation email arrived very late.
+F5383,E146,B13890,2026-10-02,3,Excellent worked examples.
+F5384,E146,B13897,2026-10-03,1,Confirmation email arrived very late.
+F5385,E147,B13911,2026-10-17,4,Clear explanations and a good pace throughout.
+F5386,E147,B13912,2026-10-13,4,Catering was excellent with good vegetarian options.
+F5387,E147,B13920,2026-10-13,4,Lovely room with plenty of space.
+F5388,E147,B13941,2026-10-11,3,Lovely room with plenty of space.
+F5389,E148,B13949,2026-10-29,1,Hard to change my booking to a colleague.
+F5390,E148,B13951,2026-10-25,1,The panel ran over and cut the Q&A.
+F5391,E148,B13956,2026-10-25,1,Lunch ran out before everyone was served.
+F5392,E148,B13959,2026-10-31,1,One speaker read straight from the slides.
+F5393,E148,B13985,2026-10-29,1,Lunch ran out before everyone was served.
+F5394,E148,B14014,2026-10-29,1,Would have liked more hands-on exercises.
+F5395,E148,B14043,2026-10-31,1,Would have liked more hands-on exercises.

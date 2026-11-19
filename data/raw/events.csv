@@ -1,0 +1,61 @@
+event_id,event_name,topic,format,city,venue,event_date,start_hour,capacity,price_gbp,status
+E101,Practical GenAI Clinic,AI,online,Online,A8 Live (online),2025-01-06,9,225,195,completed
+E102,Data Quality Lab,Data engineering,in_person,Manchester,Mill Yard Studios,2025-01-22,18,120,195,completed
+E103,Analytics Breakfast,Analytics,in_person,London,Riverside Hall,2025-02-05,18,112,95,completed
+E104,Data Leaders Forum,Leadership,in_person,Bristol,Harbourside Rooms,2025-02-19,18,45,95,completed
+E105,Responsible AI Roundtable,AI,online,Online,A8 Live (online),2025-03-08,13,225,45,completed
+E106,Lakehouse Foundations,Data engineering,hybrid,Leeds,The Engine House,2025-03-18,9,40,95,completed
+E107,Dashboard Design Studio,Analytics,in_person,Manchester,Mill Yard Studios,2025-04-04,13,90,95,completed
+E108,Value Delivery Masterclass,Leadership,online,Online,A8 Live (online),2025-04-17,18,300,0,completed
+E109,AI Builders Workshop,AI,in_person,Bristol,Harbourside Rooms,2025-04-27,18,30,95,completed
+E110,Pipelines in Practice,Data engineering,online,Online,A8 Live (online),2025-05-11,9,150,0,completed
+E111,Analytics Breakfast,Analytics,hybrid,Leeds,The Engine House,2025-05-26,13,40,95,completed
+E112,Value Delivery Masterclass,Leadership,in_person,Manchester,Mill Yard Studios,2025-06-13,9,60,95,completed
+E113,Practical GenAI Clinic,AI,in_person,London,Riverside Hall,2025-06-26,13,75,195,completed
+E114,Data Quality Lab,Data engineering,in_person,Bristol,Harbourside Rooms,2025-07-07,9,30,95,completed
+E115,Dashboard Design Studio,Analytics,online,Online,A8 Live (online),2025-07-21,9,300,45,completed
+E116,AI Strategy Briefing,Leadership,hybrid,Leeds,The Engine House,2025-08-03,18,80,45,completed
+E117,Responsible AI Roundtable,AI,in_person,Manchester,Mill Yard Studios,2025-08-20,18,90,95,completed
+E118,Lakehouse Foundations,Data engineering,in_person,London,Riverside Hall,2025-08-31,9,112,95,completed
+E119,Metrics That Matter,Analytics,in_person,Bristol,Harbourside Rooms,2025-09-16,13,45,195,completed
+E120,Value Delivery Masterclass,Leadership,online,Online,A8 Live (online),2025-09-30,9,225,0,completed
+E121,Responsible AI Roundtable,AI,hybrid,Leeds,The Engine House,2025-10-12,9,80,195,completed
+E122,Data Quality Lab,Data engineering,online,Online,A8 Live (online),2025-10-29,9,300,0,completed
+E123,Analytics Breakfast,Analytics,in_person,London,Riverside Hall,2025-11-09,13,75,45,completed
+E124,AI Strategy Briefing,Leadership,in_person,Bristol,Harbourside Rooms,2025-11-27,13,60,45,completed
+E125,AI Builders Workshop,AI,online,Online,A8 Live (online),2025-12-08,9,225,45,completed
+E126,Pipelines in Practice,Data engineering,hybrid,Leeds,The Engine House,2025-12-24,13,60,95,completed
+E127,Metrics That Matter,Analytics,in_person,Manchester,Mill Yard Studios,2026-01-08,9,120,195,completed
+E128,Value Delivery Masterclass,Leadership,in_person,London,Riverside Hall,2026-01-22,9,112,45,completed
+E129,Practical GenAI Clinic,AI,online,Online,A8 Live (online),2026-02-02,9,300,95,completed
+E130,Data Quality Lab,Data engineering,online,Online,A8 Live (online),2026-02-17,18,225,0,completed
+E131,Analytics Breakfast,Analytics,hybrid,Leeds,The Engine House,2026-03-06,13,60,95,completed
+E132,Value Delivery Masterclass,Leadership,in_person,Manchester,Mill Yard Studios,2026-03-16,9,60,195,completed
+E133,Practical GenAI Clinic,AI,in_person,London,Riverside Hall,2026-04-02,9,150,45,completed
+E134,Pipelines in Practice,Data engineering,in_person,Bristol,Harbourside Rooms,2026-04-14,9,45,195,completed
+E135,Metrics That Matter,Analytics,online,Online,A8 Live (online),2026-04-27,13,225,195,completed
+E136,Data Leaders Forum,Leadership,online,Online,A8 Live (online),2026-05-15,13,150,0,completed
+E137,AI Builders Workshop,AI,in_person,Manchester,Mill Yard Studios,2026-05-28,18,90,95,completed
+E138,Data Quality Lab,Data engineering,in_person,London,Riverside Hall,2026-06-08,18,112,95,completed
+E139,Analytics Breakfast,Analytics,in_person,Bristol,Harbourside Rooms,2026-06-25,9,30,95,completed
+E140,Data Leaders Forum,Leadership,online,Online,A8 Live (online),2026-07-10,13,300,0,completed
+E141,Responsible AI Roundtable,AI,hybrid,Leeds,The Engine House,2026-07-25,13,40,95,completed
+E142,Pipelines in Practice,Data engineering,in_person,Manchester,Mill Yard Studios,2026-08-07,18,90,45,completed
+E143,Dashboard Design Studio,Analytics,online,Online,A8 Live (online),2026-08-16,9,300,95,completed
+E144,AI Strategy Briefing,Leadership,in_person,Bristol,Harbourside Rooms,2026-09-04,9,60,95,completed
+E145,Responsible AI Roundtable,AI,online,Online,A8 Live (online),2026-09-13,18,300,45,completed
+E146,Pipelines in Practice,Data engineering,hybrid,Leeds,The Engine House,2026-10-01,9,80,45,completed
+E147,Metrics That Matter,Analytics,in_person,Manchester,Mill Yard Studios,2026-10-11,9,60,195,completed
+E148,Value Delivery Masterclass,Leadership,in_person,London,Riverside Hall,2026-10-25,9,150,95,completed
+E149,AI Builders Workshop,AI,in_person,Bristol,Harbourside Rooms,2026-11-30,9,30,95,scheduled
+E150,Lakehouse Foundations,Data engineering,online,Online,A8 Live (online),2026-12-10,13,150,0,scheduled
+E151,Dashboard Design Studio,Analytics,hybrid,Leeds,The Engine House,2026-12-16,9,80,95,scheduled
+E152,AI Strategy Briefing,Leadership,in_person,Manchester,Mill Yard Studios,2026-12-25,18,90,45,scheduled
+E153,Practical GenAI Clinic,AI,in_person,London,Riverside Hall,2027-01-04,18,75,95,scheduled
+E154,Pipelines in Practice,Data engineering,in_person,Bristol,Harbourside Rooms,2027-01-13,9,30,95,scheduled
+E155,Dashboard Design Studio,Analytics,online,Online,A8 Live (online),2027-01-24,18,150,95,scheduled
+E156,Value Delivery Masterclass,Leadership,hybrid,Leeds,The Engine House,2027-01-31,13,80,95,scheduled
+E157,Practical GenAI Clinic,AI,online,Online,A8 Live (online),2027-02-08,13,225,95,scheduled
+E158,Lakehouse Foundations,Data engineering,in_person,London,Riverside Hall,2027-02-17,9,112,95,scheduled
+E159,Analytics Breakfast,Analytics,in_person,Bristol,Harbourside Rooms,2027-02-25,9,45,95,scheduled
+E160,AI Strategy Briefing,Leadership,online,Online,A8 Live (online),2027-03-09,9,150,0,scheduled

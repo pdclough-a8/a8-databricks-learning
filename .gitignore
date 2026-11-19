@@ -9,3 +9,4 @@ site/
 .databricks/
 .streamlit/secrets.toml
 *.log
+.local-validation/

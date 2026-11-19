@@ -1,46 +1,42 @@
-# A8 | Data to working AI
+# A8 | Databricks, from data to working AI
 
-**Build an assistant you can check, explain and hand over.**
+**Learn in the notebooks.** Open `notebooks/00_setup` in your Databricks Git folder.
+The website is an overview and evidence ledger, not a second set of lesson instructions.
 
-An event operations team needs a quick answer: which events have places left?
-You will turn six booking records into checked evidence, give that evidence to a model,
-then put the answer behind a small application. One problem, one dataset, one connected journey.
+You run A8 Events. Use one continuous dataset: **60 events, 4,204 bookings and 395 feedback records**,
+all synthetic, frozen at 20 November 2026. Each lesson explains a concept, demonstrates a real
+Databricks operation, takes you into the UI, gives checked exercises and finishes with a recap.
+Allow about an hour per lesson, plus deployment waits. These are planning estimates, not measured learner timings.
 
-This is **pilot v0.1.0**, not a production system or a promise of business savings.
-Our measurable learning outcome is simple: another person can use your app, trace its answer
-to the supplied records and understand where it must stop.
+## Full curriculum
 
-## The journey
-
-| Stage | What you do | Evidence you keep |
+| Module | What you build and learn | Delivery |
 |---|---|---|
-| Strategy | Define the operations question and limits in [readiness](start.md) | Your destination, budget and success criteria |
-| Execution, lesson 1 | [Trust the data](lessons/01-data.md) | A checked query and explanation |
-| Execution, lesson 2 | [Ask with evidence](lessons/02-model.md) | Three answer verdicts |
-| Enablement, lesson 3 | [Put it to work](lessons/03-app.md) | A checked app and short handover |
+| 0. Workbench | Git folders, compute, catalog/schema, permissions and persistent configuration | Stage 1 |
+| 1. Lakehouse data | Volumes, `read_files`, typed Delta tables, SQL and PySpark, joins, views, history/time travel, lineage | Stage 1 |
+| 2. Governance | Grants and identity, comments/tags, real row filters and column masks, lineage and optional audit system tables | Stage 1 |
+| 3. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
+| 4. GenAI | Playground, pay-per-token endpoints, `ai_query`, AI Functions for feedback, prompts and tracing | Planned next |
+| 5. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
+| 6. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
+| 6b. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
+| 7. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
+| 8. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
+| 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
-Allow roughly 20 minutes for readiness and 30–45 minutes per lesson, plus workspace approval
-and deployment waits. These are planning estimates, not measured completion times.
+## Start and stop
 
-## Choose how you work
+Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance`
+→ `03_predictive_ml` → `99_pause_and_cleanup`.
+Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
+Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
 
-**UI-led:** Catalog Explorer, the SQL editor, AI Playground and Apps. Copy the supplied short SQL
-and prompt blocks. This is low-code, not a claim that a custom Python app can be authored visually.
+- **Free Edition:** existing `workspace.default`, serverless compute, quotas and feature restrictions apply.
+- **Azure paid:** existing `users.pclough`; no schema creation. Your administrator controls availability and grants.
+- Namespace all artefacts with your learner tag. Never use shared tables for experimentation.
+- Data, MLflow and model versions persist. Optional serving endpoints can bill after closing a notebook; delete them.
+- A model alias is not approval. A mask is not anonymisation. A completed notebook is not production validation.
 
-**Code-first:** supplied Python notebooks inside Databricks. Read the explanation, run the worked
-example, make one change, complete a gap, then solve a small transfer task yourself.
-
-Both routes reach the same checkpoints. You can switch at a checkpoint by using the same learner tag,
-table and app. Do not recreate objects when switching. The [optional tutor](tutor.md) supports either route.
-
-## Keep the boundaries visible
-
-- All records are synthetic. Never substitute customer, employee or attendee data in this pilot.
-- The model receives all six records in its prompt. This is **not RAG**, model training or vector search.
-- The app reads the packaged CSV, **not your Unity Catalog table**. Updating that table will not update the app.
-  The table teaches governed data and SQL; the fixture keeps application permissions and retrieval out of this first pilot.
-- Simulation is deterministic code, **not AI**. It proves the interface, not model quality or authentication.
-- Databricks compute, Apps and live inference can incur charges. Nothing here provisions them automatically.
-- Live deployment and UI steps still need instructor validation in the target workspace. See [validation](validation.md).
-
-**Start:** [Check readiness](start.md). **When stopping:** [pause or finish](operations.md).
+The previous three-lesson pilot and packaged-fixture app have been superseded, not left as alternative instructions.
+The future app will read learner data; it is not included in Stage 1.
+See [validation evidence](validation.md), [known issues](issues.md) and [brand application](brand.md).

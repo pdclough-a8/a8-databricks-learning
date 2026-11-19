@@ -1,2 +1,4 @@
 mkdocs-material==9.6.21
--r app/event_assistant/requirements.txt
+databricks-sdk==0.73.0
+scikit-learn==1.7.2
+pandas==2.2.3

@@ -7,7 +7,7 @@ and positioning reference. The internal playbook itself is not included or repro
 
 - **Business first:** open with the operations decision and the evidence needed to make it.
 - **Strategy, execution, enablement:** keep the purpose, working implementation and handover connected.
-- **Pragmatic by design:** one small app and explicit boundaries, not a platform framework.
+- **Pragmatic by design:** one connected Events scenario and explicit boundaries, not a platform framework.
 - **Talk like a human:** plain UK English, direct steps, useful recovery guidance.
 - **Back it up:** give expected facts and validation limits. Don't invent ROI or imply production readiness.
 - **Build capability:** supplied code supports learners, then hints fade into independent transfer.
@@ -36,5 +36,5 @@ The stylesheet retains visible keyboard focus and responsive Material navigation
 
 Before public release, obtain approved logo files, exact colour/font tokens, usage rules and
 brand-owner review. Replace tokens in `docs/stylesheets/a8.css`,
-`app/event_assistant/.streamlit/config.toml` and `app/event_assistant/style.css`.
+`lib/a8learn/__init__.py` (notebook cards).
 Do not extract or redraw a low-resolution logo from a slide.
