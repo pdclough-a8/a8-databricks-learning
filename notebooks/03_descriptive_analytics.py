@@ -1,15 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # A8 | 1b. Describe the business with AI/BI and Genie
-# MAGIC **Where this sits:** descriptive analytics, what happened or is booked. Prediction is Module 3;
-# MAGIC diagnostic analytics follows in Module 1c; prescriptive analytics follows Module 3 in `01d`.
+# MAGIC # A8 | 3. Describe the business with AI/BI and Genie
+# MAGIC **Where this sits:** descriptive analytics, what happened or is booked. Prediction is Module 5;
+# MAGIC diagnostic analytics follows in Module 4, predictive in Module 5 and prescriptive in Module 6.
 # MAGIC
 # MAGIC **Outcome:** build a private draft dashboard and a Genie space over your own governed event metrics,
 # MAGIC then prove their answers with SQL. Descriptive analytics asks **what happened or is booked**, not what will
 # MAGIC happen or why. Event management is the case study; Databricks datasets, dashboards and Genie are the skills.
 # MAGIC
 # MAGIC **60–75 minutes, an estimate:** orient 5 · metrics/view 15 · dashboard 20 · Genie 20 · transfer/recap 10.
-# MAGIC **Before you start:** finish `00_setup` and `01_lakehouse_data`. Modules 2 and 3 are not prerequisites.
+# MAGIC **Before you start:** finish `00_setup` and `01_lakehouse_data`. Modules 2 and 5 are not prerequisites.
 # MAGIC Use the saved learner tag and schema, normally `workspace.default` on Free Edition.
 # MAGIC All data is synthetic, frozen at **20 November 2026**. Do not use today's date or substitute customer data.
 # MAGIC
@@ -250,7 +250,7 @@ print(dashboard_sql)
 # MAGIC in this Git folder to read one. It deliberately has no SQL and is not named `.lvdash.json`, so it is not itself
 # MAGIC a dashboard. The next cells copy it, insert `dashboard_sql` with **your** view name, and save it to your own
 # MAGIC `a8learn` user folder. Exporting, editing and importing this file is how dashboards move between workspaces;
-# MAGIC deploying them automatically is Module 8.
+# MAGIC deploying them automatically is Module 12.
 # MAGIC
 # MAGIC Writing the file is a workspace write, so it is opt-in: run the next cell, set `write_dashboard_file` to
 # MAGIC **yes**, rerun that gate cell, then run the following cells. An existing file is left unchanged; to
@@ -509,28 +509,28 @@ for question, query in genie_benchmarks.items():
 # MAGIC
 # MAGIC ## 6. Your turn, change, fill a gap, transfer
 # MAGIC - **Change:** select a different city in the dashboard. Predict the counter change and verify it with SQL.
-# MAGIC - **Gap 1b.1:** fill in scheduled confirmed tickets by city. Hint: SUM, not COUNT.
-# MAGIC - **Gap 1b.2:** compute completed-event ratings by topic, weighted by feedback counts.
+# MAGIC - **Gap 3.1:** fill in scheduled confirmed tickets by city. Hint: SUM, not COUNT.
+# MAGIC - **Gap 3.2:** compute completed-event ratings by topic, weighted by feedback counts.
 # MAGIC - **Transfer:** choose a new descriptive question (for example, available seats by format for scheduled
 # MAGIC   events), state its grain/status/units, write and run your own reference SELECT, then, only with approval,
 # MAGIC   ask Genie and inspect the SQL. Do not promote an unchecked response to an example.
 # MAGIC
 # MAGIC Exercises use this notebook's `IDENTIFIER(a8_event_metrics)`. Dashboard/Genie/SQL editor sessions do not
 # MAGIC inherit that variable; use the real names printed above. Blank answers reveal hints; use
-# MAGIC `A8.solution("1b.2")` if stuck. A correct query plus an explanation, not just a green cell, completes the task.
+# MAGIC `A8.solution("3.2")` if stuck. A correct query plus an explanation, not just a green cell, completes the task.
 
 # COMMAND ----------
 
 # WHAT: Check: compares your scheduled-tickets-by-city SQL with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback about your result.
 answer_1b_1 = """"""
-A8.check("1b.1", answer_1b_1)
+A8.check("3.1", answer_1b_1)
 
 # COMMAND ----------
 # WHAT: Check: compares your feedback-weighted topic ratings with the supplied answer.
 # LOOK FOR: a hint or feedback; averaging per-event averages is deliberately incorrect.
 answer_1b_2 = """"""
-A8.check("1b.2", answer_1b_2)
+A8.check("3.2", answer_1b_2)
 
 # COMMAND ----------
 # MAGIC %md
@@ -569,7 +569,7 @@ A8.check("1b.2", answer_1b_2)
 # MAGIC **Completion requires:** SQL reconciliation and both exercises, observed dashboard checkpoint D, and
 # MAGIC observed Genie checkpoint G, plus your explanations. Nothing automatically marks those UI checkpoints passed.
 # MAGIC If blocked, keep the checkpoint and continue to Module 2 without claiming full completion.
-# MAGIC **Next:** `01c_diagnostic_analytics`, explain why a difference exists. Then `02_governance`.
+# MAGIC **Next:** `04_diagnostic_analytics`, explain why a difference exists.
 # MAGIC
 # MAGIC ### Official references, checked 20 November 2026, not workspace acceptance
 # MAGIC - [Free Edition limits](https://docs.databricks.com/aws/en/getting-started/free-edition-limitations)

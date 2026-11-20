@@ -1,7 +1,7 @@
-"""Offline execution of Module 1d's real SQL and decision code, checked against independent Python.
+"""Offline execution of Module 6's real SQL and decision code, checked against independent Python.
 
 SQLite exercises the relational logic only, not Spark/Unity Catalog. The prediction table is synthetic and built by a
-separate Python loop with two model versions, so the latest-score rule is exercised. The Module 3 view is built by
+separate Python loop with two model versions, so the latest-score rule is exercised. The Module 5 view is built by
 independent Python aggregation, not by 03's SQL. Decisions are checked against exact enumeration and brute force.
 """
 import ast
@@ -24,7 +24,7 @@ from a8learn import Config, Course
 from a8learn.exercises import EXERCISES
 from test_descriptive import OfflineSpark, Result, read_fixture
 
-NOTEBOOK = ROOT / "notebooks/01d_prescriptive_analytics.py"
+NOTEBOOK = ROOT / "notebooks/06_prescriptive_analytics.py"
 SOURCE = NOTEBOOK.read_text(encoding="utf-8")
 FORECAST_FIELDS = ["event_id", "event_name", "event_date", "capacity", "confirmed_tickets", "expected_attendees"]
 
@@ -223,11 +223,11 @@ class PrescriptiveTests(unittest.TestCase):
         for row in self.latest:
             by_event[row[1]].append(row)
         forecast = self.spark.sql("SELECT * FROM event_forecast ORDER BY event_id").rows
-        for key, query in [("1d.1", EXERCISES["1d.1"]["solution"]), ("1d.2", EXERCISES["1d.2"]["solution"])]:
+        for key, query in [("6.1", EXERCISES["6.1"]["solution"]), ("6.2", EXERCISES["6.2"]["solution"])]:
             sql = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", query)
             result = self.spark.sql(sql).rows
             with self.subTest(exercise=key):
-                if key == "1d.1":
+                if key == "6.1":
                     want = [(r["event_id"], round(r["expected_attendees"] / r["confirmed_tickets"], 3),
                              int(r["capacity"] / (r["expected_attendees"] / r["confirmed_tickets"])))
                             for r in forecast if r["expected_attendees"] > 0]
@@ -242,10 +242,10 @@ class PrescriptiveTests(unittest.TestCase):
     def test_naive_exercise_answers_fail_and_blank_answers_are_rejected(self):
         self.run_lesson()
         wrong = {
-            "1d.1": """SELECT event_id, round(expected_attendees / confirmed_tickets, 3) AS show_probability,
+            "6.1": """SELECT event_id, round(expected_attendees / confirmed_tickets, 3) AS show_probability,
 round(capacity / (expected_attendees / confirmed_tickets), 0) AS simple_limit
 FROM event_forecast WHERE expected_attendees > 0 ORDER BY event_id""",
-            "1d.2": """SELECT event_id, round(sum(tickets * tickets * attendance_probability
+            "6.2": """SELECT event_id, round(sum(tickets * tickets * attendance_probability
 * (1 - attendance_probability)), 2) AS attendance_variance
 FROM attendance_predictions GROUP BY event_id ORDER BY event_id""",
         }
@@ -274,10 +274,10 @@ FROM attendance_predictions GROUP BY event_id ORDER BY event_id""",
 
     def test_course_navigation_and_branding_point_to_module_1d(self):
         index = (ROOT / "docs/index.md").read_text(encoding="utf-8")
-        self.assertIn("| 1d. Prescriptive analytics |", index)
-        self.assertIn("01d_prescriptive_analytics", index)
+        self.assertIn("| 6. Prescriptive analytics |", index)
+        self.assertIn("06_prescriptive_analytics", index)
         self.assertNotIn("number to be assigned", index)
-        self.assertIn("01d_prescriptive_analytics", (ROOT / "START_HERE.md").read_text(encoding="utf-8"))
+        self.assertIn("06_prescriptive_analytics", (ROOT / "START_HERE.md").read_text(encoding="utf-8"))
         logo = ROOT / "docs/assets/a8-logo.png"
         self.assertEqual(logo.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
         self.assertIn("assets/a8-logo.png", (ROOT / "mkdocs.yml").read_text(encoding="utf-8"))

@@ -10,8 +10,8 @@
 # MAGIC - **Notebook/serverless compute:** idles automatically; classic clusters/warehouses follow their own auto-stop
 # MAGIC   settings.
 # MAGIC - **Delta tables, volumes, MLflow and UC models:** persist and use storage.
-# MAGIC - **Module 1b dashboard drafts and Genie spaces:** persist separately. This notebook does not delete them,
-# MAGIC   conversations or cached results. Follow Module 1b's exact-URL/ID UI cleanup before dropping its
+# MAGIC - **Module 3 dashboard drafts and Genie spaces:** persist separately. This notebook does not delete them,
+# MAGIC   conversations or cached results. Follow Module 3's exact-URL/ID UI cleanup before dropping its
 # MAGIC   reporting view. Remove any generated dashboard file by its exact printed path too; keep saved settings.
 # MAGIC - **Custom model serving:** can keep billing even when your notebook is closed. Delete the endpoint when not
 # MAGIC   needed.
@@ -19,9 +19,9 @@
 # MAGIC
 # MAGIC To resume, reopen the next lesson and run its configuration cell. Saved settings reload from your workspace user
 # MAGIC folder.
-# MAGIC Rerun Module 1 only if you intend to reset its source fixtures; rerun Module 3 to create a new model version.
+# MAGIC Rerun Module 1 only if you intend to reset its source fixtures; rerun Module 5 to create a new model version.
 # MAGIC
-# MAGIC The next two cells install the MLflow client this notebook needs and restart Python, as in Module 3.
+# MAGIC The next two cells install the MLflow client this notebook needs and restart Python, as in Module 5.
 # MAGIC A red pip dependency message about `databricks-agents` is expected and harmless here.
 
 # COMMAND ----------

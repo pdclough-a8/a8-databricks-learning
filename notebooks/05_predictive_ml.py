@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 3. Predict attendance, track it and put it to work
-# MAGIC **Where this sits:** predictive analytics, what is likely to happen. Module 1b describes the snapshot;
-# MAGIC choosing the best action under constraints (prescriptive analytics) is planned, not taught here.
+# MAGIC **Where this sits:** predictive analytics, what is likely to happen. Module 3 describes the snapshot;
+# MAGIC choosing the best action under constraints (prescriptive analytics) is taught next, in Module 6.
 # MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - a classifier that predicts whether a confirmed booking turns up
@@ -424,7 +424,7 @@ A8.links(("Forecast: inspect upstream lineage", "table", "event_forecast"))
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ### Exercise 3.1: write the forecast yourself
+# MAGIC ### Exercise 5.1: write the forecast yourself
 # MAGIC Using only the predictions table, first find the latest score for each booking with `row_number()`.
 # MAGIC Then return `event_id` and `expected_attendees` (the sum of tickets × attendance_probability),
 # MAGIC one row per event, ordered by `event_id`. Use `IDENTIFIER(a8_attendance_predictions)` as the table name.
@@ -432,9 +432,9 @@ A8.links(("Forecast: inspect upstream lineage", "table", "event_forecast"))
 
 # COMMAND ----------
 # WHAT: checks your SQL against the course's answer on your own tables.
-# LOOK FOR: a green correct card. A8.solution("3.1") shows a worked answer if you are stuck.
+# LOOK FOR: a green correct card. A8.solution("5.1") shows a worked answer if you are stuck.
 answer_3_1 = """"""
-A8.check("3.1", answer_3_1)
+A8.check("5.1", answer_3_1)
 
 # COMMAND ----------
 # MAGIC %md
@@ -498,14 +498,14 @@ else:
 # MAGIC **UI alternative:** Serving → Create endpoint → choose this model and version → Small → scale to zero.
 # MAGIC Use exactly the name printed below, and add the two course tags (`a8learn_course`, `a8learn_tag`).
 # MAGIC Query it with the model's input example, look at its permissions and logs, then **delete** it.
-# MAGIC Stopping compute is not enough. Serving this scikit-learn model is not a GenAI call; Module 4 adds those.
+# MAGIC Stopping compute is not enough. Serving this scikit-learn model is not a GenAI call; Module 7 adds those.
 # MAGIC
 # MAGIC ## Recap
 # MAGIC Name the unit of prediction, the time-based split, the baseline, the run, the model version, the alias and
 # MAGIC the batch output. **Which of these are fixed evidence, and which can move?**
 # MAGIC (The run, version and appended batch are fixed; the alias and forecast view change when you retrain.)
 # MAGIC
-# MAGIC **Stop here for Stage 1.** Modules 4–8 are planned, not yet supplied. Remove any serving endpoint now.
+# MAGIC **Stop here for Stage 1.** Modules 7–12 are planned, not yet supplied. Remove any serving endpoint now.
 
 # COMMAND ----------
 # WHAT: prints your endpoint's name and summarises what you built.

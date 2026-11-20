@@ -17,15 +17,18 @@ Using an LLM does not automatically make an answer predictive or prescriptive.
 
 | Level | Question | Course home |
 |---|---|---|
-| Descriptive | What happened, or what is booked? | Module 1b: dashboard and SQL-checked Genie answers |
-| Diagnostic | Why did it happen? | Module 1c: drill-downs, mix versus rate and a chance test; association alone is not causation |
-| Predictive | What is likely to happen? | Module 3: attendance probabilities and expected turnout |
-| Prescriptive | What should we do, given objectives and constraints? | Module 1d: choose ticket limits and meal orders |
-| Automation | How can approved work run repeatedly or take bounded actions? | Modules 6 and 8, planned |
+| Descriptive | What happened, or what is booked? | Module 3: dashboard and SQL-checked Genie answers |
+| Diagnostic | Why did it happen? | Module 4: drill-downs, mix versus rate and a chance test; association alone is not causation |
+| Predictive | What is likely to happen? | Module 5: attendance probabilities and expected turnout |
+| Prescriptive | What should we do, given objectives and constraints? | Module 6: choose ticket limits and meal orders |
+| Automation | How can approved work run repeatedly or take bounded actions? | Modules 9 and 12, planned |
 
-Automation is a delivery capability, not proof of better analysis. Modules 0–2 provide the platform,
-data and governance foundations. Modules 4–5 add GenAI and retrieval capabilities that can support
-several levels; they are not new analytics levels.
+The course follows the order of analytical complexity: Modules 0–2 provide the platform, data and governance
+foundations, then Modules 3–6 climb from descriptive to diagnostic, predictive and prescriptive analytics.
+Modules 7–11 add AI capabilities (GenAI functions, retrieval, agents, MCP and an app). They support the same four
+levels, for example GenAI classifying feedback for a descriptive question or an agent acting on a prescriptive
+recommendation, but they are not new levels. Each AI module names the level it serves and states what the model adds
+that a query or a classical model does not. Automation is a delivery capability, not proof of better analysis.
 
 ## Full curriculum
 
@@ -33,17 +36,17 @@ several levels; they are not new analytics levels.
 |---|---|---|
 | 0. Workbench | Git folders, compute, catalog/schema, permissions and persistent configuration | Stage 1 |
 | 1. Lakehouse data | Volumes, `read_files`, typed Delta tables, SQL and PySpark, joins, views, history/time travel, lineage | Stage 1 |
-| 1b. Descriptive AI/BI and Genie | Event-grain reporting view, metrics, draft dashboard datasets/charts/filters, Genie instructions/examples and SQL-checked answers | Supplied; offline checked, no live validation |
-| 1c. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
 | 2. Governance | Grants and identity, comments/tags, real row filters and column masks, lineage and optional audit system tables | Stage 1 |
-| 3. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
-| 4. GenAI | Playground, pay-per-token endpoints, `ai_query`, AI Functions for feedback, prompts and tracing | Planned next |
-| 5. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
-| 6. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
-| 6b. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
-| 7. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
-| 8. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dashboard deployment and programmatic Genie creation, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
-| 1d. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 3 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 3); offline checked, no live validation |
+| 3. Descriptive AI/BI and Genie | Event-grain reporting view, metrics, draft dashboard datasets/charts/filters, Genie instructions/examples and SQL-checked answers | Supplied; offline checked, no live validation |
+| 4. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
+| 5. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
+| 6. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 5 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 5); offline checked, no live validation |
+| 7. GenAI | Playground, pay-per-token endpoints, `ai_query`, AI Functions for feedback, prompts and tracing | Planned next |
+| 8. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
+| 9. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
+| 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
+| 11. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
+| 12. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dashboard deployment and programmatic Genie creation, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
 | 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
 ## Start and stop
@@ -51,16 +54,17 @@ several levels; they are not new analytics levels.
 First time in Databricks? [Git folders for beginners](git-folders.md) shows how to clone the course,
 pull updates and recover from conflicts.
 
-Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `01b_descriptive_analytics` → `01c_diagnostic_analytics`
-→ `02_governance` → `03_predictive_ml` → `01d_prescriptive_analytics` → `99_pause_and_cleanup`.
+Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `99_pause_and_cleanup`.
+
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
 
-## Module 1b: descriptive analytics, not prediction
+## Module 3: descriptive analytics, not prediction
 
 Build a private **draft** AI/BI dashboard and a Genie space over the same learner-tagged event metrics.
 Start with one dataset, one counter and one city filter by hand, then opt in to generating a learner-bound
-`.lvdash.json` file for the complete dashboard. API creation/deployment is deferred to Module 8.
+`.lvdash.json` file for the complete dashboard. API creation/deployment is deferred to Module 12.
 The notebook supplies native SQL, a dashboard template, metric definitions, three example question/SQL pairs,
 three held-out SQL checks, a human-reviewed boundary question and two checked exercises.
 Current Databricks documentation calls Genie Spaces **Genie Agents**; this lesson uses their Chat mode,
@@ -77,25 +81,25 @@ compatibility are **not live validated**. If a UI feature is unavailable, use th
 fallback and record that checkpoint as blocked. Exact UI-asset cleanup is manual; the cleanup notebook
 drops the reporting view but does not delete generated files, dashboard drafts, Genie spaces, conversations or caches.
 
-## Module 1d: prescriptive analytics, assumptions not guarantees
+## Module 4: diagnostic analytics, not causation
 
-Decide how many tickets to sell and how many meals to order for one scheduled event, using the Module 3
+Explain why completed online events attend less than in-person and hybrid ones, using the Module 3
+`event_metrics` view. You drill down by city, topic, format and month, split the gap into a **mix** effect
+(different kinds of events) and a **rate** effect (same kind, different behaviour), and run one seeded permutation test
+(numpy, no new library) to ask whether the gap is bigger than chance. Then you ask your existing Genie space a
+"why" question and check its SQL and prose against the reference. Two checked exercises follow the 3 style.
+
+The notebook states plainly that nothing in it proves causation. It writes nothing, deploys nothing and makes no AI call.
+The optional Genie step is learner-triggered and needs approval. Confounder adjustment and Simpson's paradox are deferred.
+
+## Module 6: prescriptive analytics, assumptions not guarantees
+
+Decide how many tickets to sell and how many meals to order for one scheduled event, using the Module 5
 `attendance_predictions` table and `event_forecast` view. A seeded numpy simulation draws plausible turnouts, an
 expected-cost search finds the cheapest choice, and sensitivity tables show how fragile it is. Costs are **assumed
 teaching parameters**, bookings are treated as independent, and the model's probabilities are trusted as given.
 Nothing is written, no library is added and no model is called. Two SQL exercises and a human-judgement checkpoint
-on fairness to turned-away attendees complete it. Run it after `03_predictive_ml`.
-
-## Module 1c: diagnostic analytics, not causation
-
-Explain why completed online events attend less than in-person and hybrid ones, using the Module 1b
-`event_metrics` view. You drill down by city, topic, format and month, split the gap into a **mix** effect
-(different kinds of events) and a **rate** effect (same kind, different behaviour), and run one seeded permutation test
-(numpy, no new library) to ask whether the gap is bigger than chance. Then you ask your existing Genie space a
-"why" question and check its SQL and prose against the reference. Two checked exercises follow the 1b style.
-
-The notebook states plainly that nothing in it proves causation. It writes nothing, deploys nothing and makes no AI call.
-The optional Genie step is learner-triggered and needs approval. Confounder adjustment and Simpson's paradox are deferred.
+on fairness to turned-away attendees complete it. Run it after `05_predictive_ml`.
 
 ## Workspace boundaries
 

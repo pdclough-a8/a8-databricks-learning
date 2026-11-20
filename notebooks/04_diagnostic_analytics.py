@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # A8 | 1c. Diagnose a difference: why did it happen?
+# MAGIC # A8 | 4. Diagnose a difference: why did it happen?
 # MAGIC **Where this sits:** diagnostic analytics, why a difference exists. It builds on the descriptive view from
-# MAGIC Module 1b; prediction is Module 3 and prescriptive analytics is planned separately.
+# MAGIC Module 3; prediction is Module 5 and prescriptive analytics is planned separately.
 # MAGIC
 # MAGIC **Outcome:** explain why turnout or ratings differ between segments of events, say what is a pattern and
 # MAGIC what would be a cause, and test whether a gap is bigger than chance. **Nothing in this notebook proves
@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC **60–75 minutes, an estimate:** orient 5 · drill down 15 · mix versus rate 15 · chance test 15 · Genie 10 ·
 # MAGIC recap 10.
-# MAGIC **Before you start:** finish `00_setup`, `01_lakehouse_data` and `01b_descriptive_analytics` (it creates
+# MAGIC **Before you start:** finish `00_setup`, `01_lakehouse_data` and `03_descriptive_analytics` (it creates
 # MAGIC `event_metrics`). All data is synthetic, frozen at **20 November 2026**.
 # MAGIC
 # MAGIC **Free Edition first, no cloud writes:** use Serverless compute. This notebook only reads your existing
@@ -34,7 +34,7 @@
 # MAGIC All three can be true while the cause is still unknown. A lower online turnout might come from reminders,
 # MAGIC audience, timing, price, the topics chosen or something we did not record. The data cannot choose between those.
 # MAGIC
-# MAGIC **Scope and units.** Attendance is the ticket-weighted proxy from Module 1b: attended tickets over tickets
+# MAGIC **Scope and units.** Attendance is the ticket-weighted proxy from Module 3: attended tickets over tickets
 # MAGIC with a
 # MAGIC known outcome, completed events only. Ratings come from self-selected feedback. We compare **online** with
 # MAGIC **not online** (in-person and hybrid). Scheduled events have no attendance outcome yet and are excluded.
@@ -53,7 +53,7 @@ import numpy as np
 
 # COMMAND ----------
 
-# WHAT: Check: stops here if the Module 1b reporting view is missing.
+# WHAT: Check: stops here if the Module 3 reporting view is missing.
 # LOOK FOR: no output when it exists; otherwise a card naming the prerequisite notebook.
 A8.require("event_metrics")
 
@@ -67,7 +67,7 @@ event_metrics = A8.t("event_metrics")
 
 # MAGIC %md
 # MAGIC ## 2. Drill down: where is the difference?
-# MAGIC A drill-down repeats one descriptive question across the values of one dimension. The rule from Module 1b still
+# MAGIC A drill-down repeats one descriptive question across the values of one dimension. The rule from Module 3 still
 # MAGIC applies: add counts and sums, then divide, so a three-ticket event does not outweigh a three-hundred-ticket one.
 # MAGIC The helper below holds the SQL for any of four dimensions and shows event counts so you can see how thin a
 # MAGIC segment is. Small segments move a lot for no reason; a big gap in two events is a rumour, not a finding.
@@ -212,7 +212,7 @@ A8.expect(abs(split["mix_effect"] + split["rate_effect"] - split["total_gap"]) <
 # MAGIC lower commitment to free-to-leave sessions, calendar clashes or joining problems. The data records none of them.
 # MAGIC
 # MAGIC The same split works for ratings: set the weight to `feedback_count` and the total to `rating_sum`.
-# MAGIC That is exercise 1c.2. Ratings come from respondents only, so a ratings gap may reflect who answers.
+# MAGIC That is exercise 4.2. Ratings come from respondents only, so a ratings gap may reflect who answers.
 # MAGIC
 # MAGIC ## 4. Is the gap bigger than chance? A permutation test
 # MAGIC Each event is one unit: tickets within an event share a venue, topic and date, so we shuffle whole events, not
@@ -291,7 +291,7 @@ A8.expect(abs(100 * observed_gap - overall_gap) < 0.05,
 # MAGIC turnout.
 # MAGIC
 # MAGIC ## 5. Ask a "why" question of the dashboard and Genie
-# MAGIC Use the Module 1b dashboard and Genie space you already built; do not create new ones here. Both are
+# MAGIC Use the Module 3 dashboard and Genie space you already built; do not create new ones here. Both are
 # MAGIC learner-triggered. Genie questions consume quota and invoke AI, so ask only with approval, once, in a new chat.
 # MAGIC
 # MAGIC **Dashboard (no AI):** filter **Event status** to completed and **City** to Online, then to each other city
@@ -300,7 +300,7 @@ A8.expect(abs(100 * observed_gap - overall_gap) < 0.05,
 # MAGIC The dashboard has no attendance widget, so compare with the drill-down above instead of trusting a glance.
 # MAGIC
 # MAGIC **Genie:** ask the question below. Then open the generated SQL and compare it with the reference result. Genie's
-# MAGIC instructions from Module 1b say not to infer causes; instructions guide but do not guarantee behaviour.
+# MAGIC instructions from Module 3 say not to infer causes; instructions guide but do not guarantee behaviour.
 # MAGIC Things to check, as likely failure modes rather than observed results:
 # MAGIC - Does it average event-level attendance percentages instead of summing tickets first?
 # MAGIC - Does it include scheduled events, where attendance is unknown, as if they were zero?
@@ -331,27 +331,27 @@ display(spark.sql(reference_sql))
 # MAGIC If you skipped Genie, label this checkpoint blocked; the SQL work above still stands.
 # MAGIC
 # MAGIC ## 6. Your turn
-# MAGIC - **Gap 1c.1:** for each topic, the online-minus-not-online attendance gap in points. Hint: conditional sums.
-# MAGIC - **Gap 1c.2:** split the rating gap into mix and rate effects, as section 3 did for attendance.
+# MAGIC - **Gap 4.1:** for each topic, the online-minus-not-online attendance gap in points. Hint: conditional sums.
+# MAGIC - **Gap 4.2:** split the rating gap into mix and rate effects, as section 3 did for attendance.
 # MAGIC - **Transfer:** pick another segment pair (for example Leeds hybrid against the rest, or the first half of
 # MAGIC   2025 against the second), drill down, state its event counts, and say whether you would bother to test it.
 # MAGIC
 # MAGIC Exercises use this notebook's `IDENTIFIER(a8_event_metrics)`. Blank answers reveal hints; use
-# MAGIC `A8.solution("1c.2")` if stuck. A correct query plus an explanation, not just a green cell, completes the task.
+# MAGIC `A8.solution("4.2")` if stuck. A correct query plus an explanation, not just a green cell, completes the task.
 
 # COMMAND ----------
 
 # WHAT: Check: compares your per-topic attendance gap with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback; averaging per-event rates is deliberately wrong.
 answer_1c_1 = """"""
-A8.check("1c.1", answer_1c_1)
+A8.check("4.1", answer_1c_1)
 
 # COMMAND ----------
 
 # WHAT: Check: compares your rating-gap split with the supplied answer.
 # LOOK FOR: a hint or feedback; the two effects and the total must each match to two decimals.
 answer_1c_2 = """"""
-A8.check("1c.2", answer_1c_2)
+A8.check("4.2", answer_1c_2)
 
 # COMMAND ----------
 
@@ -370,4 +370,4 @@ A8.check("1c.2", answer_1c_2)
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint G2 (or marked blocked), and your own
 # MAGIC explanations. **Not covered:** adjusting for several confounders at once and Simpson's paradox are deferred.
-# MAGIC **Next:** `02_governance`, enforce who can see what. Prescriptive analytics (`01d`) follows Module 3.
+# MAGIC **Next:** `05_predictive_ml`, predict what is likely to happen.

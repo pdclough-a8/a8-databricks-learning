@@ -1,3 +1,6 @@
+> **Superseded.** Module 1d was delivered as `06_prescriptive_analytics`. Notebooks were renumbered to follow the
+> analytics levels: 1b is now 03, 1c is 04, 3 is 05 and 1d is 06. Names below are historical.
+
 # Handover: next module, prescriptive analytics
 
 Start a **fresh session** and invoke `/lean-databricks-module`. Read `AGENTS.md` and `docs/code-standard.md` first.

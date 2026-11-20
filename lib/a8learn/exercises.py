@@ -24,7 +24,7 @@ GROUP BY e.event_id ORDER BY e.event_id""",
         "explain": "A booking can contain multiple tickets. Counting bookings understates demand.",
         "ordered": True,
     },
-    "1b.1": {
+    "3.1": {
         "task": "Return city and confirmed_tickets for scheduled events from event_metrics, "
                 "grouped and ordered by city.",
         "hint": "Use IDENTIFIER(a8_event_metrics), filter event_status = 'scheduled', then SUM(confirmed_tickets).",
@@ -34,7 +34,7 @@ WHERE event_status = 'scheduled' GROUP BY city ORDER BY city""",
         "explain": "The reporting grain is one row per event. SUM counts tickets; COUNT counts events.",
         "ordered": True,
     },
-    "1b.2": {
+    "3.2": {
         "task": "Return topic, feedback_count and average_rating for completed events, ordered by topic. "
                 "Round the feedback-weighted average rating to two decimal places.",
         "hint": "SUM(rating_sum) / SUM(feedback_count), not AVG(average_rating). "
@@ -47,7 +47,7 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
                    "Missing feedback remains unknown, not a zero-star review.",
         "ordered": True,
     },
-    "1c.1": {
+    "4.1": {
         "task": "For completed events, return topic and gap_pp: online ticket-weighted attendance minus "
                 "not-online ticket-weighted attendance, in percentage points rounded to 1 decimal place, "
                 "ordered by topic.",
@@ -65,7 +65,7 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
                    "Subtracting averages of per-event rates would weight a small event like a large one.",
         "ordered": True,
     },
-    "1c.2": {
+    "4.2": {
         "task": "Split the gap in average feedback rating between online and not-online completed events "
                 "(online minus not online) into a topic-mix effect and a within-topic rate effect. Return one row: "
                 "mix_effect, rate_effect, total_gap, each rounded to 2 decimals.",
@@ -94,7 +94,7 @@ FROM paired""",
         "explain": "The two effects add up exactly to the gap. Mix says the segments contain different topics; "
                    "rate says the same topic is rated differently. Neither says why.",
     },
-    "1d.1": {
+    "6.1": {
         "task": "For scheduled events with predicted attendance, return event_id, show_probability (expected_attendees "
                 "divided by confirmed_tickets, rounded to 3 decimals) and simple_limit (capacity divided by the "
                 "unrounded show probability, truncated to a whole number of tickets), ordered by event_id.",
@@ -107,10 +107,10 @@ FROM IDENTIFIER(a8_event_forecast) WHERE expected_attendees > 0 ORDER BY event_i
                    "The simulation prices both the empty seats and the people turned away.",
         "ordered": True,
     },
-    "1d.2": {
+    "6.2": {
         "task": "Using only the latest prediction per booking, return event_id and attendance_variance: the sum of "
                 "tickets squared x probability x (1 - probability), rounded to 2 decimals, ordered by event_id.",
-        "hint": "Reuse the row_number() pattern from exercise 3.1 on IDENTIFIER(a8_attendance_predictions), "
+        "hint": "Reuse the row_number() pattern from exercise 5.1 on IDENTIFIER(a8_attendance_predictions), "
                 "keep rank 1, then sum tickets * tickets * attendance_probability * (1 - attendance_probability).",
         "solution": """WITH ranked AS (
 SELECT p.*, row_number() OVER (
@@ -138,7 +138,7 @@ GROUP BY city ORDER BY city""",
 WHERE customer_email NOT LIKE '%***%'""",
         "explain": "SQL sees the masked value, not the original email. This is not encryption or anonymisation.",
     },
-    "3.1": {
+    "5.1": {
         "task": "Using only the latest prediction per booking, return event_id and expected_attendees, "
                 "grouped and ordered by event_id.",
         "hint": "Rank rows with row_number() over (partition by booking_id order by scored_at desc), "

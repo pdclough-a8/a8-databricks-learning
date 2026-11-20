@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # A8 | 1d. Decide what to do: overbooking and catering
+# MAGIC # A8 | 6. Decide what to do: overbooking and catering
 # MAGIC **Where this sits:** prescriptive analytics, "what should we do?". It builds on the descriptive view from
-# MAGIC Module 1b, the diagnostic work in Module 1c and the attendance predictions from Module 3.
+# MAGIC Module 3, the diagnostic work in Module 4 and the attendance predictions from Module 5.
 # MAGIC
 # MAGIC **Outcome:** turn uncertain attendance predictions into two decisions, how many tickets to sell for one
 # MAGIC event (overbooking) and how many meals to order for it (catering). You simulate attendance, price the
@@ -11,7 +11,7 @@
 # MAGIC
 # MAGIC **60-75 minutes, an estimate:** orient 5 · assumptions 10 · overbooking 20 · catering 20 · exercises 10 ·
 # MAGIC recap 10.
-# MAGIC **Before you start:** finish `00_setup`, `01_lakehouse_data` and `03_predictive_ml` (it creates
+# MAGIC **Before you start:** finish `00_setup`, `01_lakehouse_data` and `05_predictive_ml` (it creates
 # MAGIC `attendance_predictions` and `event_forecast`). All data is synthetic, frozen at **20 November 2026**.
 # MAGIC
 # MAGIC **Free Edition first, no cloud writes:** use Serverless compute. This notebook only reads two existing course
@@ -19,7 +19,7 @@
 # MAGIC model request and needs no new library. Reads use compute quota. `99_pause_and_cleanup` is unchanged.
 # MAGIC
 # MAGIC ## 1. Two decisions, one source of uncertainty
-# MAGIC Module 3 gives each confirmed booking a probability that it attends. A probability is not an answer: the
+# MAGIC Module 5 gives each confirmed booking a probability that it attends. A probability is not an answer: the
 # MAGIC kitchen needs a number of meals and the box office needs a ticket limit. Both decisions have two ways to be
 # MAGIC wrong.
 # MAGIC
@@ -49,7 +49,7 @@ import pandas as pd
 
 # COMMAND ----------
 
-# WHAT: Check: stops here if the Module 3 prediction table or forecast view is missing.
+# WHAT: Check: stops here if the Module 5 prediction table or forecast view is missing.
 # LOOK FOR: no output when both exist; otherwise a card naming the prerequisite notebook.
 A8.require("attendance_predictions", "event_forecast")
 
@@ -69,8 +69,8 @@ event_forecast = A8.t("event_forecast")
 # MAGIC - **Costs are assumed teaching parameters.** The course has no payment ledger, so none of these figures is a
 # MAGIC   real price, refund or supplier cost. Change them and the answer changes; that is the point of section 5.
 # MAGIC - **Independence.** Each booking attends or not independently of every other booking, with the probability
-# MAGIC   Module 3 scored. In reality friends and colleagues attend together, which widens the real spread.
-# MAGIC - **Calibration.** We treat the model's probabilities as correct. Module 3 evidence is the limit of that trust.
+# MAGIC   Module 5 scored. In reality friends and colleagues attend together, which widens the real spread.
+# MAGIC - **Calibration.** We treat the model's probabilities as correct. Module 5 evidence is the limit of that trust.
 # MAGIC - **Overbooking what-if.** Most scheduled events are far from full. We ask: *if this event sold up to a limit,
 # MAGIC   and the extra buyers behaved like the current bookers, what limit is cheapest?* Late bookers may behave
 # MAGIC   differently.
@@ -208,7 +208,7 @@ display(pd.DataFrame(rows))
 # COMMAND ----------
 
 # WHAT: reads the latest prediction for each confirmed booking of your event.
-# LOOK FOR: one row per booking with tickets and probability; older model versions are ignored, as in exercise 3.1.
+# LOOK FOR: one row per booking with tickets and probability; older model versions are ignored, as in exercise 5.1.
 bookings_frame = spark.sql(f"""WITH ranked AS (
 SELECT p.*, row_number() OVER (
 PARTITION BY booking_id ORDER BY scored_at DESC NULLS LAST, CAST(model_version AS INT) DESC
@@ -298,14 +298,14 @@ display(pd.DataFrame(rows))
 # MAGIC - **Evidence:** which assumption (independence, calibration, late bookers, costs) would you test first, and how?
 # MAGIC
 # MAGIC ## 6. Your turn
-# MAGIC Both exercises read your own Module 3 objects and prepare inputs for these decisions in plain SQL.
-# MAGIC - **Gap 1d.1:** for each scheduled event with bookings, the show probability and the simple overbooking limit.
-# MAGIC - **Gap 1d.2:** for each scheduled event, the variance of turnout from the latest booking predictions.
+# MAGIC Both exercises read your own Module 5 objects and prepare inputs for these decisions in plain SQL.
+# MAGIC - **Gap 6.1:** for each scheduled event with bookings, the show probability and the simple overbooking limit.
+# MAGIC - **Gap 6.2:** for each scheduled event, the variance of turnout from the latest booking predictions.
 # MAGIC - **Transfer:** pick another event, change one cost, and say whether the recommendation moves by more than the
 # MAGIC   sampling noise (rerun with a different `SEED` to see that noise).
 # MAGIC
 # MAGIC Exercises use `IDENTIFIER(a8_event_forecast)` and `IDENTIFIER(a8_attendance_predictions)`. Blank answers reveal
-# MAGIC hints; use `A8.solution("1d.2")` if stuck. A correct query plus an explanation, not just a green cell,
+# MAGIC hints; use `A8.solution("6.2")` if stuck. A correct query plus an explanation, not just a green cell,
 # MAGIC completes the task.
 
 # COMMAND ----------
@@ -313,14 +313,14 @@ display(pd.DataFrame(rows))
 # WHAT: Check: compares your simple overbooking limit with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback; truncate to a whole number of tickets.
 answer_1d_1 = """"""
-A8.check("1d.1", answer_1d_1)
+A8.check("6.1", answer_1d_1)
 
 # COMMAND ----------
 
 # WHAT: Check: compares your turnout variance with the supplied answer.
 # LOOK FOR: a hint or feedback; using every score instead of the latest one per booking is deliberately wrong.
 answer_1d_2 = """"""
-A8.check("1d.2", answer_1d_2)
+A8.check("6.2", answer_1d_2)
 
 # COMMAND ----------
 
@@ -336,5 +336,6 @@ A8.check("1d.2", answer_1d_2)
 # MAGIC - Which assumption would most change your recommendation if it were wrong?
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint H1 and your own explanations.
-# MAGIC **Not covered:** reinforcement learning, solver libraries, live pricing, scheduled automation (Modules 6 and 8)
-# MAGIC and any claim about real revenue or cost. **Next:** `02_governance`, enforce who can see what.
+# MAGIC **Not covered:** reinforcement learning, solver libraries, live pricing, scheduled automation (Modules 9 and 12)
+# MAGIC and any claim about real revenue or cost.
+# MAGIC **Next:** the AI modules, GenAI first, are planned; each will say which analytics level it supports.

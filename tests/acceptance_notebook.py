@@ -54,8 +54,8 @@ A8.expect(unmasked == 0, "No unmasked customer email is visible through the gove
 # COMMAND ----------
 # WHAT: runs the original Stage 1 exercise solutions against the smoke tables.
 # LOOK FOR: a green tick for each exercise.
-# live_smoke does not run Module 1b; never claim its SQL or UI checkpoints passed here.
-for exercise_id in ("1.1", "1.2", "2.1", "2.2", "3.1"):
+# live_smoke does not run Module 3; never claim its SQL or UI checkpoints passed here.
+for exercise_id in ("1.1", "1.2", "2.1", "2.2", "5.1"):
     A8.expect(A8.check(exercise_id), f"Exercise {exercise_id} matches its independent solution.")
 
 # COMMAND ----------

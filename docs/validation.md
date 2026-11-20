@@ -9,12 +9,12 @@ Python 3.12.13 on Windows, dependencies scoped to this repository's ignored `.pa
 
 | Check | Evidence |
 |---|---|
-| Final offline suite, including Module 1b file generation | 54 passed; includes Ruff over `lib notebooks tests`. Strict MkDocs build passed |
+| Final offline suite, including Module 3 file generation | 54 passed; includes Ruff over `lib notebooks tests`. Strict MkDocs build passed |
 | `python -m unittest discover -s tests -v` | 37 passed (20 November 2026), including real split/pipeline code, latest-score SQL, lint, partial/repeated cleanup and MLflow ownership helpers |
 | `python -m ruff check lib notebooks tests data` | Passed (20 November 2026); also executed by the unit suite |
 | `python -m mkdocs build --strict` | Passed after the all-module code-standard rewrite (20 November 2026) |
 | Data regeneration | All three generated CSVs byte-identical to supplied data; 60 / 4,204 / 395 rows |
-| Independent SQL checks | Exercises 1.1 and 1.2 compared with Python aggregations; exercise 3.1 proved that only the latest prediction per booking is summed |
+| Independent SQL checks | Exercises 1.1 and 1.2 compared with Python aggregations; exercise 5.1 proved that only the latest prediction per booking is summed |
 | Persistence | Save, construct a fresh Course, reload without widgets |
 | Lifecycle safety | Wrong confirmation, other owner, absent endpoint, preflight collision and endpoint-only scope |
 
@@ -52,7 +52,7 @@ acceptance → cleanup → cleanup again. Every task succeeded in all three.
 
 | Run | What it covered |
 |---|---|
-| 1 | Pushed commit `0ebadd0`: rewritten Module 3, new `claim_experiment`/`claim_model` helpers and folder-lookup fallback |
+| 1 | Pushed commit `0ebadd0`: rewritten Module 5, new `claim_experiment`/`claim_model` helpers and folder-lookup fallback |
 | 2 | Local rewrite of Modules 0–2 and cleanup; also reused the soft-deleted smoke3 experiment, exercising the restore path |
 | 3 | Commit `e4c2aac`: endpoint name passed in the serving config (S15); serving created, queried and deleted |
 
@@ -86,7 +86,7 @@ Not yet validated:
 | A learner editing exercise answers interactively | Not tested; checker verified with supplied solutions and offline wrong-answer cases |
 | Ownership conflict with a second real user | Not tested; offline fakes only |
 
-## Module 1b: descriptive AI/BI dashboard and Genie
+## Module 3: descriptive AI/BI dashboard and Genie
 
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
 
@@ -96,7 +96,7 @@ Not yet validated:
 | Generated dashboard file | JSON round-trip, learner-view SQL, one dataset, two counters, two bars, one table, city/status/date field bindings, default-no, existing-file preservation and user-folder path checked offline; SDK metadata read mocked |
 | Dashboard filter states | All, scheduled, scheduled Leeds and scheduled Leeds in December 2026 reference SQL match independent counts and ticket sums; each state is non-empty |
 | Genie SQL | Three example and three held-out reference queries match independent results; example and held-out sets are disjoint |
-| Exercises 1b.1, 1b.2 | Solutions pass; a row count and an unweighted average of averages are rejected |
+| Exercises 3.1, 3.2 | Solutions pass; a row count and an unweighted average of averages are rejected |
 | Edge cases | Empty event, cancelled-only, unknown attendance, zero capacity and several feedback rows per event give no double-counting and NULL, not zero, where evidence is absent |
 | Safety | Default-no gate writes nothing and stops at a named missing-view check; the gate has its own cell; ownership failure stops before CREATE; rerun/resume does not change sources; only one CREATE OR REPLACE VIEW; no personal fields in the view or dashboard dataset |
 | Cleanup | `event_metrics` is dropped before its source tables; generated files, dashboards and Genie spaces are explicitly out of scope of the cleanup notebook |
@@ -105,12 +105,12 @@ SQLite checks relational logic only. Not validated: Spark SQL/Unity Catalog exec
 rendered dashboard, live filter behaviour, notebook-written file recognition as FILE versus DASHBOARD, UI import,
 Genie availability on Free Edition, Genie answers, benchmarks, UI labels and manual UI cleanup.
 The widget-display fix is covered by offline cell-order checks but has not been re-observed live.
-`live_smoke.py` does not run Module 1b, and its acceptance notebook now checks only the
+`live_smoke.py` does not run Module 3, and its acceptance notebook now checks only the
 original five exercises, so it makes no claim about this module.
 
 The overview now maps analytics levels to modules and labels diagnostic/prescriptive content as planned.
 Notebook headers identify their place in that map. This framing is documentation, not evidence of new capability.
-Dashboard API deployment and programmatic Genie creation are deferred to Module 8; Module 7 is conversation-only.
+Dashboard API deployment and programmatic Genie creation are deferred to Module 12; Module 11 is conversation-only.
 
 No GenAI, RAG, MCP or app validation is claimed: these are Stage 2 modules, not supplied in this release.
 
@@ -137,40 +137,40 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
-## Module 1d: prescriptive analytics
+## Module 6: prescriptive analytics
 
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
 
 | Check | Evidence |
 |---|---|
-| `tests/test_prescriptive.py` | 14 tests: the notebook's Python cells execute against a synthetic `attendance_predictions` table (two model versions per booking) and an `event_forecast` table built by independent Python, not by Module 3's model or SQL |
+| `tests/test_prescriptive.py` | 14 tests: the notebook's Python cells execute against a synthetic `attendance_predictions` table (two model versions per booking) and an `event_forecast` table built by independent Python, not by Module 5's model or SQL |
 | Overbooking | The simulated best ticket limit is within 1% of the brute-force minimum of the exact binomial cost, and within 8 tickets of its argmin (the cost curve is flat near the minimum); limit rises with the cost of turning people away and falls as show probability rises |
 | Turnout simulation | Seeded and repeatable; matches exact enumeration of all 16 outcomes of a four-booking case within 0.01 per outcome |
 | Catering | The chosen order is within 1% of the exact-distribution minimum (dynamic programming) and within 2 meals of its argmin; exact mean and variance match sum(t x p) and sum(t^2 x p x (1 - p)) |
-| Exercises 1d.1, 1d.2 | Solutions equal independent Python results for every scheduled event; rounding instead of truncating, and ignoring the latest-score rule, are rejected, as are blank answers |
+| Exercises 6.1, 6.2 | Solutions equal independent Python results for every scheduled event; rounding instead of truncating, and ignoring the latest-score rule, are rejected, as are blank answers |
 | Safety | No CREATE/DROP/INSERT/UPDATE/DELETE, no gate, guard, file write, AI call or MLflow; imports only math, numpy and pandas; missing prerequisites stop before any query; completed, unknown and injection-style event ids are rejected; the event id is a query parameter |
-| Navigation and branding | Index, START_HERE and the Module 1b/1c next-step lines point to 1d; the supplied logo file is a PNG referenced by mkdocs, README, START_HERE and the overview |
+| Navigation and branding | Index, START_HERE and the Module 3/4 next-step lines point to 6; the supplied logo file is a PNG referenced by mkdocs, README, START_HERE and the overview |
 
-Illustration only, from the synthetic test predictions (not Module 3's real model): for E150 the simulated cheapest limit was
+Illustration only, from the synthetic test predictions (not Module 5's real model): for E150 the simulated cheapest limit was
 201 tickets against a simple rule of 208, and the cheapest order was 44 meals for 59 tickets and 42.6 expected attendees.
 Real learner results will differ with their own model version and costs.
 
 Not validated: Spark SQL execution (named `:event_id` parameters, `row_number()` with `NULLS LAST`, `toPandas()` on
 serverless), the notebook rendering in Databricks, and the logo and white header rendering in the built site (checked only that
-the strict build passes, not by eye in a browser). Probabilities from Module 3 are treated as calibrated; independence between
+the strict build passes, not by eye in a browser). Probabilities from Module 5 are treated as calibrated; independence between
 bookings is an assumption; costs are assumed teaching parameters with no payment ledger behind them.
 
-## Module 1c: diagnostic analytics
+## Module 4: diagnostic analytics
 
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
 
 | Check | Evidence |
 |---|---|
-| `tests/test_diagnostic.py` | 11 tests: the notebook's Python cells execute against an `event_metrics` table built from the shipped CSVs by independent Python, not by 01b's SQL |
+| `tests/test_diagnostic.py` | 11 tests: the notebook's Python cells execute against an `event_metrics` table built from the shipped CSVs by independent Python, not by Module 3's SQL |
 | Drill-downs | City, topic, format and month results match an independent aggregation (events, tickets, attendance %, responses, rating) |
 | Mix versus rate | Attendance and rating splits match an independent two-segment calculation; effects add to the overall gap. On the shipped data: attendance gap -17.7 points = mix +1.1 and rate -18.9; rating gap -0.11 = mix -0.01 and rate -0.10 |
 | Permutation test | Observed gap equals the SQL gap; seeded, repeatable; p agrees with a separate stdlib shuffle (different RNG, 20,000 runs) within 0.01; a six-event case matches exact enumeration of all 20 labelings within 0.02. Shipped data: p = 0.0003 with 10,000 shuffles, the floor for that count |
-| Exercises 1c.1, 1c.2 | Solutions pass; unweighted averages of event-level rates/ratings and blank answers are rejected |
+| Exercises 4.1, 4.2 | Solutions pass; unweighted averages of event-level rates/ratings and blank answers are rejected |
 | Safety | No CREATE/DROP/INSERT/UPDATE/DELETE, no gate, no file write; imports only numpy; missing `event_metrics` stops before any query; unknown drill-down dimensions are rejected |
 
 SQLite checks relational logic only. Not validated: Spark SQL execution (notably `substr` on a DATE column for the month cut),

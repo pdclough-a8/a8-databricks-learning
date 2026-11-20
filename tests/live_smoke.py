@@ -48,7 +48,7 @@ def main():
         ("setup", "00_setup", {"catalog": "workspace", "schema": "default", "tag": args.tag, "run_write_probe": "yes"}),
         ("data", "01_lakehouse_data", {}),
         ("governance", "02_governance", {"read_system_evidence": "yes"}),
-        ("ml", "03_predictive_ml", {"deploy_serving": "yes"}),
+        ("ml", "05_predictive_ml", {"deploy_serving": "yes"}),
     ]:
         tasks.append(SubmitTask(
             task_key=key, notebook_task=NotebookTask(
@@ -60,7 +60,7 @@ def main():
     tasks.append(SubmitTask(
         task_key="ml_again",
         notebook_task=NotebookTask(
-            notebook_path=f"{remote}/notebooks/03_predictive_ml",
+            notebook_path=f"{remote}/notebooks/05_predictive_ml",
             base_parameters={**params, "deploy_serving": "no"},
         ),
         depends_on=[TaskDependency(task_key="ml")], timeout_seconds=2400,

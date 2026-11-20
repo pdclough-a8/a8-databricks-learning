@@ -171,7 +171,7 @@ class DataTests(unittest.TestCase):
             ("B1", "E1", 2, 0.75, "2", "2026-11-20 11:00:00"),
             ("B2", "E1", 1, 0.50, "2", "2026-11-20 11:00:00"),
         ])
-        query = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", EXERCISES["3.1"]["solution"])
+        query = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", EXERCISES["5.1"]["solution"])
         self.assertEqual(db.execute(query).fetchall(), [("E1", 2.0)])
 
 
@@ -332,9 +332,9 @@ class NotebookTests(unittest.TestCase):
     def test_sources_and_run_targets(self):
         paths = list((ROOT / "notebooks").glob("*.py"))
         self.assertEqual({p.stem for p in paths}, {
-            "00_setup", "01_lakehouse_data", "01b_descriptive_analytics", "01c_diagnostic_analytics",
-            "01d_prescriptive_analytics", "02_governance",
-            "03_predictive_ml", "99_pause_and_cleanup", "_config",
+            "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
+            "06_prescriptive_analytics", "02_governance",
+            "05_predictive_ml", "99_pause_and_cleanup", "_config",
         })
         for path in paths:
             source = path.read_text(encoding="utf-8")
@@ -346,7 +346,7 @@ class NotebookTests(unittest.TestCase):
             self.assertTrue(source.startswith("# Databricks notebook source\n"))
             for target in re.findall(r"^# MAGIC %run (.+)$", source, re.M):
                 self.assertTrue((path.parent / (target + ".py")).is_file())
-        ml = (ROOT / "notebooks/03_predictive_ml.py").read_text()
+        ml = (ROOT / "notebooks/05_predictive_ml.py").read_text()
         self.assertIn('mlflow.pyfunc.spark_udf(', ml)
         self.assertIn('result_type="array<double>"', ml)
         self.assertNotIn(".cache()", ml)  # PERSIST TABLE is unsupported on serverless compute
@@ -355,7 +355,7 @@ class NotebookTests(unittest.TestCase):
 
     def test_serving_config_builds_with_installed_sdk(self):
         from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
-        ml = (ROOT / "notebooks/03_predictive_ml.py").read_text(encoding="utf-8")
+        ml = (ROOT / "notebooks/05_predictive_ml.py").read_text(encoding="utf-8")
         self.assertIn("EndpointCoreConfigInput(name=A8.endpoint_name,", ml)
         config = EndpointCoreConfigInput(name="a8-x-attendance", served_entities=[
             ServedEntityInput(entity_name="c.s.m", entity_version="1",

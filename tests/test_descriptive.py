@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "lib"))
 from a8learn import Config, Course, OBJECTS
 from a8learn.exercises import EXERCISES
 
-NOTEBOOK = ROOT / "notebooks/01b_descriptive_analytics.py"
+NOTEBOOK = ROOT / "notebooks/03_descriptive_analytics.py"
 SOURCE = NOTEBOOK.read_text(encoding="utf-8")
 INTEGER_FIELDS = {"start_hour", "capacity", "price_gbp", "tickets", "rating"}
 FIELDS = [
@@ -286,9 +286,9 @@ class DescriptiveTests(unittest.TestCase):
     def test_exercises_correct_but_row_counts_and_unweighted_averages_fail(self):
         self.run_lesson()
         for exercise, wrong in [
-            ("1b.1", """SELECT city, count(*) FROM event_metrics
+            ("3.1", """SELECT city, count(*) FROM event_metrics
 WHERE event_status = 'scheduled' GROUP BY city ORDER BY city"""),
-            ("1b.2", """SELECT topic, sum(feedback_count), round(avg(average_rating), 2) FROM event_metrics
+            ("3.2", """SELECT topic, sum(feedback_count), round(avg(average_rating), 2) FROM event_metrics
 WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
         ]:
             with self.subTest(exercise=exercise), contextlib.redirect_stdout(io.StringIO()):
@@ -356,7 +356,7 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
         self.assertTrue(writes[0].startswith(f"CREATE OR REPLACE VIEW {self.course.t('event_metrics')}"))
         self.assertNotIn("A8.next_step(", SOURCE)  # UI completion requires observed evidence, not a green cell.
         self.assertIn("does **not** delete dashboards, Genie spaces", SOURCE)
-        self.assertEqual(OBJECTS["event_metrics"], ("view", "01b_descriptive_analytics"))
+        self.assertEqual(OBJECTS["event_metrics"], ("view", "03_descriptive_analytics"))
         self.assertIn("B1–B3", SOURCE)
         self.assertIn("View not created", SOURCE)
 

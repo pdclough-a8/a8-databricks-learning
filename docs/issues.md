@@ -21,14 +21,15 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S15 | Fixed | Interactive serving cell failed: the session's Databricks SDK requires `name` in `EndpointCoreConfigInput` |
 | S16 | Fixed, live verified | Notebook cells mixed several operations, used a private SQL placeholder dialect and hid checks in bare assertions |
 | S17 | Fixed, live verified | Serverless rejected `DataFrame.cache()` as unsupported `PERSIST TABLE` during Spark scoring |
-| S18 | Implemented, not live validated | Module 1b descriptive AI/BI dashboard and Genie path; UI steps follow documentation, not a workspace walkthrough |
+| S18 | Implemented, not live validated | Module 3 descriptive AI/BI dashboard and Genie path; UI steps follow documentation, not a workspace walkthrough |
 | S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
-| S21 | Fixed, not live verified | Module 1b's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 3 |
+| S21 | Fixed, not live verified | Module 3's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 5 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
-| S23 | Implemented, not live validated | Module 1c diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
-| S24 | Implemented, not live validated | Module 1d prescriptive analytics: seeded Monte Carlo and expected-cost search for overbooking and catering over Module 3 predictions; read-only, offline only |
+| S23 | Implemented, not live validated | Module 4 diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
+| S26 | Implemented | Notebook order did not match the analytics levels: 1b, 1c and 1d suffixes were out of sequence. Renumbered to 03 descriptive, 04 diagnostic, 05 predictive, 06 prescriptive; later modules are 7 to 12. Exercise IDs follow (3.x, 4.x, 5.1, 6.x); learner object keys and tables are unchanged |
+| S24 | Implemented, not live validated | Module 6 prescriptive analytics: seeded Monte Carlo and expected-cost search for overbooking and catering over Module 5 predictions; read-only, offline only |
 | S25 | Open | Analytics8 logo supplied by the course owner and added to the docs site, README and START_HERE; the file is not confirmed as the approved master, and notebooks keep text branding because Git-folder image rendering is unverified |
-| S22 | Implemented, not live validated | Module 1b now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
+| S22 | Implemented, not live validated | Module 3 now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 
 ## S01: persistent settings
 
@@ -90,7 +91,7 @@ dashboard file from `dashboards/event_snapshot.lvdash.template.json`. Only the l
 inserted. The file is saved beside their settings, never intentionally replaced, and its workspace object type
 is read using native SDK authentication. If stored as FILE rather than DASHBOARD, use the documented UI import.
 No API creation, publishing, sharing, scheduling or AI requests are added. API dashboard deployment and Genie
-creation belong to planned Module 8; Module 7 uses the conversation API with an existing Genie space.
+creation belong to planned Module 12; Module 11 uses the conversation API with an existing Genie space.
 **Checks:** offline execution covers the generated SQL, dataset/widget field bindings, default-no, existing-file
 preservation and user-folder path. These checks do not prove UI rendering, filter interactivity or import.
 **Remaining uncertainty:** whether a notebook-written file is recognised as DASHBOARD, exact UI import behaviour
@@ -101,7 +102,7 @@ Never include credentials, private logs or personal workspace paths.
 
 ## S12: vanished working folder
 
-**Symptom:** in an interactive Git folder, after resolving a merge and pulling, Module 3's import cell failed
+**Symptom:** in an interactive Git folder, after resolving a merge and pulling, Module 5's import cell failed
 with `FileNotFoundError: [Errno 2]` inside `pkgutil.get_importer`, with no filename.
 **Cause:** the `''` entry on `sys.path` means the working folder; the merge had replaced that folder, so
 `os.getcwd()` failed while an import scanned the path. Resetting the environment cleared it.
@@ -111,7 +112,7 @@ into the folder by path. **Limit:** the stale-folder case has not been reproduce
 ## S13: explaining code to learners
 
 Learner feedback: dense cells mixed course safety checks with the Databricks concepts and had no explanation.
-Module 3 now starts every code cell with WHAT/LOOK FOR comments, comments the key lines, adds predict prompts,
+Module 5 now starts every code cell with WHAT/LOOK FOR comments, comments the key lines, adds predict prompts,
 explains the expected pip warning, and moves experiment/model ownership checks into tested helpers
 (`claim_experiment`, `mark_experiment`, `claim_model`). Modules 0–2 and cleanup now follow the same pattern,
 and Module 1 introduces the `A8` helpers in a table before they are used.
@@ -141,7 +142,7 @@ table/view writes and display. Other cells used `{events}` placeholders and bare
 patterns to copy into production notebooks.
 **Fix:** `docs/code-standard.md` now defines one idea per cell, native Spark/Databricks operations,
 `IDENTIFIER(a8_*)` in `%sql` and exercises, real validated names in Python, imports at module top, and separate
-`A8.expect` check cells. Module 3 scores with `mlflow.pyfunc.spark_udf`, appends `model_version`/`scored_at`,
+`A8.expect` check cells. Module 5 scores with `mlflow.pyfunc.spark_udf`, appends `model_version`/`scored_at`,
 and selects the latest score per booking in the forecast. Ruff runs in the offline unit tests.
 **Evidence:** 37 offline tests cover exercise SQL, temporal splitting, real model probabilities and lint. Live run
 `208516018796520` passed every notebook, two training/scoring batches, latest-per-booking acceptance, serving and
@@ -182,6 +183,11 @@ underscores, matching the serving endpoint tags. Delta table properties keep `a8
 The earlier smoke experiment was soft-deleted with old-style tags; the notebook correctly refuses to adopt it,
 so the retest uses a new tag rather than weakening the ownership check.
 
+## S26: module renumbering
+
+**Change:** `03_descriptive_analytics`, `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics` replace the old 1b, 1c, 3 and 1d names, and exercise IDs became 3.1 to 6.2. Evidence entries below this point may still say 1b, 1c, 1d or Module 3 for the old numbers where they record history; the table in `docs/index.md` is the current map.
+**Limits:** learners who already cloned the old names will see renamed notebooks after a pull, and any notes or exercise answers that cite old IDs need updating. Saved settings, tags and table names do not use notebook numbers, so existing learner objects are unaffected. Not live validated.
+
 ## S25: logo and branding
 
 **Scope:** `docs/assets/a8-logo.png` (798 x 286 px) is used unaltered. The docs header changed from charcoal to white because the logo is dark; the orange rule stays.
@@ -189,7 +195,7 @@ so the retest uses a new tag rather than weakening the ownership check.
 
 ## S24: prescriptive analytics module
 
-**Scope:** Module 1d reads `attendance_predictions` and `event_forecast` only. It writes nothing, makes no AI call and adds no library.
+**Scope:** Module 6 reads `attendance_predictions` and `event_forecast` only. It writes nothing, makes no AI call and adds no library.
 **Checks:** `tests/test_prescriptive.py`, offline only; Spark/serverless execution is not live validated.
 **Limits:** costs are assumed teaching parameters, not real prices; bookings are treated as independent and the model's probabilities as calibrated; the overbooking
 what-if assumes later buyers behave like current bookers; catering covers existing bookings only. A recommendation is a decision under these assumptions.
@@ -197,7 +203,7 @@ Fairness to turned-away attendees needs human judgement (checkpoint H1). The pre
 
 ## S23: diagnostic analytics module
 
-**Scope:** Module 1c reads `event_metrics` only. It writes nothing and makes no AI call. The optional Genie "why" question is learner-triggered.
+**Scope:** Module 4 reads `event_metrics` only. It writes nothing and makes no AI call. The optional Genie "why" question is learner-triggered.
 **Checks:** `tests/test_diagnostic.py`, offline only; Spark/serverless execution and Genie behaviour are not live validated.
 **Limits:** the online gap is a pattern, not a proven cause. In this data online is both a city and a format, so they
 cannot be separated, and only 48 completed events (15 online) support the comparison. Confounder adjustment and

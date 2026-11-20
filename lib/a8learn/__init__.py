@@ -26,14 +26,14 @@ OBJECTS = {
     "bookings": ("table", "01_lakehouse_data"),
     "feedback": ("table", "01_lakehouse_data"),
     "event_availability": ("view", "01_lakehouse_data"),
-    "event_metrics": ("view", "01b_descriptive_analytics"),
+    "event_metrics": ("view", "03_descriptive_analytics"),
     "bookings_governed": ("table", "02_governance"),
     "mask_email": ("function", "02_governance"),
     "city_filter": ("function", "02_governance"),
-    "booking_features": ("table", "03_predictive_ml"),
-    "attendance_model": ("model", "03_predictive_ml"),
-    "attendance_predictions": ("table", "03_predictive_ml"),
-    "event_forecast": ("view", "03_predictive_ml"),
+    "booking_features": ("table", "05_predictive_ml"),
+    "attendance_model": ("model", "05_predictive_ml"),
+    "attendance_predictions": ("table", "05_predictive_ml"),
+    "event_forecast": ("view", "05_predictive_ml"),
 }
 
 
@@ -154,7 +154,7 @@ class Course:
 
     @property
     def dashboard_path(self) -> Path:
-        """Module 1b's generated dashboard file, beside the learner's saved settings."""
+        """Module 3's generated dashboard file, beside the learner's saved settings."""
         return config_path(self.cfg.user).parent / f"A8 {self.cfg.tag} event snapshot.lvdash.json"
 
     @property

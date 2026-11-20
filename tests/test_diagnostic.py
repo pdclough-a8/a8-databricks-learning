@@ -1,7 +1,7 @@
-"""Offline execution of Module 1c's real SQL and permutation test, checked against independent Python.
+"""Offline execution of Module 4's real SQL and permutation test, checked against independent Python.
 
 SQLite exercises the relational logic only, not Spark/Unity Catalog or the Genie/dashboard UI.
-The event_metrics table is built from the shipped CSVs by a separate Python aggregation, not by 01b's SQL.
+The event_metrics table is built from the shipped CSVs by a separate Python aggregation, not by Module 3's SQL.
 """
 import ast
 import contextlib
@@ -23,7 +23,7 @@ from a8learn import Config, Course
 from a8learn.exercises import EXERCISES
 from test_descriptive import FIELDS, OfflineSpark, Result, independent_metrics, read_fixture
 
-NOTEBOOK = ROOT / "notebooks/01c_diagnostic_analytics.py"
+NOTEBOOK = ROOT / "notebooks/04_diagnostic_analytics.py"
 SOURCE = NOTEBOOK.read_text(encoding="utf-8")
 
 
@@ -191,10 +191,10 @@ class DiagnosticTests(unittest.TestCase):
     def test_exercise_solutions_pass_and_naive_answers_fail(self):
         self.run_lesson()
         wrong = {
-            "1c.1": """SELECT topic, round(100.0 * (avg(CASE WHEN format = 'online' THEN attendance_rate END)
+            "4.1": """SELECT topic, round(100.0 * (avg(CASE WHEN format = 'online' THEN attendance_rate END)
 - avg(CASE WHEN format <> 'online' THEN attendance_rate END)), 1) AS gap_pp
 FROM event_metrics WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
-            "1c.2": """SELECT 0.0 AS mix_effect, round(avg(CASE WHEN format = 'online' THEN average_rating END)
+            "4.2": """SELECT 0.0 AS mix_effect, round(avg(CASE WHEN format = 'online' THEN average_rating END)
 - avg(CASE WHEN format <> 'online' THEN average_rating END), 2) AS rate_effect, 0.0 AS total_gap
 FROM event_metrics WHERE event_status = 'completed'""",
         }
@@ -220,12 +220,12 @@ FROM event_metrics WHERE event_status = 'completed'""",
         self.assertIn("**Where this sits:**", SOURCE)
 
     def test_course_navigation_points_to_module_1c(self):
-        descriptive = (ROOT / "notebooks/01b_descriptive_analytics.py").read_text(encoding="utf-8")
-        self.assertIn("01c_diagnostic_analytics", descriptive)
+        descriptive = (ROOT / "notebooks/03_descriptive_analytics.py").read_text(encoding="utf-8")
+        self.assertIn("04_diagnostic_analytics", descriptive)
         index = (ROOT / "docs/index.md").read_text(encoding="utf-8")
-        self.assertIn("| 1c. Diagnostic analytics |", index)
-        self.assertIn("01c_diagnostic_analytics", index)
-        self.assertIn("01c_diagnostic_analytics", (ROOT / "START_HERE.md").read_text(encoding="utf-8"))
+        self.assertIn("| 4. Diagnostic analytics |", index)
+        self.assertIn("04_diagnostic_analytics", index)
+        self.assertIn("04_diagnostic_analytics", (ROOT / "START_HERE.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

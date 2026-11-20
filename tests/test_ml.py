@@ -27,7 +27,7 @@ class PredictiveTests(unittest.TestCase):
         joined["weekday"] = (joined.event_date.dt.dayofweek + 1) % 7 + 1  # Spark: Sunday=1
         joined["lead_days"] = (joined.event_date - joined.booked_date).dt.days
         joined["label"] = joined.attended.map({True: 1, False: 0})
-        source = (ROOT / "notebooks/03_predictive_ml.py").read_text()
+        source = (ROOT / "notebooks/05_predictive_ml.py").read_text()
         cells = source.split("# COMMAND ----------")
         split_cell = next(c for c in cells if "\nframe = spark.table(" in c)
         baseline_cell = next(c for c in cells if "\nbaseline = DummyClassifier(" in c)

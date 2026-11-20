@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 1. Files to trusted lakehouse data
-# MAGIC **Where this sits:** the data foundation for descriptive analytics in Module 1b and prediction in Module 3.
+# MAGIC **Where this sits:** the data foundation for descriptive analytics in Module 3 and prediction in Module 5.
 # MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - the raw CSV files in a governed **volume**
@@ -370,7 +370,8 @@ A8.links(("Events: schema, sample and history", "table", "events"),
 # MAGIC - Why does a view show new bookings without being recreated?
 # MAGIC - What would go wrong if `attended IS NULL` were treated as `false` when training a model?
 # MAGIC
-# MAGIC **Next:** describe the business with a dashboard and check Genie answers, then enforce data access in Module 2.
+# MAGIC **Next:** `02_governance`, enforce who can see what. The analytics ladder then starts at
+# MAGIC `03_descriptive_analytics`.
 
 # COMMAND ----------
 
@@ -383,4 +384,4 @@ print(f"SELECT * FROM {event_availability} ORDER BY available DESC")
 # LOOK FOR: the outcomes you can explain and your next lesson.
 A8.next_step(["Governed CSV volume", "Three typed Delta tables", "Availability view",
               "SQL/PySpark queries, a time-travel read and UI lineage inspection"],
-             "01b_descriptive_analytics", "Describe the business with AI/BI and Genie")
+             "03_descriptive_analytics", "Describe the business with AI/BI and Genie")
