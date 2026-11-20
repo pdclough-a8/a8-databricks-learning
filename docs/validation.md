@@ -45,13 +45,14 @@ MLflow's normal retention; they hold no endpoint or data objects.
 
 ### Explanatory rewrite, 20 November 2026
 
-Two further full runs on a8-free with tag `smoke3`, each setup → data → governance → ML with serving →
-acceptance → cleanup → cleanup again. Every task succeeded in both.
+Three further full runs on a8-free with tag `smoke3`, each setup → data → governance → ML with serving →
+acceptance → cleanup → cleanup again. Every task succeeded in all three.
 
 | Run | What it covered |
 |---|---|
 | 1 | Pushed commit `0ebadd0`: rewritten Module 3, new `claim_experiment`/`claim_model` helpers and folder-lookup fallback |
 | 2 | Local rewrite of Modules 0–2 and cleanup; also reused the soft-deleted smoke3 experiment, exercising the restore path |
+| 3 | Commit `e4c2aac`: endpoint name passed in the serving config (S15); serving created, queried and deleted |
 
 Afterwards no `a8_smoke3*` tables, views, functions, volumes, models or `a8-smoke3*` endpoints remained;
 test folders and test settings were deleted. The vanished-working-folder fallback (S12) was not triggered by
