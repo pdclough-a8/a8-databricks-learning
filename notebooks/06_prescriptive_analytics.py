@@ -338,4 +338,4 @@ A8.check("6.2", answer_1d_2)
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint H1 and your own explanations.
 # MAGIC **Not covered:** reinforcement learning, solver libraries, live pricing, scheduled automation (Modules 9 and 12)
 # MAGIC and any claim about real revenue or cost.
-# MAGIC **Next:** the AI modules, GenAI first, are planned; each will say which analytics level it supports.
+# MAGIC **Next:** Module 7 (`07_genai`) reads feedback text with a foundation model; each AI module names its level.

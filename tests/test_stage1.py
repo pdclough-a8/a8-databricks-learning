@@ -333,7 +333,7 @@ class NotebookTests(unittest.TestCase):
         paths = list((ROOT / "notebooks").glob("*.py"))
         self.assertEqual({p.stem for p in paths}, {
             "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
-            "06_prescriptive_analytics", "02_governance",
+            "06_prescriptive_analytics", "02_governance", "07_genai",
             "05_predictive_ml", "99_pause_and_cleanup", "_config",
         })
         for path in paths:

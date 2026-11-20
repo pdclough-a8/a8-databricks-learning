@@ -137,6 +137,21 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 7: GenAI
+
+**Supplied, offline checked, not live validated.** No workspace, model or AI Function was contacted.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_genai.py` | The notebook's Python cells run against a synthetic `feedback` table with a deterministic stand-in for AI Functions |
+| Gates | Default run makes zero AI statements and no writes; approvals are consumed after one use; a missing note, or a missing `databricks-` endpoint for `ai_query`, is refused before any request |
+| Input | Five-comment, ordered, parameterised sample; comment text never appears in SQL text |
+| Exercises 7.1, 7.2 | Solutions equal independent Python; naive (NULL-dropping) and blank answers fail |
+
+Not validated: availability, pricing or quota on Free Edition or paid workspaces, the Playground UI, the `ai_classify` 2.1
+VARIANT shape, parameter markers inside AI Function arguments, endpoint names, output quality, and notebook rendering.
+Synthetic comments repeat a few templates, so results look cleaner than real feedback.
+
 ## Module 6: prescriptive analytics
 
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.

@@ -41,7 +41,7 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 4. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
 | 5. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
 | 6. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 5 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 5); offline checked, no live validation |
-| 7. GenAI | Playground, pay-per-token endpoints, `ai_query`, AI Functions for feedback, prompts and tracing | Planned next |
+| 7. GenAI | Playground, `ai_query`, AI Functions for feedback comments (descriptive, five synthetic comments), human review; prompt registry and tracing deferred | Supplied; offline checked, no live validation; model requests opt-in |
 | 8. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
 | 9. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
 | 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
@@ -55,7 +55,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
@@ -100,6 +100,14 @@ expected-cost search finds the cheapest choice, and sensitivity tables show how 
 teaching parameters**, bookings are treated as independent, and the model's probabilities are trusted as given.
 Nothing is written, no library is added and no model is called. Two SQL exercises and a human-judgement checkpoint
 on fairness to turned-away attendees complete it. Run it after `05_predictive_ml`.
+
+## Module 7: GenAI reads feedback text, descriptive not predictive
+
+Interpret five synthetic feedback comments with `ai_analyze_sentiment` and `ai_classify` (version 2.1), then optionally
+send one explicit `ai_query` prompt to an endpoint you name. Compare sentiment with ratings as a sanity check, not accuracy.
+A one-use, default-no gate guards each model request, every request needs a recorded scope and cost/quota note, and nothing
+is written or persisted. Free Edition limits, region, pricing and model availability vary and are not verified live.
+Two model-free SQL exercises work with every gate closed. RAG, agents and tracing are later modules.
 
 ## Workspace boundaries
 

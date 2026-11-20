@@ -9,6 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
+   `07_genai` is optional and makes no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -19,6 +20,10 @@ All data is synthetic. Never substitute customer data.
 **Stage 1 implements Modules 0–2 and the analytics ladder in Modules 3–6.** The notebooks follow the order of
 analytical complexity: descriptive (3), diagnostic (4), predictive (5), then prescriptive (6).
 Modules 3, 4 and 6 are supplied and offline checked, **not live validated**.
+
+Module **7** (GenAI) interprets five synthetic feedback comments. It is supplied and offline checked, **not live
+validated**. Each model request needs separate approval and may use quota or incur charges; the SQL-only exercises
+need none. Nothing is written.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

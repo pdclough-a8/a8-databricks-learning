@@ -28,6 +28,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S23 | Implemented, not live validated | Module 4 diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
 | S26 | Implemented | Notebook order did not match the analytics levels: 1b, 1c and 1d suffixes were out of sequence. Renumbered to 03 descriptive, 04 diagnostic, 05 predictive, 06 prescriptive; later modules are 7 to 12. Exercise IDs follow (3.x, 4.x, 5.1, 6.x); learner object keys and tables are unchanged |
 | S24 | Implemented, not live validated | Module 6 prescriptive analytics: seeded Monte Carlo and expected-cost search for overbooking and catering over Module 5 predictions; read-only, offline only |
+| S27 | Implemented, not live validated | Module 7 GenAI: bounded sentiment/classification and one optional `ai_query`, gated, in memory; offline only |
 | S25 | Open | Analytics8 logo supplied by the course owner and added to the docs site, README and START_HERE; the file is not confirmed as the approved master, and notebooks keep text branding because Git-folder image rendering is unverified |
 | S22 | Implemented, not live validated | Module 3 now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 
@@ -192,6 +193,13 @@ so the retest uses a new tag rather than weakening the ownership check.
 
 **Scope:** `docs/assets/a8-logo.png` (798 x 286 px) is used unaltered. The docs header changed from charcoal to white because the logo is dark; the orange rule stays.
 **Limits:** brand-owner approval, clear-space and minimum-size rules are not confirmed. Colour tokens remain provisional. The notebooks do not embed the logo.
+
+## S27: GenAI module
+
+**Scope:** `07_genai` reads five synthetic comments from `feedback`; writes and persists nothing; no RAG, agent, endpoint creation or library.
+**Checks:** `tests/test_genai.py`, offline with a stand-in for AI Functions; live behaviour is not validated.
+**Uncertain:** Free Edition availability and quotas, pricing, Playground labels, `ai_classify` 2.1 output shape, parameter markers in AI Function
+arguments, endpoint choice. A five-row cap is not a billing cap. Live validation needs separate approval of workspace, data, functions and allowance.
 
 ## S24: prescriptive analytics module
 

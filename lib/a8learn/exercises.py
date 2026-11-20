@@ -154,6 +154,37 @@ FROM ranked WHERE score_rank = 1 GROUP BY event_id ORDER BY event_id""",
                    "Expected attendance remains fractional and uncertain.",
         "ordered": True,
     },
+    "7.1": {
+        "task": "Prepare the bounded model input: return feedback_id and comment_length (characters in the comment) "
+                "for the first five non-empty comments, ordered by feedback_id.",
+        "hint": "Use IDENTIFIER(a8_feedback). Filter comment IS NOT NULL AND trim(comment) <> '', ORDER BY "
+                "feedback_id, then LIMIT 5. length(comment) gives the character count.",
+        "solution": """SELECT feedback_id, length(comment) AS comment_length FROM IDENTIFIER(a8_feedback)
+WHERE comment IS NOT NULL AND trim(comment) <> '' ORDER BY feedback_id LIMIT 5""",
+        "explain": "Sorting before LIMIT makes the sample repeatable. A five-row cap bounds the input, not the "
+                   "bill: retries, token length and compute still matter. No model was called.",
+        "ordered": True,
+    },
+    "7.2": {
+        "task": "Use this invented example, not model output: WITH examples(example_id, rating, sentiment) AS "
+                "(VALUES (1,5,'positive'),(2,1,'positive'),(3,3,'neutral'),(4,4,'mixed'),(5,2,NULL),"
+                "(6,2,'negative')). Return example_id and review_reason, ordered by example_id. Use 'review' for "
+                "NULL or 'mixed' sentiment, and 'disagree' where sentiment differs from the rating heuristic "
+                "(1-2 negative, 3 neutral, 4-5 positive). Omit agreeing rows.",
+        "hint": "Handle NULL and 'mixed' first so they are never scored as agreement. Then compare sentiment with "
+                "a CASE on rating. Keep only rows with a reason.",
+        "solution": """WITH examples(example_id, rating, sentiment) AS (
+VALUES (1,5,'positive'),(2,1,'positive'),(3,3,'neutral'),(4,4,'mixed'),(5,2,NULL),(6,2,'negative')
+)
+SELECT example_id, CASE WHEN sentiment IS NULL OR sentiment = 'mixed' THEN 'review' ELSE 'disagree' END
+AS review_reason FROM examples
+WHERE sentiment IS NULL OR sentiment = 'mixed'
+OR sentiment <> CASE WHEN rating <= 2 THEN 'negative' WHEN rating = 3 THEN 'neutral' ELSE 'positive' END
+ORDER BY example_id""",
+        "explain": "NULL comparisons are never true, so a naive mismatch filter silently drops NULL rows. "
+                   "Agreement with a rating is a sanity check, not accuracy.",
+        "ordered": True,
+    },
 }
 
 
