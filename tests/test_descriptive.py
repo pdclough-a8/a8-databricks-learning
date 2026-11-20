@@ -124,9 +124,9 @@ class DescriptiveTests(unittest.TestCase):
             self.spark.load(key, rows)
         self.namespace = {"A8": self.course, "spark": self.spark, "display": lambda frame: frame.collect()}
 
-    def run_lesson(self, approved=True):
+    def run_lesson(self, approved=True, exists=lambda key: True):
         # These mocks replace ownership/availability reads only, never the taught SELECT queries.
-        with patch.object(self.course, "exists", return_value=True), \
+        with patch.object(self.course, "exists", side_effect=exists), \
              patch.object(self.course, "guard") as guard, \
              patch.object(self.course, "gate", return_value=approved), \
              contextlib.redirect_stdout(io.StringIO()):
@@ -156,10 +156,18 @@ class DescriptiveTests(unittest.TestCase):
         self.assertTrue(self.course.test_with_solutions)
         self.assertIn("answer_1b_2", self.namespace)
 
-    def test_default_no_stops_before_any_write(self):
-        with self.assertRaisesRegex(RuntimeError, "No view written"):
-            self.run_lesson(approved=False)
+    def test_default_no_skips_write_and_stops_at_require(self):
+        with self.assertRaisesRegex(RuntimeError, "Missing prerequisites: a8_offline8_event_metrics"):
+            self.run_lesson(approved=False, exists=lambda key: key != "event_metrics")
         self.assertFalse(any("CREATE" in query or "DROP" in query for query in self.spark.statements))
+        self.assertIs(self.namespace["create_reporting_view"], False)
+
+    def test_gate_cell_finishes_before_the_write_cell(self):
+        cells = SOURCE.split("# COMMAND ----------")
+        gate = next(i for i, c in enumerate(cells) if 'A8.gate("create_reporting_view"' in c)
+        write = next(i for i, c in enumerate(cells) if "CREATE OR REPLACE VIEW" in c)
+        self.assertLess(gate, write)
+        self.assertNotIn("raise", cells[gate])
 
     def test_no_mocked_approval_is_required_by_default_gate(self):
         self.course.dbutils = Mock()
@@ -338,7 +346,7 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
         self.assertIn("does **not** delete dashboards, Genie spaces", SOURCE)
         self.assertEqual(OBJECTS["event_metrics"], ("view", "01b_descriptive_analytics"))
         self.assertIn("B1–B3", SOURCE)
-        self.assertIn("No view written", SOURCE)
+        self.assertIn("View not created", SOURCE)
 
 
 if __name__ == "__main__":

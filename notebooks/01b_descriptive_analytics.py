@@ -127,23 +127,38 @@ print(metrics_sql)
 # MAGIC %md
 # MAGIC ### Create deliberately
 # MAGIC This writes only the view definition, not a copy of the source data. After reviewing the target above,
-# MAGIC set `create_reporting_view` to **yes** and rerun the next cell. It defaults to no and stops Run All here.
+# MAGIC run the next cell: it adds a `create_reporting_view` widget above the notebook, defaulting to **no**.
+# MAGIC Set it to **yes**, then run the create cell. With no, the create cell skips the write and the following
+# MAGIC check stops with a clear message, so Run All cannot create the view by accident.
 # MAGIC Rerunning yes replaces the same owned, course-marked view; it never appends rows. An ownership or marker
 # MAGIC collision stops the write. Do not adopt or rename somebody else's object.
 # MAGIC
-# MAGIC On resume, review and rerun this cell before continuing. The switch may retain your previous choice,
+# MAGIC On resume, review and rerun these cells before continuing. The widget may retain your previous choice,
 # MAGIC so return it to no when you finish. No source table is changed.
 
 # COMMAND ----------
 
+# WHAT: asks for permission to create or replace your reporting view.
+# LOOK FOR: a create_reporting_view widget above the notebook, defaulting to no.
+create_reporting_view = A8.gate("create_reporting_view", "Approve creating/replacing your reporting view?")
+print("Approved:" if create_reporting_view else "Not approved yet. Set the widget to yes, then rerun this cell.",
+      event_metrics)
+
+# COMMAND ----------
 # WHAT: creates the reporting view only after your opt-in and an ownership check.
-# LOOK FOR: successful CREATE VIEW, or a clear stop before any write if the switch is no.
-if not A8.gate("create_reporting_view", "Approve creating/replacing your reporting view?"):
-    raise RuntimeError("No view written. Review the SQL, set create_reporting_view to yes, then rerun this cell.")
-A8.guard("event_metrics")
-spark.sql(f"""CREATE OR REPLACE VIEW {event_metrics}
+# LOOK FOR: successful CREATE VIEW, or "View not created" if the widget is no.
+if create_reporting_view:
+    A8.guard("event_metrics")
+    spark.sql(f"""CREATE OR REPLACE VIEW {event_metrics}
 COMMENT 'a8-databricks-learning one row per event; synthetic snapshot 2026-11-20; no personal fields'
 AS {metrics_sql}""")
+else:
+    print("View not created. Set create_reporting_view to yes and rerun the two cells above.")
+
+# COMMAND ----------
+# WHAT: Check: stops here if the reporting view does not exist yet.
+# LOOK FOR: no output when the view exists; otherwise a card naming the missing view.
+A8.require("event_metrics")
 
 # COMMAND ----------
 # WHAT: previews the reporting view without exposing booking-level personal fields.

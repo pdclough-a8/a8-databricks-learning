@@ -23,6 +23,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S17 | Fixed, live verified | Serverless rejected `DataFrame.cache()` as unsupported `PERSIST TABLE` during Spark scoring |
 | S18 | Implemented, not live validated | Module 1b descriptive AI/BI dashboard and Genie path; UI steps follow documentation, not a workspace walkthrough |
 | S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
+| S21 | Fixed, not live verified | Module 1b's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 3 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
 
 ## S01: persistent settings
@@ -66,6 +67,15 @@ there is no payment ledger. Dashboard and Genie assets are created by the learne
 no API or AI calls. **Checks:** `tests/test_descriptive.py`, offline only.
 **Uncertainty:** labels, Genie availability, generated SQL and benchmark behaviour need one approved live
 checkpoint on Free Edition. Until then checkpoints D and G are unverified.
+
+## S21: hidden reporting-view widget
+
+**Symptom:** in the first learner test, the view cell raised "No view written" and no widget appeared above the
+notebook. `dbutils.widgets.getAll()` showed `create_reporting_view = no`, so the widget existed but was not shown.
+**Cause, likely:** unlike every other notebook, one cell both created the widget and raised an error.
+**Fix:** a separate cell creates the gate widget and finishes normally; the create cell skips the write when it
+is no, and an `A8.require` check then stops with a named missing view. Offline tests cover default-no and cell order.
+**Limit:** the widget display has not been re-observed in the workspace yet.
 
 For new issues record symptom, scope, evidence/cause, fix or blocker, checks and remaining uncertainty.
 Never include credentials, private logs or personal workspace paths.
