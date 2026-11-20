@@ -317,6 +317,14 @@ class Course:
         self.spark.sql(statement)
         return self.t(key)
 
+    # ---------- checks ----------
+    def expect(self, condition, message: str):
+        """A notebook check: raise a readable error, or confirm what passed. Unlike assert, never skipped."""
+        if not condition:
+            self.card("Check failed", f"<p>{html.escape(message)}</p>", tone="bad")
+            raise AssertionError(message)
+        print("✓", message)
+
     # ---------- display ----------
     def html(self, body: str):
         if self._html is None:
@@ -448,7 +456,7 @@ def compare(actual, expected, ordered=False):
         a, e = sorted(a, key=repr), sorted(e, key=repr)
     if len(a) != len(e):
         return False, f"Expected {len(e)} row(s), got {len(a)}."
-    for i, (x, y) in enumerate(zip(a, e)):
+    for i, (x, y) in enumerate(zip(a, e, strict=True)):
         if x != y:
             where = "in row" if ordered else "in sorted row"
             return False, f"First difference {where} {i + 1}: got {x}, expected {y}."

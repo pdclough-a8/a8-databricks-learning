@@ -13,49 +13,91 @@ dbutils.library.restartPython()
 # MAGIC %run ../notebooks/_config $config_profile="stage1_smoke" $answers="solutions"
 
 # COMMAND ----------
-assert A8.cfg.catalog == "workspace" and A8.cfg.schema == "default" and A8.cfg.tag.startswith("smoke")
-assert A8.test_with_solutions
-assert A8.sql("SELECT count(*) FROM {events}").first()[0] == 60
-assert A8.sql("SELECT count(*) FROM {bookings}").first()[0] == 4204
-assert A8.sql("SELECT count(*) FROM {feedback}").first()[0] == 395
-
+# WHAT: imports libraries used by the independent acceptance checks.
+# LOOK FOR: no output.
 import csv
 from collections import Counter
-from a8learn import OBJECTS
-from a8learn.exercises import EXERCISES
 
+import mlflow
+from a8learn.exercises import EXERCISES
+from mlflow import MlflowClient
+
+# COMMAND ----------
+# WHAT: checks the smoke namespace and source-table row counts.
+# LOOK FOR: five green ticks.
+A8.expect(A8.cfg.catalog == "workspace" and A8.cfg.schema == "default", "Acceptance uses workspace.default.")
+A8.expect(A8.cfg.tag.startswith("smoke") and A8.test_with_solutions, "Acceptance uses smoke solutions.")
+for key, expected in [("events", 60), ("bookings", 4204), ("feedback", 395)]:
+    actual = spark.table(A8.t(key)).count()
+    A8.expect(actual == expected, f"{key} contains the expected {expected} source rows.")
+
+# COMMAND ----------
+# WHAT: derives expected policy results directly from the shipped CSV files.
+# LOOK FOR: two green ticks for independent city counts and email masking.
 with (ROOT / "data/raw/bookings.csv").open(encoding="utf-8", newline="") as f:
     bookings = list(csv.DictReader(f))
 with (ROOT / "data/raw/events.csv").open(encoding="utf-8", newline="") as f:
     events = {e["event_id"]: e for e in csv.DictReader(f)}
-expected_cities = Counter(events[b["event_id"]]["city"] for b in bookings
-                          if events[b["event_id"]]["city"] in {"Leeds", "Online"})
-observed_cities = dict((r[0], r[1]) for r in A8.sql(
-    "SELECT city, count(*) FROM {bookings_governed} GROUP BY city").collect())
-assert observed_cities == expected_cities
-assert A8.sql("SELECT count(*) FROM {bookings_governed} WHERE customer_email NOT LIKE '%***%'").first()[0] == 0
-for exercise_id in EXERCISES:
-    assert A8.check(exercise_id)
-
-expected_future = [b for b in bookings if b["status"] == "confirmed"
-                   and events[b["event_id"]]["status"] == "scheduled"]
-assert A8.sql("SELECT count(*) FROM {attendance_predictions}").first()[0] == len(expected_future)
-assert A8.sql("SELECT count(*) FROM {event_forecast}").first()[0] == 12
-assert A8.sql("""SELECT count(*) FROM {event_forecast}
-WHERE expected_attendees < 0 OR expected_attendees > confirmed_tickets""").first()[0] == 0
-assert A8.sql("""SELECT count(*) FROM {events} VERSION AS OF 0
-WHERE event_id = 'E149'""").first()[0] == 1
-print("ACCEPTANCE: source counts, independent policy counts, five exercises, future row count, forecast bounds and history passed.")
+expected_cities = Counter(
+    events[b["event_id"]]["city"] for b in bookings
+    if events[b["event_id"]]["city"] in {"Leeds", "Online"}
+)
+governed = A8.t("bookings_governed")
+observed_cities = {r[0]: r[1] for r in spark.sql(
+    f"SELECT city, count(*) FROM {governed} GROUP BY city"
+).collect()}
+unmasked = spark.sql(
+    f"SELECT count(*) FROM {governed} WHERE customer_email NOT LIKE '%***%'"
+).first()[0]
+A8.expect(observed_cities == expected_cities, "Governed city counts match an independent CSV aggregation.")
+A8.expect(unmasked == 0, "No unmasked customer email is visible through the governed table.")
 
 # COMMAND ----------
-import mlflow
-from mlflow import MlflowClient
+# WHAT: runs every supplied exercise solution against the smoke tables.
+# LOOK FOR: a green tick for each exercise.
+for exercise_id in EXERCISES:
+    A8.expect(A8.check(exercise_id), f"Exercise {exercise_id} matches its independent solution.")
+
+# COMMAND ----------
+# WHAT: checks the latest prediction per booking and forecast bounds after append-based scoring.
+# LOOK FOR: five green ticks, including one latest prediction per booking and two appended batches.
+expected_future = [
+    b for b in bookings if b["status"] == "confirmed"
+    and events[b["event_id"]]["status"] == "scheduled"
+]
+predictions = A8.t("attendance_predictions")
+latest = spark.sql(f"""WITH ranked AS (
+SELECT p.*, row_number() OVER (
+PARTITION BY booking_id ORDER BY scored_at DESC NULLS LAST, CAST(model_version AS INT) DESC
+) AS score_rank FROM {predictions} p
+) SELECT * FROM ranked WHERE score_rank = 1""")
+forecast = spark.table(A8.t("event_forecast"))
+invalid = forecast.where("expected_attendees < 0 OR expected_attendees > confirmed_tickets").count()
+A8.expect(latest.count() == len(expected_future), "Latest predictions cover every confirmed future booking once.")
+A8.expect(
+    spark.table(predictions).count() == 2 * len(expected_future),
+    "Retraining appends a second complete prediction batch without replacing the first.",
+)
+A8.expect(latest.where("scored_at IS NULL").count() == 0, "Every latest prediction records its scoring time.")
+A8.expect(forecast.count() == 12, "The forecast contains all 12 scheduled events.")
+A8.expect(invalid == 0, "Every forecast is bounded by zero and confirmed tickets.")
+
+# COMMAND ----------
+# WHAT: checks that Delta version zero still contains the event used in the time-travel lesson.
+# LOOK FOR: one green tick.
+events_table = A8.t("events")
+original = spark.sql(f"SELECT count(*) FROM {events_table} VERSION AS OF 0 WHERE event_id = 'E149'").first()[0]
+A8.expect(original == 1, "Delta version zero retains the original E149 row.")
+
+# COMMAND ----------
+# WHAT: checks Champion and prints the latest run's recorded metrics.
+# LOOK FOR: READY, the holdout metrics and the Champion version.
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
-model_name = f"{A8.cfg.catalog}.{A8.cfg.schema}.{A8.name('attendance_model')}"
-champion = client.get_model_version_by_alias(model_name, "Champion")
-assert champion.status == "READY"
+champion = client.get_model_version_by_alias(A8.model_name, "Champion")
+A8.expect(champion.status == "READY", "The Champion model version is ready.")
 experiment = mlflow.get_experiment_by_name(A8.experiment_path)
 run = client.search_runs([experiment.experiment_id], order_by=["start_time DESC"], max_results=1)[0]
 print("METRICS:", run.data.metrics)
 print("CHAMPION:", champion.version)
+print("ACCEPTANCE: source, policies, exercises, latest predictions, forecast, history and registry passed.")

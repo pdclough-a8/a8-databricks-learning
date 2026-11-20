@@ -10,7 +10,8 @@ def endpoint_for_cleanup(course, workspace):
     except NotFound:
         return None
     tags = {t.key: t.value for t in endpoint.tags or []}
-    if endpoint.creator != course.cfg.user or tags.get("a8learn_course") != COURSE_ID or tags.get("a8learn_tag") != course.cfg.tag:
+    if (endpoint.creator != course.cfg.user or tags.get("a8learn_course") != COURSE_ID
+            or tags.get("a8learn_tag") != course.cfg.tag):
         raise PermissionError("Endpoint owner/course tags do not match. Nothing deleted.")
     return endpoint
 

@@ -9,10 +9,11 @@ Python 3.12.13 on Windows, dependencies scoped to this repository's ignored `.pa
 
 | Check | Evidence |
 |---|---|
-| `python -m unittest discover -s tests -v` | 32 passed (20 November 2026), including real split/pipeline code, partial/repeated cleanup and MLflow ownership helpers |
-| `python -m mkdocs build --strict` | Passed at first Stage 1 checkpoint |
+| `python -m unittest discover -s tests -v` | 37 passed (20 November 2026), including real split/pipeline code, latest-score SQL, lint, partial/repeated cleanup and MLflow ownership helpers |
+| `python -m ruff check lib notebooks tests data` | Passed (20 November 2026); also executed by the unit suite |
+| `python -m mkdocs build --strict` | Passed after the all-module code-standard rewrite (20 November 2026) |
 | Data regeneration | All three generated CSVs byte-identical to supplied data; 60 / 4,204 / 395 rows |
-| Independent SQL checks | Exercise 1.1 and 1.2 queries run in SQLite, compared to Python aggregations |
+| Independent SQL checks | Exercises 1.1 and 1.2 compared with Python aggregations; exercise 3.1 proved that only the latest prediction per booking is summed |
 | Persistence | Save, construct a fresh Course, reload without widgets |
 | Lifecycle safety | Wrong confirmation, other owner, absent endpoint, preflight collision and endpoint-only scope |
 
@@ -57,6 +58,23 @@ acceptance → cleanup → cleanup again. Every task succeeded in all three.
 Afterwards no `a8_smoke3*` tables, views, functions, volumes, models or `a8-smoke3*` endpoints remained;
 test folders and test settings were deleted. The vanished-working-folder fallback (S12) was not triggered by
 these jobs and remains unverified live. The Git beginner guide is documentation only.
+
+### All-module code standard, 20 November 2026
+
+The first rewrite run, [190892132722849](https://dbc-9293e8d1-d494.cloud.databricks.com/?o=7474653906705547#job/623352491271238/run/190892132722849),
+passed setup, data and governance but failed both ML attempts because serverless rejects `.cache()` as
+`PERSIST TABLE` (S17). Both cleanup tasks succeeded. The fix removes caching and reads the persisted batch for
+later display and serving checks.
+
+The retest, [208516018796520](https://dbc-9293e8d1-d494.cloud.databricks.com/?o=7474653906705547#job/43681650382943/run/208516018796520),
+passed setup → data → governance → ML with serving → ML again without serving → acceptance → cleanup → cleanup
+again. Acceptance verified two complete appended prediction batches, one latest prediction per future booking,
+all five exercises, 12 bounded event forecasts, Delta history and a ready Champion model. The second ML run also
+exercised the existing-object and restored-experiment paths.
+
+Afterwards, CLI listing found no `a8_smoke4*` tables/views, volumes, functions or models and no `a8-smoke4*`
+endpoints. Both generated test folders and the smoke settings file were deleted. Migration of a prediction table
+from the older course schema remains untested live; the rerun used the new schema.
 
 Not yet validated:
 

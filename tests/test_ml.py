@@ -30,7 +30,10 @@ class PredictiveTests(unittest.TestCase):
         source = (ROOT / "notebooks/03_predictive_ml.py").read_text()
         cells = source.split("# COMMAND ----------")
         split_cell = next(c for c in cells if "\nframe = spark.table(" in c)
-        model_cell = next(c for c in cells if "\npreprocess = ColumnTransformer(" in c).split("with mlflow.start_run")[0]
+        baseline_cell = next(c for c in cells if "\nbaseline = DummyClassifier(" in c)
+        model_cell = next(
+            c for c in cells if "\npreprocess = ColumnTransformer(" in c
+        ).split("with mlflow.start_run")[0]
         cls.env = {
             "spark": SimpleNamespace(table=lambda _: SimpleNamespace(toPandas=lambda: joined.copy())),
             "A8": SimpleNamespace(t=lambda _: "unused"),
@@ -41,6 +44,7 @@ class PredictiveTests(unittest.TestCase):
         }
         with contextlib.redirect_stdout(io.StringIO()):
             exec(split_cell, cls.env)
+            exec(baseline_cell, cls.env)
             exec(model_cell, cls.env)
         cls.env["pipeline"].fit(cls.env["train"][cls.env["features"]], cls.env["train"].label)
 
@@ -65,6 +69,11 @@ class PredictiveTests(unittest.TestCase):
         totals = forecast.groupby("event_id")[["tickets", "expected"]].sum()
         self.assertTrue((totals.expected <= totals.tickets).all())
         self.assertTrue((totals.expected >= 0).all())
+
+    def test_model_beats_the_baseline_on_holdout_log_loss(self):
+        e = self.env
+        probabilities = e["pipeline"].predict_proba(e["test"][e["features"]])[:, 1]
+        self.assertLess(log_loss(e["test"].label, probabilities), e["baseline_loss"])
 
     def test_no_identifiers_outcomes_or_contacts_in_features(self):
         self.assertFalse(set(self.env["features"]) & {

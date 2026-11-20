@@ -19,6 +19,8 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S13 | Implemented | Code cells did not explain themselves; Modules 0–3 and cleanup rewritten with WHAT/LOOK FOR comments |
 | S14 | Implemented | First-time learners did not know how to clone, pull or recover from Git conflicts |
 | S15 | Fixed | Interactive serving cell failed: the session's Databricks SDK requires `name` in `EndpointCoreConfigInput` |
+| S16 | Fixed, live verified | Notebook cells mixed several operations, used a private SQL placeholder dialect and hid checks in bare assertions |
+| S17 | Fixed, live verified | Serverless rejected `DataFrame.cache()` as unsupported `PERSIST TABLE` during Spark scoring |
 
 ## S01: persistent settings
 
@@ -80,6 +82,31 @@ an unclear conflict screen, and conflict markers written into a notebook. `docs/
 clone, pull, discard and recovery in plain terms, with a symptom table. `README.md`, `START_HERE.md`, the overview
 and `00_setup` link to it. UI labels follow the Databricks documentation and the author's screenshots;
 the guide has not been walked through by a new learner.
+
+## S17: serverless Spark scoring cache
+
+**Symptom:** the first code-standard live run passed setup, data and governance, then both ML attempts failed
+at `.cache()` with `[NOT_SUPPORTED_WITH_SERVERLESS] PERSIST TABLE is not supported`.
+**Fix:** removed caching. A single aggregation now checks row count and probability validity; the small scoring
+batch is evaluated once for those checks and once for the append. Later display and serving checks read the
+persisted Delta batch instead of invoking the model again.
+**Evidence:** the failure was reproduced in run `190892132722849`; automatic cleanup passed. Run
+`208516018796520` then passed Spark scoring, serving, a second training/scoring run, acceptance and both cleanups.
+
+## S16: copyable notebook code standard
+
+**Symptom:** learner review found that a scoring cell combined model loading, validation, pandas conversion,
+table/view writes and display. Other cells used `{events}` placeholders and bare `assert`, which are not
+patterns to copy into production notebooks.
+**Fix:** `docs/code-standard.md` now defines one idea per cell, native Spark/Databricks operations,
+`IDENTIFIER(a8_*)` in `%sql` and exercises, real validated names in Python, imports at module top, and separate
+`A8.expect` check cells. Module 3 scores with `mlflow.pyfunc.spark_udf`, appends `model_version`/`scored_at`,
+and selects the latest score per booking in the forecast. Ruff runs in the offline unit tests.
+**Evidence:** 37 offline tests cover exercise SQL, temporal splitting, real model probabilities and lint. Live run
+`208516018796520` passed every notebook, two training/scoring batches, latest-per-booking acceptance, serving and
+repeated cleanup. No smoke4 objects or generated workspace files remain.
+**Limit:** migration of a prediction table created by the older course version is handled explicitly but was not
+separately reproduced live; the live rerun started with the new schema.
 
 ## S15: serving config name
 

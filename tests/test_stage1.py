@@ -1,5 +1,4 @@
 import ast
-import csv
 import importlib.util
 import json
 import re
@@ -46,7 +45,8 @@ class ConfigTests(unittest.TestCase):
             self.course.t("unrelated")
 
     def test_fmt_keeps_non_course_braces(self):
-        self.assertEqual(self.course.fmt("SELECT * FROM {events}"), "SELECT * FROM workspace.default.a8_learner8_events")
+        self.assertEqual(self.course.fmt("SELECT * FROM {events}"),
+                         "SELECT * FROM workspace.default.a8_learner8_events")
         self.assertEqual(self.course.fmt('{"unknown": 2}'), '{"unknown": 2}')
 
     def test_persist_then_new_session_load_without_widgets(self):
@@ -85,9 +85,15 @@ class ConfigTests(unittest.TestCase):
         with patch.object(self.course, "_info", return_value=self.cfg.user):
             with self.assertRaises(PermissionError):
                 self.course.guard("events")
-        self.course.spark.sql.return_value.collect.return_value = [{"marker": "a8-databricks-learning synthetic events"}]
+        marker = [{"marker": "a8-databricks-learning synthetic events"}]
+        self.course.spark.sql.return_value.collect.return_value = marker
         with patch.object(self.course, "_info", return_value=self.cfg.user):
             self.course.guard("events")
+
+    def test_expect_passes_or_raises_a_readable_error(self):
+        self.assertIsNone(self.course.expect(True, "The result has the expected shape."))
+        with self.assertRaisesRegex(AssertionError, "Expected 12 scheduled events"):
+            self.course.expect(False, "Expected 12 scheduled events.")
 
     def test_gate_defaults_to_no_and_preview_is_non_destructive(self):
         self.course.dbutils = Mock()
@@ -125,7 +131,8 @@ class DataTests(unittest.TestCase):
     def test_capacity_and_temporal_label_contract(self):
         events = {e["event_id"]: e for e in self.events}
         for e in self.events:
-            self.assertLessEqual(sum(b["tickets"] for b in self.bookings if b["event_id"] == e["event_id"]), e["capacity"])
+            booked = sum(b["tickets"] for b in self.bookings if b["event_id"] == e["event_id"])
+            self.assertLessEqual(booked, e["capacity"])
         for b in self.bookings:
             self.assertTrue(b["customer_email"].endswith("@example.com"))
             self.assertLessEqual(b["booked_date"], "2026-11-20")
@@ -143,13 +150,29 @@ class DataTests(unittest.TestCase):
                            [tuple(row.values()) for row in rows])
         expected = sorted((city, sum(e["city"] == city and e["status"] == "completed" for e in self.events))
                           for city in {e["city"] for e in self.events})
-        query = EXERCISES["1.1"]["solution"].replace("{events}", "events")
+        query = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", EXERCISES["1.1"]["solution"])
         self.assertEqual(db.execute(query).fetchall(), expected)
         scheduled = {e["event_id"] for e in self.events if e["status"] == "scheduled"}
-        counts = {eid: sum(b["tickets"] for b in self.bookings if b["event_id"] == eid and b["status"] == "confirmed")
-                  for eid in scheduled}
-        query = EXERCISES["1.2"]["solution"].replace("{events}", "events").replace("{bookings}", "bookings")
+        counts = {
+            eid: sum(b["tickets"] for b in self.bookings if b["event_id"] == eid and b["status"] == "confirmed")
+            for eid in scheduled
+        }
+        query = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", EXERCISES["1.2"]["solution"])
         self.assertEqual(db.execute(query).fetchall(), sorted(counts.items()))
+
+    def test_forecast_exercise_uses_only_latest_prediction_per_booking(self):
+        db = sqlite3.connect(":memory:")
+        self.addCleanup(db.close)
+        db.execute("""CREATE TABLE attendance_predictions (
+            booking_id TEXT, event_id TEXT, tickets INT, attendance_probability REAL,
+            model_version TEXT, scored_at TEXT)""")
+        db.executemany("INSERT INTO attendance_predictions VALUES (?, ?, ?, ?, ?, ?)", [
+            ("B1", "E1", 2, 0.25, "1", "2026-11-20 10:00:00"),
+            ("B1", "E1", 2, 0.75, "2", "2026-11-20 11:00:00"),
+            ("B2", "E1", 1, 0.50, "2", "2026-11-20 11:00:00"),
+        ])
+        query = re.sub(r"IDENTIFIER\(a8_(\w+)\)", r"\1", EXERCISES["3.1"]["solution"])
+        self.assertEqual(db.execute(query).fetchall(), [("E1", 2.0)])
 
 
 class LifecycleTests(unittest.TestCase):
@@ -308,12 +331,18 @@ class NotebookTests(unittest.TestCase):
         self.assertEqual(len(paths), 6)
         for path in paths:
             source = path.read_text(encoding="utf-8")
-            ast.parse(source, str(path))
+            tree = ast.parse(source, str(path))
+            self.assertFalse(any(isinstance(node, ast.Assert) for node in ast.walk(tree)),
+                             f"{path.name} must use A8.expect for runtime checks")
+            self.assertNotRegex(source, r"A8\.(?:run|sql|fmt)\(",
+                                f"{path.name} must use native Spark SQL with validated names")
             self.assertTrue(source.startswith("# Databricks notebook source\n"))
             for target in re.findall(r"^# MAGIC %run (.+)$", source, re.M):
                 self.assertTrue((path.parent / (target + ".py")).is_file())
         ml = (ROOT / "notebooks/03_predictive_ml.py").read_text()
-        self.assertIn('mlflow.pyfunc.load_model(f"models:/{model_name}@Champion")', ml)
+        self.assertIn('mlflow.pyfunc.spark_udf(', ml)
+        self.assertIn('result_type="array<double>"', ml)
+        self.assertNotIn(".cache()", ml)  # PERSIST TABLE is unsupported on serverless compute
         self.assertIn("baseline_log_loss", ml)
         self.assertIn('A8.gate("deploy_serving"', ml)
 

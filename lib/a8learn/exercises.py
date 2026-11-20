@@ -1,19 +1,24 @@
-"""SQL exercises, checked against the learner's own tables, not memorised numbers."""
+"""SQL exercises, checked against the learner's own tables, not memorised numbers.
+
+Solutions use the session variables declared by _config (IDENTIFIER(a8_events) and so on), which is the
+same SQL a learner would write in a %sql cell.
+"""
 
 EXERCISES = {
     "1.1": {
         "task": "Return city and count of completed events as events, ordered by city.",
-        "hint": "Filter status before GROUP BY; COUNT(*) counts events, not bookings.",
-        "solution": """SELECT city, count(*) AS events FROM {events}
+        "hint": "Filter status before GROUP BY; COUNT(*) counts events, not bookings. "
+                "Read from IDENTIFIER(a8_events).",
+        "solution": """SELECT city, count(*) AS events FROM IDENTIFIER(a8_events)
 WHERE status = 'completed' GROUP BY city ORDER BY city""",
         "explain": "The grain is one row per city. Filtering before aggregation excludes future events.",
         "ordered": True,
     },
     "1.2": {
         "task": "Return event_id and total confirmed tickets for scheduled events, ordered by event_id.",
-        "hint": "Join events to bookings, filter both statuses and SUM(tickets), not COUNT(*).",
+        "hint": "Join IDENTIFIER(a8_events) to IDENTIFIER(a8_bookings), filter both statuses and SUM(tickets).",
         "solution": """SELECT e.event_id, sum(b.tickets) AS confirmed_tickets
-FROM {events} e JOIN {bookings} b USING (event_id)
+FROM IDENTIFIER(a8_events) e JOIN IDENTIFIER(a8_bookings) b USING (event_id)
 WHERE e.status = 'scheduled' AND b.status = 'confirmed'
 GROUP BY e.event_id ORDER BY e.event_id""",
         "explain": "A booking can contain multiple tickets. Counting bookings understates demand.",
@@ -21,8 +26,8 @@ GROUP BY e.event_id ORDER BY e.event_id""",
     },
     "2.1": {
         "task": "Return city and row count from bookings_governed, grouped and ordered by city.",
-        "hint": "Query the governed table, not the unrestricted bookings table.",
-        "solution": """SELECT city, count(*) FROM {bookings_governed}
+        "hint": "Query IDENTIFIER(a8_bookings_governed), not the unrestricted bookings table.",
+        "solution": """SELECT city, count(*) FROM IDENTIFIER(a8_bookings_governed)
 GROUP BY city ORDER BY city""",
         "explain": "The policy is evaluated at read time. Only Leeds and Online survive this demo filter.",
         "ordered": True,
@@ -30,16 +35,24 @@ GROUP BY city ORDER BY city""",
     "2.2": {
         "task": "Return the count of governed rows whose customer_email does not contain '***'.",
         "hint": "Use NOT LIKE '%***%' on the masked column. The expected count is zero.",
-        "solution": """SELECT count(*) FROM {bookings_governed}
+        "solution": """SELECT count(*) FROM IDENTIFIER(a8_bookings_governed)
 WHERE customer_email NOT LIKE '%***%'""",
         "explain": "SQL sees the masked value, not the original email. This is not encryption or anonymisation.",
     },
     "3.1": {
-        "task": "Return event_id and sum(tickets * attendance_probability) as expected_attendees from attendance_predictions, grouped and ordered by event_id.",
-        "hint": "Probability applies to a booking; weight by its ticket count. Do not round each booking.",
-        "solution": """SELECT event_id, sum(tickets * attendance_probability) AS expected_attendees
-FROM {attendance_predictions} GROUP BY event_id ORDER BY event_id""",
-        "explain": "Expected attendance is fractional and uncertain, not a guaranteed headcount.",
+        "task": "Using only the latest prediction per booking, return event_id and expected_attendees, "
+                "grouped and ordered by event_id.",
+        "hint": "Rank rows with row_number() over (partition by booking_id order by scored_at desc), "
+                "keep rank 1, then sum tickets * attendance_probability.",
+        "solution": """WITH ranked AS (
+SELECT p.*, row_number() OVER (
+PARTITION BY booking_id ORDER BY scored_at DESC NULLS LAST, CAST(model_version AS INT) DESC
+) AS score_rank FROM IDENTIFIER(a8_attendance_predictions) p
+)
+SELECT event_id, sum(tickets * attendance_probability) AS expected_attendees
+FROM ranked WHERE score_rank = 1 GROUP BY event_id ORDER BY event_id""",
+        "explain": "Latest-score selection prevents retraining from double-counting a booking. "
+                   "Expected attendance remains fractional and uncertain.",
         "ordered": True,
     },
 }

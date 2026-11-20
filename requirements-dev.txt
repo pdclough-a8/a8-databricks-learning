@@ -2,3 +2,4 @@ mkdocs-material==9.6.21
 databricks-sdk==0.73.0
 scikit-learn==1.7.2
 pandas==2.2.3
+ruff==0.17.6

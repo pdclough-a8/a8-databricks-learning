@@ -5,4 +5,15 @@ description = "A8 notebook-first Databricks and AI course, Stage 1"
 requires-python = ">=3.12,<3.14"
 
 [tool.ruff]
-line-length = 100
+# 120 fits Spark SQL and notebook cells without awkward wrapping.
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "E501", "F", "W", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Databricks injects names; %run ./_config defines course names and necessarily precedes notebook imports.
+"notebooks/*.py" = ["F821", "E402"]
+"tests/acceptance_notebook.py" = ["F821", "E402"]
+# Tests put lib/ on sys.path before importing the course package.
+"tests/test_*.py" = ["E402"]

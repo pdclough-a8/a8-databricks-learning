@@ -56,10 +56,19 @@ def main():
             depends_on=[TaskDependency(task_key=tasks[-1].task_key)] if tasks else None,
             timeout_seconds=2400,
         ))
+    # Retrain without serving: proves append history and latest-per-booking forecasts on existing objects.
+    tasks.append(SubmitTask(
+        task_key="ml_again",
+        notebook_task=NotebookTask(
+            notebook_path=f"{remote}/notebooks/03_predictive_ml",
+            base_parameters={**params, "deploy_serving": "no"},
+        ),
+        depends_on=[TaskDependency(task_key="ml")], timeout_seconds=2400,
+    ))
     tasks.append(SubmitTask(
         task_key="acceptance",
         notebook_task=NotebookTask(notebook_path=f"{remote}/tests/acceptance_notebook"),
-        depends_on=[TaskDependency(task_key="ml")], timeout_seconds=900,
+        depends_on=[TaskDependency(task_key="ml_again")], timeout_seconds=900,
     ))
     for key, previous in [("cleanup", "acceptance"), ("cleanup_again", "cleanup")]:
         tasks.append(SubmitTask(

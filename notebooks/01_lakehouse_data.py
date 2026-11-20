@@ -26,23 +26,50 @@
 # MAGIC
 # MAGIC | Helper | What it does |
 # MAGIC |---|---|
-# MAGIC | `{events}` inside SQL | a placeholder replaced by your real name, e.g. `workspace.default.a8_yourtag_events` |
-# MAGIC | `A8.run(sql)` | fills in the placeholders, **shows you the exact SQL**, then runs it |
-# MAGIC | `A8.sql(sql)` | the same, without showing the SQL; used for reading results |
+# MAGIC | `IDENTIFIER(a8_events)` in SQL | uses a session variable containing your real table name |
+# MAGIC | `spark.sql(sql, args={...})` | runs standard SQL; parameters carry values such as file paths |
 # MAGIC | `A8.t("events")` | returns your real table name, for Python APIs such as `spark.table(...)` |
 # MAGIC | `A8.guard("events")` | a safety check: stops if the object exists but is not yours |
 # MAGIC | `A8.links(...)` | shows links that open the matching page in the Databricks UI |
 # MAGIC | `A8.check("1.1", answer)` | checks your exercise answer against your own tables |
 # MAGIC
-# MAGIC Everything else is ordinary Databricks SQL, PySpark or Python.
+# MAGIC In Python we resolve names once with `A8.t` and interpolate those validated names into f-strings.
+# MAGIC Values use `spark.sql(..., args={...})` parameters. Saved views use real names because their definitions
+# MAGIC cannot contain session variables or parameters. Everything else is ordinary Databricks SQL, PySpark or Python.
 
 # COMMAND ----------
+
 # MAGIC %run ./_config
 
 # COMMAND ----------
-# WHAT: opens links to your schema and the SQL editor, and lists the CSV files shipped with the course.
-# LOOK FOR: three file names: bookings.csv, events.csv and feedback.csv.
+
+# WHAT: imports the libraries used in this lesson.
+# LOOK FOR: no output; these are standard Python and PySpark libraries.
+import shutil
+from pathlib import Path
+
+from a8learn import COURSE_ID
+from pyspark.sql import functions as F
+
+# COMMAND ----------
+# WHAT: resolves your validated object names for Python SQL and DataFrame APIs.
+# LOOK FOR: no output; later sections reuse these names and the volume path.
+events = A8.t("events")
+bookings = A8.t("bookings")
+feedback = A8.t("feedback")
+raw = A8.t("raw")
+event_availability = A8.t("event_availability")
+volume_path = A8.volume_path
+tables = {"events": events, "bookings": bookings, "feedback": feedback}
+
+# COMMAND ----------
+# WHAT: opens links to your schema and the SQL editor.
+# LOOK FOR: links to your own namespace.
 A8.links(("Your schema", "schema", ""), ("SQL editor", "sql_editor", ""))
+
+# COMMAND ----------
+# WHAT: lists the CSV files shipped with the course.
+# LOOK FOR: bookings.csv, events.csv and feedback.csv.
 print("Source files:", [p.name for p in (ROOT / "data" / "raw").glob("*.csv")])
 
 # COMMAND ----------
@@ -55,21 +82,29 @@ print("Source files:", [p.name for p in (ROOT / "data" / "raw").glob("*.csv")])
 # MAGIC Copying a file is not a database insert; the bytes are simply stored in the volume.
 # MAGIC
 # MAGIC **UI alternative:** Catalog → your schema → **Create → Volume**, managed, using the name shown below.
-# MAGIC Upload the three files from `data/raw`, then skip the next code cell. Never upload real customer data.
+# MAGIC Upload the three files from `data/raw`, then skip the create-volume and copy-files cells. Run the listing
+# MAGIC cell to inspect your upload. Never upload real customer data.
 
 # COMMAND ----------
-# WHAT: creates your volume (if needed) and copies the three CSV files into it.
-# LOOK FOR: the CREATE VOLUME statement that ran, then a listing of three files with their sizes.
-import shutil
-from a8learn import COURSE_ID
 
+# WHAT: creates your governed volume if needed.
+# LOOK FOR: a successful CREATE VOLUME; an existing owned volume is kept.
 A8.guard("raw")
-A8.run("""CREATE VOLUME IF NOT EXISTS {raw}
+spark.sql(f"""CREATE VOLUME IF NOT EXISTS {raw}
 COMMENT 'a8-databricks-learning managed teaching files'""")
+
+# COMMAND ----------
+# WHAT: copies the source CSV files into the volume.
+# LOOK FOR: no output; a rerun overwrites the same three fixture files.
+A8.guard("raw")
 for filename in ["events.csv", "bookings.csv", "feedback.csv"]:
-    # Volumes appear as ordinary folders under /Volumes, so standard Python file copying works.
-    shutil.copyfile(ROOT / "data" / "raw" / filename, Path(A8.volume_path) / filename)
-display(dbutils.fs.ls(A8.volume_path))
+    # Volumes expose a filesystem path, so ordinary file copying works.
+    shutil.copyfile(ROOT / "data" / "raw" / filename, Path(volume_path) / filename)
+
+# COMMAND ----------
+# WHAT: shows the files now governed by Unity Catalog.
+# LOOK FOR: three files with sizes, and a link to inspect their CSV preview.
+display(dbutils.fs.ls(volume_path))
 A8.links(("Raw files, inspect the CSV preview", "volume", "raw"))
 
 # COMMAND ----------
@@ -82,26 +117,34 @@ A8.links(("Raw files, inspect the CSV preview", "volume", "raw"))
 # MAGIC **Predict before you run:** what type will `attended` get, given that future bookings have no value yet?
 
 # COMMAND ----------
-# WHAT: previews five rows of bookings.csv, letting Databricks guess the column types.
-# LOOK FOR: the column types in the result header. Compare them with the explicit schema in the next cell.
-display(A8.sql("""SELECT * FROM read_files('{volume_path}/bookings.csv',
-format => 'csv', header => true, inferSchema => true) LIMIT 5"""))
+
+# WHAT: previews five bookings with inferred types.
+# LOOK FOR: the result header's types; compare them with the explicit schema below.
+display(spark.sql("""SELECT * FROM read_files(:path,
+format => 'csv', header => true, inferSchema => true) LIMIT 5""",
+                  args={"path": f"{volume_path}/bookings.csv"}))
 
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 4. Create Delta tables with a schema contract (10 minutes)
-# MAGIC Now we load each file into a Delta table with an **explicit schema**: we state every column's type instead of guessing.
+# MAGIC Now we load each file into a Delta table with an **explicit schema**: we state every column's type instead of
+# MAGIC guessing.
 # MAGIC `mode => 'FAILFAST'` stops the load if any row does not fit, rather than silently writing nulls.
 # MAGIC
 # MAGIC **CTAS** (CREATE TABLE AS SELECT) turns a query result into a table in one step.
 # MAGIC `CREATE OR REPLACE` means a rerun **resets** these tables to the original data; it does not append duplicates.
 # MAGIC
 # MAGIC Notice `attended BOOLEAN`: NULL means *no outcome yet*, which is different from `false` (a no-show).
+# MAGIC We bind the file paths and schemas in SELECT queries first, naming them with **temporary views** that last only
+# MAGIC for this notebook session. CTAS then reads those views. This also works on Runtime 16.4 LTS, where parameter
+# MAGIC markers cannot appear directly in DDL statements such as CREATE TABLE.
+# MAGIC The temporary views are removed afterwards.
 
 # COMMAND ----------
-# WHAT: loads each CSV into its own Delta table using a stated schema, and shows each SQL statement.
-# LOOK FOR: three CREATE OR REPLACE TABLE statements. Read one: which part is the schema and which the source file?
-schemas = {  # column name and type for each file, in file order
+
+# WHAT: states the column contract for each CSV.
+# LOOK FOR: explicit types, including BOOLEAN attendance and DATE columns.
+schemas = {
     "events": """event_id STRING, event_name STRING, topic STRING, format STRING,
 city STRING, venue STRING, event_date DATE, start_hour INT, capacity INT,
 price_gbp INT, status STRING""",
@@ -111,15 +154,35 @@ tickets INT, status STRING, attended BOOLEAN""",
     "feedback": """feedback_id STRING, event_id STRING, booking_id STRING,
 submitted_date DATE, rating INT, comment STRING""",
 }
+
+# COMMAND ----------
+# WHAT: prepares typed CSV queries as session-only source views.
+# LOOK FOR: no output; the explicit projection excludes any rescued-data metadata column.
 for key, schema in schemas.items():
+    columns = ", ".join(field.strip().split()[0] for field in schema.split(","))
+    source = spark.sql(f"""SELECT {columns} FROM read_files(:path,
+format => 'csv', header => true, schema => :schema, mode => 'FAILFAST')""",
+                       args={"path": f"{volume_path}/{key}.csv", "schema": schema})
+    source.createOrReplaceTempView(f"a8_source_{key}")
+
+# COMMAND ----------
+# WHAT: loads the typed CSV queries into owned Delta tables with CTAS.
+# LOOK FOR: three CREATE OR REPLACE TABLE statements; reruns reset the same tables without appending.
+for key, table in tables.items():
     A8.guard(key)
-    columns = ", ".join(field.strip().split()[0] for field in schema.split(","))  # just the column names
-    # TBLPROPERTIES are labels on the table; cleanup uses them to confirm a table is course work.
-    A8.run(f"""CREATE OR REPLACE TABLE {{{key}}} USING DELTA
+    # Ownership labels let cleanup distinguish course work from unrelated tables.
+    statement = f"""CREATE OR REPLACE TABLE {table} USING DELTA
 COMMENT 'a8-databricks-learning synthetic {key}'
 TBLPROPERTIES ('a8learn.course' = '{COURSE_ID}', 'a8learn.tag' = '{A8.cfg.tag}')
-AS SELECT {columns} FROM read_files('{{volume_path}}/{key}.csv',
-format => 'csv', header => true, schema => '{schema}', mode => 'FAILFAST')""")
+AS SELECT * FROM a8_source_{key}"""
+    print(statement)
+    spark.sql(statement)
+
+# COMMAND ----------
+# WHAT: removes the session-only source views after ingestion.
+# LOOK FOR: no output; the persisted Delta tables are unaffected.
+for key in tables:
+    spark.catalog.dropTempView(f"a8_source_{key}")
 
 # COMMAND ----------
 # MAGIC %md
@@ -135,15 +198,20 @@ format => 'csv', header => true, schema => '{schema}', mode => 'FAILFAST')""")
 # MAGIC UNION ALL SELECT 'feedback', count(*) FROM IDENTIFIER(a8_feedback);
 
 # COMMAND ----------
-# WHAT: checks the row counts, and that every booking points at an event that exists.
-# LOOK FOR: "Counts and booking→event referential integrity passed." An AssertionError means the load is wrong.
-assert spark.table(A8.t("events")).count() == 60
-assert spark.table(A8.t("bookings")).count() == 4204
-assert spark.table(A8.t("feedback")).count() == 395
-# LEFT ANTI JOIN returns bookings with no matching event. There should be none.
-assert A8.sql("""SELECT count(*) FROM {bookings} b LEFT ANTI JOIN {events} e
-ON b.event_id = e.event_id""").first()[0] == 0
-print("Counts and booking→event referential integrity passed.")
+
+# WHAT: Check: verifies the three fixture row counts.
+# LOOK FOR: a clear pass message for each expected count.
+A8.expect(spark.table(events).count() == 60, "Events must contain 60 rows.")
+A8.expect(spark.table(bookings).count() == 4204, "Bookings must contain 4,204 rows.")
+A8.expect(spark.table(feedback).count() == 395, "Feedback must contain 395 rows.")
+
+# COMMAND ----------
+# WHAT: Check: verifies every booking points at an existing event.
+# LOOK FOR: zero unmatched bookings and a pass message.
+# LEFT ANTI JOIN returns bookings with no matching event.
+orphan_count = spark.sql(f"""SELECT count(*) FROM {bookings} b LEFT ANTI JOIN {events} e
+ON b.event_id = e.event_id""").first()[0]
+A8.expect(orphan_count == 0, "Every booking must reference an existing event.")
 
 # COMMAND ----------
 # MAGIC %md
@@ -159,10 +227,12 @@ print("Counts and booking→event referential integrity passed.")
 # MAGIC *(It would vanish from the result, because WHERE runs after the LEFT JOIN and drops its empty rows.)*
 
 # COMMAND ----------
-# WHAT: creates a view of booked and available seats per event, then shows scheduled events.
-# LOOK FOR: the view's SQL, then scheduled events sorted by most seats available.
+
+# WHAT: saves a reusable query for booked and available seats.
+# LOOK FOR: a view created with real table names, not session variables.
 A8.guard("event_availability")
-A8.run("""CREATE OR REPLACE VIEW {event_availability}
+# Saved views cannot contain session variables or parameter markers.
+spark.sql(f"""CREATE OR REPLACE VIEW {event_availability}
 COMMENT 'a8-databricks-learning current confirmed ticket availability'
 AS SELECT e.event_id, e.event_name, e.city, e.event_date, e.status, e.capacity,
 coalesce(sum(b.tickets), 0) AS booked,
@@ -170,7 +240,11 @@ e.capacity - coalesce(sum(b.tickets), 0) AS available
 FROM {events} e LEFT JOIN {bookings} b
 ON e.event_id = b.event_id AND b.status = 'confirmed'
 GROUP BY e.event_id, e.event_name, e.city, e.event_date, e.status, e.capacity""")
-display(A8.sql("SELECT * FROM {event_availability} WHERE status = 'scheduled' ORDER BY available DESC"))
+
+# COMMAND ----------
+# WHAT: shows scheduled events with the most available seats first.
+# LOOK FOR: the live result of the saved availability view.
+display(spark.sql(f"SELECT * FROM {event_availability} WHERE status = 'scheduled' ORDER BY available DESC"))
 
 # COMMAND ----------
 # MAGIC %md
@@ -178,15 +252,18 @@ display(A8.sql("SELECT * FROM {event_availability} WHERE status = 'scheduled' OR
 # MAGIC the same governed table; pick whichever language suits the task.
 
 # COMMAND ----------
-# WHAT: counts completed events per city using PySpark instead of SQL.
-# LOOK FOR: one row per city. Compare with exercise 1.1 below, which asks for the same thing in SQL.
-from pyspark.sql import functions as F
 
-by_city = (spark.table(A8.t("events"))           # read the Delta table, not the CSV
-           .where(F.col("status") == "completed")  # keep past events only
+# WHAT: groups completed events by city using PySpark.
+# LOOK FOR: no output yet; by_city is a Spark DataFrame.
+by_city = (spark.table(events)
+           .where(F.col("status") == "completed")
            .groupBy("city")
            .agg(F.count("*").alias("events"))
            .orderBy("city"))
+
+# COMMAND ----------
+# WHAT: shows the PySpark city counts.
+# LOOK FOR: one row per city; exercise 1.1 asks for the same result in SQL.
 display(by_city)
 
 # COMMAND ----------
@@ -196,16 +273,21 @@ display(by_city)
 # MAGIC 2. Exercise 1.1: write the SQL version of the completed-events-by-city query.
 # MAGIC 3. Exercise 1.2: total confirmed **tickets** for each scheduled event. Counting rows is deliberately wrong here.
 # MAGIC
-# MAGIC Put your SQL between the triple quotes and run the cell. You can use placeholders such as `{events}`.
+# MAGIC Put your SQL between the triple quotes and run the cell. Use `IDENTIFIER(a8_events)` and
+# MAGIC `IDENTIFIER(a8_bookings)` for table names, just as in the `%sql` example.
 # MAGIC A blank answer shows the task and a hint. `A8.solution("1.2")` shows a worked answer.
 
 # COMMAND ----------
-# WHAT: checks your answer to 1.1 against the course solution, run on your tables.
+
+# WHAT: Check: compares your exercise 1.1 answer with the course solution.
+# LOOK FOR: a hint for a blank answer, or feedback on your query.
 answer_1_1 = """"""
 A8.check("1.1", answer_1_1)
 
 # COMMAND ----------
-# WHAT: checks your answer to 1.2.
+
+# WHAT: Check: compares your exercise 1.2 answer with the course solution.
+# LOOK FOR: a hint for a blank answer, or feedback on your query.
 answer_1_2 = """"""
 A8.check("1.2", answer_1_2)
 
@@ -216,22 +298,58 @@ A8.check("1.2", answer_1_2)
 # MAGIC (**time travel**) and see who changed what (**history**).
 # MAGIC Old versions are kept only until files are cleaned up (`VACUUM`), so history is not long-term backup.
 # MAGIC
-# MAGIC The next cell adds 1 to one event's capacity, reads the old version to prove it is still there, then sets
-# MAGIC the value back. It starts from the current value, so running it twice does not drift.
+# MAGIC The next cells capture the current version and capacity, temporarily add 1 to E149's capacity and read
+# MAGIC the old version. The update, eager reads (`collect`/`first`) and restore deliberately share one compact
+# MAGIC `try/finally` cell: `finally` restores the original value even if a read fails. Splitting that safety block
+# MAGIC across cells could strand the changed data if you stopped midway. Display and Check cells run only after
+# MAGIC restoration, so even a failed check cannot leave the increment behind. Rerunning the demonstration starts
+# MAGIC from the current value and does not drift; rerun the baseline cell to capture a fresh history version.
 
 # COMMAND ----------
-# WHAT: makes a small change, reads the table as it was before, then restores the value. Finally shows history.
-# LOOK FOR: the old capacity from VERSION AS OF, then two UPDATE rows at the top of the history table.
-version = A8.sql("DESCRIBE HISTORY {events}").first()["version"]  # newest version number
-before = A8.sql("SELECT capacity FROM {events} WHERE event_id = 'E149'").first()[0]
+
+# WHAT: captures the current Delta version and capacity before the demonstration.
+# LOOK FOR: no output; version and before are the baseline for this run.
+A8.guard("events")
+version = spark.sql(f"DESCRIBE HISTORY {events}").first()["version"]
+before = spark.sql(f"SELECT capacity FROM {events} WHERE event_id = 'E149'").first()[0]
+
+# COMMAND ----------
+# WHAT: demonstrates a temporary Delta update with guaranteed restoration.
+# LOOK FOR: no output; both versions are collected before the finally block restores capacity.
+A8.guard("events")
 try:
-    A8.run("UPDATE {events} SET capacity = capacity + 1 WHERE event_id = 'E149'")
-    # Time travel: read the table as it was at the earlier version.
-    display(A8.sql(f"SELECT event_id, capacity FROM {{events}} VERSION AS OF {version} WHERE event_id = 'E149'"))
-    assert A8.sql("SELECT capacity FROM {events} WHERE event_id = 'E149'").first()[0] == before + 1
+    spark.sql(f"UPDATE {events} SET capacity = :capacity WHERE event_id = 'E149'",
+              args={"capacity": before + 1})
+    old_rows = spark.sql(
+        f"SELECT event_id, capacity FROM {events} VERSION AS OF {version} WHERE event_id = 'E149'"
+    ).collect()
+    changed = spark.sql(f"SELECT capacity FROM {events} WHERE event_id = 'E149'").first()[0]
 finally:
-    A8.run(f"UPDATE {{events}} SET capacity = {before} WHERE event_id = 'E149'")  # always put it back
-display(A8.sql("DESCRIBE HISTORY {events}"))
+    spark.sql(f"UPDATE {events} SET capacity = :capacity WHERE event_id = 'E149'",
+              args={"capacity": before})
+
+# COMMAND ----------
+# WHAT: shows the old-version rows collected before restoration.
+# LOOK FOR: E149's original capacity, not its temporary increment.
+display(spark.createDataFrame(old_rows))
+
+# COMMAND ----------
+# WHAT: Check: verifies time travel, the temporary update and the restored baseline.
+# LOOK FOR: pass messages proving the table has not drifted.
+A8.expect(len(old_rows) == 1 and old_rows[0]["capacity"] == before,
+          "Time travel must return E149's original capacity.")
+A8.expect(changed == before + 1, "The temporary update must add exactly one seat.")
+restored = spark.sql(f"SELECT capacity FROM {events} WHERE event_id = 'E149'").first()[0]
+A8.expect(restored == before, "E149's capacity must be restored before continuing.")
+
+# COMMAND ----------
+# WHAT: shows the Delta transaction history.
+# LOOK FOR: two UPDATE operations at the top: the change and its restoration.
+display(spark.sql(f"DESCRIBE HISTORY {events}"))
+
+# COMMAND ----------
+# WHAT: opens the history and lineage pages.
+# LOOK FOR: links to Events and its downstream availability view.
 A8.links(("Events: schema, sample and history", "table", "events"),
          ("Availability: upstream lineage", "table", "event_availability"))
 
@@ -239,9 +357,10 @@ A8.links(("Events: schema, sample and history", "table", "events"),
 # MAGIC %md
 # MAGIC **Do it in the UI**
 # MAGIC 1. Open **Events** from the link above → **History**. Find the two UPDATE operations.
-# MAGIC 2. Open the availability view → **Lineage**, and expand its upstream tables. Lineage can take a few minutes to appear.
-# MAGIC 3. In the **SQL editor**, paste the SELECT printed below, choose a warehouse and run it. Session variables do not
-# MAGIC    carry over to the SQL editor, so the printed statement uses your real names.
+# MAGIC 2. Open the availability view → **Lineage**, and expand its upstream tables. Lineage can take a few minutes to
+# MAGIC   appear.
+# MAGIC 3. In the **SQL editor**, paste the SELECT printed below, choose a warehouse and run it. Session variables
+# MAGIC    do not carry over to the SQL editor, so the printed statement uses your real names.
 # MAGIC 4. On the PySpark city result, click **+** → **Visualization** → bar chart, city on X, events on Y.
 # MAGIC
 # MAGIC **Recap: explain in your own words**
@@ -252,8 +371,14 @@ A8.links(("Events: schema, sample and history", "table", "events"),
 # MAGIC **Next:** control who can see what, before using the data to predict attendance.
 
 # COMMAND ----------
-# WHAT: prints a ready-to-paste query with your real names, and summarises the module.
-A8.code(A8.fmt("SELECT * FROM {event_availability} ORDER BY available DESC"))
+
+# WHAT: prints a query ready to paste into the SQL editor.
+# LOOK FOR: your real availability view name.
+print(f"SELECT * FROM {event_availability} ORDER BY available DESC")
+
+# COMMAND ----------
+# WHAT: summarises the module and names the next notebook.
+# LOOK FOR: the outcomes you can explain and your next lesson.
 A8.next_step(["Governed CSV volume", "Three typed Delta tables", "Availability view",
               "SQL/PySpark queries, a time-travel read and UI lineage inspection"],
              "02_governance", "Control who can see what")
