@@ -352,7 +352,8 @@ if A8.gate("deploy_serving", "Create a billable attendance serving endpoint?"):
     # Create only: a name collision fails rather than updating someone else's endpoint.
     endpoint = w.serving_endpoints.create_and_wait(
         name=A8.endpoint_name,
-        config=EndpointCoreConfigInput(served_entities=[
+        # Some SDK versions require the endpoint name inside config too; it must match name above.
+        config=EndpointCoreConfigInput(name=A8.endpoint_name, served_entities=[
             ServedEntityInput(entity_name=model_name, entity_version=str(version.version),  # pin a tested version
                               workload_size="Small", scale_to_zero_enabled=True)
         ]),

@@ -317,6 +317,15 @@ class NotebookTests(unittest.TestCase):
         self.assertIn("baseline_log_loss", ml)
         self.assertIn('A8.gate("deploy_serving"', ml)
 
+    def test_serving_config_builds_with_installed_sdk(self):
+        from databricks.sdk.service.serving import EndpointCoreConfigInput, ServedEntityInput
+        ml = (ROOT / "notebooks/03_predictive_ml.py").read_text(encoding="utf-8")
+        self.assertIn("EndpointCoreConfigInput(name=A8.endpoint_name,", ml)
+        config = EndpointCoreConfigInput(name="a8-x-attendance", served_entities=[
+            ServedEntityInput(entity_name="c.s.m", entity_version="1",
+                              workload_size="Small", scale_to_zero_enabled=True)])
+        self.assertEqual(config.as_dict()["name"], "a8-x-attendance")
+
     def test_exercises_used_and_well_formed(self):
         source = "\n".join(p.read_text() for p in (ROOT / "notebooks").glob("*.py"))
         for key, exercise in EXERCISES.items():

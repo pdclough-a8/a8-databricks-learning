@@ -18,6 +18,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S12 | Fixed, not live verified | `FileNotFoundError` from `pkgutil` after a Git folder merge: Python's working folder had been replaced |
 | S13 | Implemented | Code cells did not explain themselves; Modules 0–3 and cleanup rewritten with WHAT/LOOK FOR comments |
 | S14 | Implemented | First-time learners did not know how to clone, pull or recover from Git conflicts |
+| S15 | Fixed | Interactive serving cell failed: the session's Databricks SDK requires `name` in `EndpointCoreConfigInput` |
 
 ## S01: persistent settings
 
@@ -79,6 +80,14 @@ an unclear conflict screen, and conflict markers written into a notebook. `docs/
 clone, pull, discard and recovery in plain terms, with a symptom table. `README.md`, `START_HERE.md`, the overview
 and `00_setup` link to it. UI labels follow the Databricks documentation and the author's screenshots;
 the guide has not been walked through by a new learner.
+
+## S15: serving config name
+
+**Symptom:** in an interactive serverless session, the optional serving cell raised an error building
+`EndpointCoreConfigInput`; the learner fixed it by adding `name=A8.endpoint_name`.
+**Cause:** SDK versions differ between interactive and job environments. In some (including 0.73) `name` is a
+required field of the config; the job environment's version made it optional, so live job runs passed.
+**Fix:** always pass the endpoint name in the config. An offline test builds the config with the installed SDK.
 
 ## S09: notebook environment compatibility
 
