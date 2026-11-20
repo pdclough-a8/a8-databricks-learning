@@ -368,7 +368,7 @@ A8.links(("Events: schema, sample and history", "table", "events"),
 # MAGIC - Why does a view show new bookings without being recreated?
 # MAGIC - What would go wrong if `attended IS NULL` were treated as `false` when training a model?
 # MAGIC
-# MAGIC **Next:** control who can see what, before using the data to predict attendance.
+# MAGIC **Next:** describe the business with a dashboard and check Genie answers, then enforce data access in Module 2.
 
 # COMMAND ----------
 
@@ -381,4 +381,4 @@ print(f"SELECT * FROM {event_availability} ORDER BY available DESC")
 # LOOK FOR: the outcomes you can explain and your next lesson.
 A8.next_step(["Governed CSV volume", "Three typed Delta tables", "Availability view",
               "SQL/PySpark queries, a time-travel read and UI lineage inspection"],
-             "02_governance", "Control who can see what")
+             "01b_descriptive_analytics", "Describe the business with AI/BI and Genie")

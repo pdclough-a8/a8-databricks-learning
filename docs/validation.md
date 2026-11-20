@@ -85,6 +85,25 @@ Not yet validated:
 | A learner editing exercise answers interactively | Not tested; checker verified with supplied solutions and offline wrong-answer cases |
 | Ownership conflict with a second real user | Not tested; offline fakes only |
 
+## Module 1b: descriptive AI/BI dashboard and Genie
+
+**Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_descriptive.py` | 12 passed: the notebook's Python cells execute against the shipped CSVs in SQLite; all 60 `event_metrics` rows match an independent Python aggregation |
+| Dashboard filter states | All, scheduled, scheduled Leeds and scheduled Leeds in December 2026 reference SQL match independent counts and ticket sums; each state is non-empty |
+| Genie SQL | Three example and three held-out reference queries match independent results; example and held-out sets are disjoint |
+| Exercises 1b.1, 1b.2 | Solutions pass; a row count and an unweighted average of averages are rejected |
+| Edge cases | Empty event, cancelled-only, unknown attendance, zero capacity and several feedback rows per event give no double-counting and NULL, not zero, where evidence is absent |
+| Safety | Default-no gate writes nothing; ownership failure stops before CREATE; rerun/resume does not change sources; only one CREATE OR REPLACE VIEW; no personal fields in the view or dashboard dataset |
+| Cleanup | `event_metrics` is dropped before its source tables; dashboards and Genie spaces are explicitly out of scope of the cleanup notebook |
+
+SQLite checks relational logic only. Not validated: Spark SQL/Unity Catalog execution of the view, the
+rendered dashboard, filter bindings, Genie availability on Free Edition, Genie answers, benchmarks, UI labels,
+and manual UI cleanup. `live_smoke.py` does not run Module 1b, and its acceptance notebook now checks only the
+original five exercises, so it makes no claim about this module.
+
 No GenAI, RAG, MCP or app validation is claimed: these are Stage 2 modules, not supplied in this release.
 
 ## Reproduce as a maintainer

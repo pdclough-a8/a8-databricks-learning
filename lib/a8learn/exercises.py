@@ -24,6 +24,29 @@ GROUP BY e.event_id ORDER BY e.event_id""",
         "explain": "A booking can contain multiple tickets. Counting bookings understates demand.",
         "ordered": True,
     },
+    "1b.1": {
+        "task": "Return city and confirmed_tickets for scheduled events from event_metrics, "
+                "grouped and ordered by city.",
+        "hint": "Use IDENTIFIER(a8_event_metrics), filter event_status = 'scheduled', then SUM(confirmed_tickets).",
+        "solution": """SELECT city, sum(confirmed_tickets) AS confirmed_tickets
+FROM IDENTIFIER(a8_event_metrics)
+WHERE event_status = 'scheduled' GROUP BY city ORDER BY city""",
+        "explain": "The reporting grain is one row per event. SUM counts tickets; COUNT counts events.",
+        "ordered": True,
+    },
+    "1b.2": {
+        "task": "Return topic, feedback_count and average_rating for completed events, ordered by topic. "
+                "Round the feedback-weighted average rating to two decimal places.",
+        "hint": "SUM(rating_sum) / SUM(feedback_count), not AVG(average_rating). "
+                "Use 1.0 for fractional division and NULLIF for an empty denominator.",
+        "solution": """SELECT topic, sum(feedback_count) AS feedback_count,
+round(1.0 * sum(rating_sum) / nullif(sum(feedback_count), 0), 2) AS average_rating
+FROM IDENTIFIER(a8_event_metrics)
+WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
+        "explain": "Weight by responses, not by events. An event with one response must not outweigh one with twenty. "
+                   "Missing feedback remains unknown, not a zero-star review.",
+        "ordered": True,
+    },
     "2.1": {
         "task": "Return city and row count from bookings_governed, grouped and ordered by city.",
         "hint": "Query IDENTIFIER(a8_bookings_governed), not the unrestricted bookings table.",

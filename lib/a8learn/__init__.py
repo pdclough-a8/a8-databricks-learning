@@ -26,6 +26,7 @@ OBJECTS = {
     "bookings": ("table", "01_lakehouse_data"),
     "feedback": ("table", "01_lakehouse_data"),
     "event_availability": ("view", "01_lakehouse_data"),
+    "event_metrics": ("view", "01b_descriptive_analytics"),
     "bookings_governed": ("table", "02_governance"),
     "mask_email": ("function", "02_governance"),
     "city_filter": ("function", "02_governance"),

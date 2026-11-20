@@ -21,6 +21,9 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S15 | Fixed | Interactive serving cell failed: the session's Databricks SDK requires `name` in `EndpointCoreConfigInput` |
 | S16 | Fixed, live verified | Notebook cells mixed several operations, used a private SQL placeholder dialect and hid checks in bare assertions |
 | S17 | Fixed, live verified | Serverless rejected `DataFrame.cache()` as unsupported `PERSIST TABLE` during Spark scoring |
+| S18 | Implemented, not live validated | Module 1b descriptive AI/BI dashboard and Genie path; UI steps follow documentation, not a workspace walkthrough |
+| S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
+| S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
 
 ## S01: persistent settings
 
@@ -54,6 +57,15 @@ Comments/tags describe data but do not grant/restrict access. System table permi
 The initial no-setup-rerun test rejected any occurrence of `00_setup`, including a helpful error message.
 The check now tests for actual `%run ./00_setup` or `Course.save` calls. All 22 tests then passed.
 No production behaviour or expected data value was relaxed.
+
+## S18–S20: descriptive analytics module
+
+**Scope:** one opt-in, ownership-guarded `event_metrics` view, one row per event. Bookings and feedback are
+aggregated separately before joining, so feedback cannot multiply tickets. Revenue is not reported because
+there is no payment ledger. Dashboard and Genie assets are created by the learner in the UI; the notebook makes
+no API or AI calls. **Checks:** `tests/test_descriptive.py`, offline only.
+**Uncertainty:** labels, Genie availability, generated SQL and benchmark behaviour need one approved live
+checkpoint on Free Edition. Until then checkpoints D and G are unverified.
 
 For new issues record symptom, scope, evidence/cause, fix or blocker, checks and remaining uncertainty.
 Never include credentials, private logs or personal workspace paths.

@@ -19,7 +19,6 @@ import csv
 from collections import Counter
 
 import mlflow
-from a8learn.exercises import EXERCISES
 from mlflow import MlflowClient
 
 # COMMAND ----------
@@ -53,9 +52,10 @@ A8.expect(observed_cities == expected_cities, "Governed city counts match an ind
 A8.expect(unmasked == 0, "No unmasked customer email is visible through the governed table.")
 
 # COMMAND ----------
-# WHAT: runs every supplied exercise solution against the smoke tables.
+# WHAT: runs the original Stage 1 exercise solutions against the smoke tables.
 # LOOK FOR: a green tick for each exercise.
-for exercise_id in EXERCISES:
+# live_smoke does not run Module 1b; never claim its SQL or UI checkpoints passed here.
+for exercise_id in ("1.1", "1.2", "2.1", "2.2", "3.1"):
     A8.expect(A8.check(exercise_id), f"Exercise {exercise_id} matches its independent solution.")
 
 # COMMAND ----------

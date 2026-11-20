@@ -11,9 +11,10 @@
 # MAGIC ## The journey
 # MAGIC You run **A8 Events**. Across the course you will:
 # MAGIC 1. load event, booking and feedback data into governed Delta tables (Module 1)
-# MAGIC 2. protect customer contact details (Module 2)
-# MAGIC 3. predict who will turn up (Module 3)
-# MAGIC 4. add GenAI, retrieval, tools and an app (Modules 4–8, the next release; not needed yet)
+# MAGIC 2. describe the business with an AI/BI dashboard and check Genie answers (Module 1b)
+# MAGIC 3. protect customer contact details (Module 2)
+# MAGIC 4. predict who will turn up (Module 3)
+# MAGIC 5. add GenAI functions, retrieval, tools and an app (Modules 4–8, planned; not needed yet)
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

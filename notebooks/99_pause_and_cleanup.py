@@ -8,6 +8,9 @@
 # MAGIC - **Notebook/serverless compute:** idles automatically; classic clusters/warehouses follow their own auto-stop
 # MAGIC   settings.
 # MAGIC - **Delta tables, volumes, MLflow and UC models:** persist and use storage.
+# MAGIC - **Module 1b dashboard drafts and Genie spaces:** persist separately. This notebook does not delete them,
+# MAGIC   conversations or cached results. Follow Module 1b's exact-URL/ID UI cleanup before dropping its
+# MAGIC   reporting view.
 # MAGIC - **Custom model serving:** can keep billing even when your notebook is closed. Delete the endpoint when not
 # MAGIC   needed.
 # MAGIC - **Later Vector Search/app modules:** not created by this release; their lifecycle will be taught with them.
@@ -70,6 +73,8 @@ A8.links(("Serving: check whether your endpoint exists", "serving", ""),
 # MAGIC of this course model, and soft-deletes this course MLflow experiment.
 # MAGIC It deletes uploaded CSV files inside the course volume too. Delta/model/MLflow retention policies can retain
 # MAGIC underlying storage; this is not a secure erasure or immediate cost-zero guarantee.
+# MAGIC "All course objects" here means the listed UC/MLflow objects and endpoint, not dashboard/Genie UI assets.
+# MAGIC A retained dashboard or Genie space will stop querying successfully after its event_metrics view is dropped.
 # MAGIC A missing object is fine; a permissions failure or ownership mismatch stops deletion.
 # MAGIC
 # MAGIC Set the action, type your tag in `confirm_tag`, then rerun the choice, cleanup, result and Check cells below.

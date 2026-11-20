@@ -229,7 +229,8 @@ class LifecycleTests(unittest.TestCase):
         fake_mlflow = SimpleNamespace(exceptions=SimpleNamespace(MlflowException=MissingModel))
         self.client.get_registered_model.side_effect = MissingModel()
         self.client.get_experiment_by_name.return_value = None
-        present = {"bookings_governed", "city_filter", "mask_email", "events", "raw"}
+        present = {"bookings_governed", "city_filter", "mask_email", "event_metrics",
+                   "feedback", "bookings", "events", "raw"}
         dropped = []
 
         def drop(statement):
@@ -246,11 +247,13 @@ class LifecycleTests(unittest.TestCase):
              patch.object(self.course, "guard"), patch.object(self.course, "run", side_effect=drop):
             first = cleanup(self.course, self.w, self.client, "smoke", tables=True)
             second = cleanup(self.course, self.w, self.client, "smoke", tables=True)
-        self.assertEqual(first["data_objects_deleted"], 5)
+        self.assertEqual(first["data_objects_deleted"], 8)
         self.assertEqual(second["data_objects_deleted"], 0)
         self.assertFalse(second["endpoint_deleted"])
         self.assertLess(dropped.index("bookings_governed"), dropped.index("city_filter"))
         self.assertLess(dropped.index("bookings_governed"), dropped.index("mask_email"))
+        for source in ["events", "bookings", "feedback"]:
+            self.assertLess(dropped.index("event_metrics"), dropped.index(source))
         self.assertEqual(dropped[-1], "raw")
 
     def test_model_alias_versions_then_model_and_experiment(self):
@@ -328,7 +331,10 @@ class MlflowOwnershipTests(unittest.TestCase):
 class NotebookTests(unittest.TestCase):
     def test_sources_and_run_targets(self):
         paths = list((ROOT / "notebooks").glob("*.py"))
-        self.assertEqual(len(paths), 6)
+        self.assertEqual({p.stem for p in paths}, {
+            "00_setup", "01_lakehouse_data", "01b_descriptive_analytics", "02_governance",
+            "03_predictive_ml", "99_pause_and_cleanup", "_config",
+        })
         for path in paths:
             source = path.read_text(encoding="utf-8")
             tree = ast.parse(source, str(path))
