@@ -1,3 +1,5 @@
+![Analytics8 logo](assets/a8-logo.png){ .a8-logo }
+
 # A8 | Databricks, from data to working AI
 
 **Learn in the notebooks.** Open `notebooks/00_setup` in your Databricks Git folder.
@@ -18,7 +20,7 @@ Using an LLM does not automatically make an answer predictive or prescriptive.
 | Descriptive | What happened, or what is booked? | Module 1b: dashboard and SQL-checked Genie answers |
 | Diagnostic | Why did it happen? | Module 1c: drill-downs, mix versus rate and a chance test; association alone is not causation |
 | Predictive | What is likely to happen? | Module 3: attendance probabilities and expected turnout |
-| Prescriptive | What should we do, given objectives and constraints? | Planned module: compare and choose actions |
+| Prescriptive | What should we do, given objectives and constraints? | Module 1d: choose ticket limits and meal orders |
 | Automation | How can approved work run repeatedly or take bounded actions? | Modules 6 and 8, planned |
 
 Automation is a delivery capability, not proof of better analysis. Modules 0–2 provide the platform,
@@ -35,13 +37,13 @@ several levels; they are not new analytics levels.
 | 1c. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
 | 2. Governance | Grants and identity, comments/tags, real row filters and column masks, lineage and optional audit system tables | Stage 1 |
 | 3. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
-| Prescriptive analytics (number to be assigned) | Compare actions against explicit objectives, constraints and uncertainty | Planned; not supplied |
 | 4. GenAI | Playground, pay-per-token endpoints, `ai_query`, AI Functions for feedback, prompts and tracing | Planned next |
 | 5. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
 | 6. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
 | 6b. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
 | 7. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
 | 8. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dashboard deployment and programmatic Genie creation, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
+| 1d. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 3 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 3); offline checked, no live validation |
 | 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
 ## Start and stop
@@ -50,7 +52,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `01b_descriptive_analytics` → `01c_diagnostic_analytics`
-→ `02_governance` → `03_predictive_ml` → `99_pause_and_cleanup`.
+→ `02_governance` → `03_predictive_ml` → `01d_prescriptive_analytics` → `99_pause_and_cleanup`.
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
 
@@ -74,6 +76,15 @@ The supplied SQL is checked offline; dashboard rendering/interactivity, Genie qu
 compatibility are **not live validated**. If a UI feature is unavailable, use the labelled SQL-only
 fallback and record that checkpoint as blocked. Exact UI-asset cleanup is manual; the cleanup notebook
 drops the reporting view but does not delete generated files, dashboard drafts, Genie spaces, conversations or caches.
+
+## Module 1d: prescriptive analytics, assumptions not guarantees
+
+Decide how many tickets to sell and how many meals to order for one scheduled event, using the Module 3
+`attendance_predictions` table and `event_forecast` view. A seeded numpy simulation draws plausible turnouts, an
+expected-cost search finds the cheapest choice, and sensitivity tables show how fragile it is. Costs are **assumed
+teaching parameters**, bookings are treated as independent, and the model's probabilities are trusted as given.
+Nothing is written, no library is added and no model is called. Two SQL exercises and a human-judgement checkpoint
+on fairness to turned-away attendees complete it. Run it after `03_predictive_ml`.
 
 ## Module 1c: diagnostic analytics, not causation
 

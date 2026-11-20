@@ -94,7 +94,36 @@ FROM paired""",
         "explain": "The two effects add up exactly to the gap. Mix says the segments contain different topics; "
                    "rate says the same topic is rated differently. Neither says why.",
     },
-    "2.1": {
+    "1d.1": {
+        "task": "For scheduled events with predicted attendance, return event_id, show_probability (expected_attendees "
+                "divided by confirmed_tickets, rounded to 3 decimals) and simple_limit (capacity divided by the "
+                "unrounded show probability, truncated to a whole number of tickets), ordered by event_id.",
+        "hint": "Use IDENTIFIER(a8_event_forecast). Keep rows where expected_attendees > 0 so you never divide by "
+                "zero. CAST(... AS INT) truncates. Divide the unrounded probability, then round only the shown one.",
+        "solution": """SELECT event_id, round(expected_attendees / confirmed_tickets, 3) AS show_probability,
+CAST(capacity / (expected_attendees / confirmed_tickets) AS INT) AS simple_limit
+FROM IDENTIFIER(a8_event_forecast) WHERE expected_attendees > 0 ORDER BY event_id""",
+        "explain": "Selling capacity / p tickets fills the room on average, but ignores the spread of turnout. "
+                   "The simulation prices both the empty seats and the people turned away.",
+        "ordered": True,
+    },
+    "1d.2": {
+        "task": "Using only the latest prediction per booking, return event_id and attendance_variance: the sum of "
+                "tickets squared x probability x (1 - probability), rounded to 2 decimals, ordered by event_id.",
+        "hint": "Reuse the row_number() pattern from exercise 3.1 on IDENTIFIER(a8_attendance_predictions), "
+                "keep rank 1, then sum tickets * tickets * attendance_probability * (1 - attendance_probability).",
+        "solution": """WITH ranked AS (
+SELECT p.*, row_number() OVER (
+PARTITION BY booking_id ORDER BY scored_at DESC NULLS LAST, CAST(model_version AS INT) DESC
+) AS score_rank FROM IDENTIFIER(a8_attendance_predictions) p
+)
+SELECT event_id,
+round(sum(tickets * tickets * attendance_probability * (1 - attendance_probability)), 2) AS attendance_variance
+FROM ranked WHERE score_rank = 1 GROUP BY event_id ORDER BY event_id""",
+        "explain": "A booking attends together, so its tickets count squared in the variance. Using every score "
+                   "instead of the latest would double-count bookings and overstate the uncertainty.",
+        "ordered": True,
+    },    "2.1": {
         "task": "Return city and row count from bookings_governed, grouped and ordered by city.",
         "hint": "Query IDENTIFIER(a8_bookings_governed), not the unrestricted bookings table.",
         "solution": """SELECT city, count(*) FROM IDENTIFIER(a8_bookings_governed)

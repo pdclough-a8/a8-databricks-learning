@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # A8 | 1b. Describe the business with AI/BI and Genie
 # MAGIC **Where this sits:** descriptive analytics, what happened or is booked. Prediction is Module 3;
-# MAGIC diagnostic analytics follows in Module 1c; prescriptive analytics is planned separately.
+# MAGIC diagnostic analytics follows in Module 1c; prescriptive analytics follows Module 3 in `01d`.
 # MAGIC
 # MAGIC **Outcome:** build a private draft dashboard and a Genie space over your own governed event metrics,
 # MAGIC then prove their answers with SQL. Descriptive analytics asks **what happened or is booked**, not what will

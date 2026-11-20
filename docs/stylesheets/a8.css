@@ -1,13 +1,17 @@
 /* Provisional course palette, inspired by supplied playbook, not official A8 tokens. */
 :root {
-  --md-primary-fg-color: #1d2225;
-  --md-primary-bg-color: #ffffff;
+  --md-primary-fg-color: #ffffff;
+  --md-primary-bg-color: #1d2225;
   --md-accent-fg-color: #a93614;
   --a8-orange: #ff5b35;
   --md-text-font-family: Arial, Helvetica, sans-serif;
   --md-code-font-family: Consolas, monospace;
 }
-.md-header { border-bottom: 4px solid var(--a8-orange); }
+.md-header { border-bottom: 4px solid var(--a8-orange); box-shadow: none; }
+/* The supplied logo is dark on white, so the header is white and the logo is shown at a readable size. */
+.md-header__button.md-logo img { height: 2rem; width: auto; }
+.md-header__button.md-logo { padding: .2rem; }
+.a8-logo { max-width: 260px; height: auto; margin: 0 0 1rem; }
 .md-typeset h1, .md-typeset h2 { color: #1d2225; font-weight: 750; }
 .md-typeset h1 { border-bottom: 1px solid #b8b8b8; padding-bottom: .5em; }
 .md-typeset a { text-decoration: underline; text-underline-offset: .15em; }

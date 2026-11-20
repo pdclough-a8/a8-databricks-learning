@@ -137,6 +137,29 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 1d: prescriptive analytics
+
+**Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_prescriptive.py` | 14 tests: the notebook's Python cells execute against a synthetic `attendance_predictions` table (two model versions per booking) and an `event_forecast` table built by independent Python, not by Module 3's model or SQL |
+| Overbooking | The simulated best ticket limit is within 1% of the brute-force minimum of the exact binomial cost, and within 8 tickets of its argmin (the cost curve is flat near the minimum); limit rises with the cost of turning people away and falls as show probability rises |
+| Turnout simulation | Seeded and repeatable; matches exact enumeration of all 16 outcomes of a four-booking case within 0.01 per outcome |
+| Catering | The chosen order is within 1% of the exact-distribution minimum (dynamic programming) and within 2 meals of its argmin; exact mean and variance match sum(t x p) and sum(t^2 x p x (1 - p)) |
+| Exercises 1d.1, 1d.2 | Solutions equal independent Python results for every scheduled event; rounding instead of truncating, and ignoring the latest-score rule, are rejected, as are blank answers |
+| Safety | No CREATE/DROP/INSERT/UPDATE/DELETE, no gate, guard, file write, AI call or MLflow; imports only math, numpy and pandas; missing prerequisites stop before any query; completed, unknown and injection-style event ids are rejected; the event id is a query parameter |
+| Navigation and branding | Index, START_HERE and the Module 1b/1c next-step lines point to 1d; the supplied logo file is a PNG referenced by mkdocs, README, START_HERE and the overview |
+
+Illustration only, from the synthetic test predictions (not Module 3's real model): for E150 the simulated cheapest limit was
+201 tickets against a simple rule of 208, and the cheapest order was 44 meals for 59 tickets and 42.6 expected attendees.
+Real learner results will differ with their own model version and costs.
+
+Not validated: Spark SQL execution (named `:event_id` parameters, `row_number()` with `NULLS LAST`, `toPandas()` on
+serverless), the notebook rendering in Databricks, and the logo and white header rendering in the built site (checked only that
+the strict build passes, not by eye in a browser). Probabilities from Module 3 are treated as calibrated; independence between
+bookings is an assumption; costs are assumed teaching parameters with no payment ledger behind them.
+
 ## Module 1c: diagnostic analytics
 
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.

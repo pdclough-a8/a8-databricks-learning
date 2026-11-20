@@ -3,6 +3,8 @@ site_description: Notebook-first Databricks learning, from governed data to work
 theme:
   name: material
   font: false
+  logo: assets/a8-logo.png
+  favicon: assets/a8-logo.png
   palette:
     primary: custom
     accent: custom

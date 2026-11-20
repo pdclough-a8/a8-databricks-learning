@@ -26,6 +26,8 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S21 | Fixed, not live verified | Module 1b's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 3 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
 | S23 | Implemented, not live validated | Module 1c diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
+| S24 | Implemented, not live validated | Module 1d prescriptive analytics: seeded Monte Carlo and expected-cost search for overbooking and catering over Module 3 predictions; read-only, offline only |
+| S25 | Open | Analytics8 logo supplied by the course owner and added to the docs site, README and START_HERE; the file is not confirmed as the approved master, and notebooks keep text branding because Git-folder image rendering is unverified |
 | S22 | Implemented, not live validated | Module 1b now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 
 ## S01: persistent settings
@@ -179,6 +181,19 @@ Training and experiment tracking had already succeeded. MLflow experiment, run a
 underscores, matching the serving endpoint tags. Delta table properties keep `a8learn.course`, which Delta accepts.
 The earlier smoke experiment was soft-deleted with old-style tags; the notebook correctly refuses to adopt it,
 so the retest uses a new tag rather than weakening the ownership check.
+
+## S25: logo and branding
+
+**Scope:** `docs/assets/a8-logo.png` (798 x 286 px) is used unaltered. The docs header changed from charcoal to white because the logo is dark; the orange rule stays.
+**Limits:** brand-owner approval, clear-space and minimum-size rules are not confirmed. Colour tokens remain provisional. The notebooks do not embed the logo.
+
+## S24: prescriptive analytics module
+
+**Scope:** Module 1d reads `attendance_predictions` and `event_forecast` only. It writes nothing, makes no AI call and adds no library.
+**Checks:** `tests/test_prescriptive.py`, offline only; Spark/serverless execution is not live validated.
+**Limits:** costs are assumed teaching parameters, not real prices; bookings are treated as independent and the model's probabilities as calibrated; the overbooking
+what-if assumes later buyers behave like current bookers; catering covers existing bookings only. A recommendation is a decision under these assumptions.
+Fairness to turned-away attendees needs human judgement (checkpoint H1). The prescriptive level is limited to two decisions; no optimiser library or automation.
 
 ## S23: diagnostic analytics module
 

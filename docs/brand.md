@@ -17,7 +17,11 @@ and internal targeting material are deliberately absent.
 
 ## Visual implementation
 
-Plain **A8** text branding identifies the learning experience. It is not a recreated official wordmark.
+Plain **A8** text branding identifies the learning experience in the notebooks. The Analytics8 logo
+(`docs/assets/a8-logo.png`, 798 x 286 px) was supplied by the course owner and is used unaltered on the
+documentation site header and overview, `README.md` and `START_HERE.md`. It is not redrawn or recoloured.
+The logo is dark on white, so the site header is white with the orange rule beneath it.
+Databricks notebooks do not show the logo: image rendering from a Git folder is unverified, so notebooks keep text branding.
 Charcoal, white, light grey, simple rules and an orange highlight echo the supplied visual examples.
 System sans-serif typography avoids inventing a licensed brand-font requirement or loading external fonts.
 
@@ -34,7 +38,7 @@ Dark orange is used for small text/control contrast rather than copying bright-o
 Links remain underlined; status is communicated with words, not colour alone.
 The stylesheet retains visible keyboard focus and responsive Material navigation.
 
-Before public release, obtain approved logo files, exact colour/font tokens, usage rules and
-brand-owner review. Replace tokens in `docs/stylesheets/a8.css`,
+Before public release, confirm the supplied logo file is the approved master, and obtain exact colour/font
+tokens, usage rules (clear space, minimum size) and brand-owner review. Replace tokens in `docs/stylesheets/a8.css`,
 `lib/a8learn/__init__.py` (notebook cards).
-Do not extract or redraw a low-resolution logo from a slide.
+Do not extract or redraw a logo from a slide.

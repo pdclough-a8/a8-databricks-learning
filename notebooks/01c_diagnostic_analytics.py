@@ -370,4 +370,4 @@ A8.check("1c.2", answer_1c_2)
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint G2 (or marked blocked), and your own
 # MAGIC explanations. **Not covered:** adjusting for several confounders at once and Simpson's paradox are deferred.
-# MAGIC **Next:** `02_governance`, enforce who can see what. Prescriptive analytics is planned separately.
+# MAGIC **Next:** `02_governance`, enforce who can see what. Prescriptive analytics (`01d`) follows Module 3.
