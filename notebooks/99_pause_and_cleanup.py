@@ -1,6 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | Pause, resume or finish
+# MAGIC **Where this sits:** lifecycle and cost control across every analytics level.
+# MAGIC
 # MAGIC **Outcome:** know what remains, remove an optional billable endpoint, or explicitly delete your course data.
 # MAGIC Settings and source notebooks are never deleted here. No wildcards, schema drops or shared-resource changes.
 # MAGIC
@@ -10,7 +12,7 @@
 # MAGIC - **Delta tables, volumes, MLflow and UC models:** persist and use storage.
 # MAGIC - **Module 1b dashboard drafts and Genie spaces:** persist separately. This notebook does not delete them,
 # MAGIC   conversations or cached results. Follow Module 1b's exact-URL/ID UI cleanup before dropping its
-# MAGIC   reporting view.
+# MAGIC   reporting view. Remove any generated dashboard file by its exact printed path too; keep saved settings.
 # MAGIC - **Custom model serving:** can keep billing even when your notebook is closed. Delete the endpoint when not
 # MAGIC   needed.
 # MAGIC - **Later Vector Search/app modules:** not created by this release; their lifecycle will be taught with them.

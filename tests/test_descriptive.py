@@ -7,13 +7,15 @@ import ast
 import contextlib
 import csv
 import io
+import json
 import re
 import sqlite3
 import sys
+import tempfile
 import unittest
 from collections import defaultdict
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib"))
@@ -122,13 +124,21 @@ class DescriptiveTests(unittest.TestCase):
         self.events, self.bookings, self.feedback = [read_fixture(k) for k in ("events", "bookings", "feedback")]
         for key, rows in [("events", self.events), ("bookings", self.bookings), ("feedback", self.feedback)]:
             self.spark.load(key, rows)
-        self.namespace = {"A8": self.course, "spark": self.spark, "display": lambda frame: frame.collect()}
+        self.namespace = {"A8": self.course, "spark": self.spark, "display": lambda frame: frame.collect(),
+                          "ROOT": ROOT}
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.dashboard_file = Path(folder.name) / "A8 offline8 event snapshot.lvdash.json"
+        self.workspace = Mock()
 
-    def run_lesson(self, approved=True, exists=lambda key: True):
+    def run_lesson(self, approved=True, exists=lambda key: True, gates=None):
         # These mocks replace ownership/availability reads only, never the taught SELECT queries.
         with patch.object(self.course, "exists", side_effect=exists), \
              patch.object(self.course, "guard") as guard, \
-             patch.object(self.course, "gate", return_value=approved), \
+             patch.object(self.course, "gate",
+                          side_effect=lambda name, _label: (gates or {}).get(name, approved)), \
+             patch.object(Course, "dashboard_path", new_callable=PropertyMock, return_value=self.dashboard_file), \
+             patch("databricks.sdk.WorkspaceClient", self.workspace), \
              contextlib.redirect_stdout(io.StringIO()):
             exec(compile(SOURCE, str(NOTEBOOK), "exec"), self.namespace)
         return guard
@@ -207,7 +217,8 @@ class DescriptiveTests(unittest.TestCase):
         self.run_lesson()
         self.assertEqual(self.values("SELECT * FROM event_metrics ORDER BY event_id"), before)
         # Re-enter the lesson from a fresh Python namespace with an existing view.
-        self.namespace = {"A8": self.course, "spark": self.spark, "display": lambda frame: frame.collect()}
+        self.namespace = {"A8": self.course, "spark": self.spark, "display": lambda frame: frame.collect(),
+                          "ROOT": ROOT}
         self.run_lesson()
         self.assertEqual(self.values("SELECT * FROM event_metrics ORDER BY event_id"), before)
         for key, rows in sources.items():
@@ -335,8 +346,9 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
 
     def test_notebook_has_only_the_contracted_write_and_no_network_or_automatic_ui_claims(self):
         tree = ast.parse(SOURCE)
-        imports = [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
-        self.assertEqual(imports, [])
+        imports = {alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))
+                   for alias in node.names}
+        self.assertEqual(imports, {"json", "WorkspaceClient"})
         self.run_lesson()
         writes = [query for query in self.spark.statements
                   if re.match(r"\s*(?:CREATE|DROP|ALTER|INSERT|UPDATE|DELETE)\b", query)]
@@ -347,6 +359,62 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
         self.assertEqual(OBJECTS["event_metrics"], ("view", "01b_descriptive_analytics"))
         self.assertIn("B1–B3", SOURCE)
         self.assertIn("View not created", SOURCE)
+
+    def test_dashboard_file_reads_only_the_view_and_binds_real_fields(self):
+        self.run_lesson()
+        written = json.loads(self.dashboard_file.read_text(encoding="utf-8"))
+        self.assertEqual(written, self.namespace["dashboard"])
+        (dataset,) = written["datasets"]
+        self.assertEqual("".join(dataset["queryLines"]), self.namespace["dashboard_sql"])
+        sql = "".join(dataset["queryLines"])
+        others = [self.course.t(k) for k in OBJECTS if k != "event_metrics"]
+        self.assertFalse([name for name in others if name in sql])
+        columns = set(self.spark.sql(sql).columns)
+        layout = written["pages"][0]["layout"]
+        kinds = {}
+        for item in layout:
+            widget = item["widget"]
+            queries = {q["name"]: q["query"] for q in widget.get("queries", [])}
+            for query in queries.values():
+                self.assertEqual(query["datasetName"], dataset["name"])
+                for field in query["fields"]:
+                    if "associative_filter_predicate_group" in field["expression"]:
+                        continue
+                    used = set(re.findall(r"`([^`]+)`", field["expression"])) - {"associative_filter_predicate_group"}
+                    self.assertTrue(used and used <= columns, field)
+            if "spec" in widget:
+                kinds.setdefault(widget["spec"]["widgetType"], []).append(widget)
+                for enc in widget["spec"]["encodings"].get("fields", []):
+                    self.assertIn(enc["queryName"], queries)
+        self.assertEqual({k: len(v) for k, v in kinds.items()},
+                         {"filter-single-select": 2, "filter-date-range-picker": 1, "counter": 2, "bar": 2, "table": 1})
+        filtered = {w["spec"]["encodings"]["fields"][0]["fieldName"] for k in kinds if k.startswith("filter")
+                    for w in kinds[k]}
+        self.assertEqual(filtered, {"city", "event_status", "event_date"})
+        counters = {w["queries"][0]["query"]["fields"][0]["expression"] for w in kinds["counter"]}
+        self.assertEqual(counters, {"COUNT(`event_id`)", "SUM(`confirmed_tickets`)"})
+        status = self.workspace.return_value.workspace.get_status
+        status.assert_called_once_with(str(self.dashboard_file).removeprefix("/Workspace"))
+
+    def test_dashboard_template_is_not_itself_a_dashboard_and_has_no_names(self):
+        template = ROOT / "dashboards/event_snapshot.lvdash.template.json"
+        self.assertFalse(template.name.endswith(".lvdash.json"))
+        data = json.loads(template.read_text(encoding="utf-8"))
+        self.assertEqual(data["datasets"][0]["queryLines"], [])
+        self.assertNotIn("a8_", template.read_text(encoding="utf-8"))
+        self.assertFalse(list(ROOT.rglob("*.lvdash.json")))
+
+    def test_dashboard_file_default_no_and_never_overwrites(self):
+        self.run_lesson(gates={"write_dashboard_file": False})
+        self.assertFalse(self.dashboard_file.exists())
+        self.workspace.return_value.workspace.get_status.assert_not_called()
+        self.dashboard_file.write_text("learner edits", encoding="utf-8")
+        self.run_lesson()
+        self.assertEqual(self.dashboard_file.read_text(encoding="utf-8"), "learner edits")
+
+    def test_dashboard_path_is_in_the_learners_own_folder(self):
+        self.assertEqual(self.course.dashboard_path.as_posix(),
+                         "/Workspace/Users/synthetic@example.com/a8learn/A8 offline8 event snapshot.lvdash.json")
 
 
 if __name__ == "__main__":

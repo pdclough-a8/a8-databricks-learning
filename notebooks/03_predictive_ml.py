@@ -1,6 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 3. Predict attendance, track it and put it to work
+# MAGIC **Where this sits:** predictive analytics, what is likely to happen. Module 1b describes the snapshot;
+# MAGIC choosing the best action under constraints (prescriptive analytics) is planned, not taught here.
+# MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - a classifier that predicts whether a confirmed booking turns up
 # MAGIC - an MLflow run that records how it was trained and how well it did

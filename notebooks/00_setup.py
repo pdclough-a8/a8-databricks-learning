@@ -1,6 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 0. Your Databricks workbench
+# MAGIC **Where this sits:** platform foundations for every analytics level, not a separate analytics level.
+# MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - a notebook running on serverless compute
 # MAGIC - a schema you know you can write to

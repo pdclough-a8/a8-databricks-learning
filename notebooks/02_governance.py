@@ -1,6 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 2. Control who can see what
+# MAGIC **Where this sits:** governance across every analytics level, not a separate analytics level.
+# MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - read the permissions on your tables
 # MAGIC - a documented, tagged copy of the bookings table

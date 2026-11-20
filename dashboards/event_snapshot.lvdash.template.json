@@ -1,0 +1,563 @@
+{
+  "datasets": [
+    {
+      "name": "event_metrics",
+      "displayName": "Event metrics",
+      "queryLines": []
+    }
+  ],
+  "pages": [
+    {
+      "name": "event_snapshot",
+      "displayName": "Event snapshot",
+      "layout": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          },
+          "widget": {
+            "name": "heading",
+            "textbox_spec": "# A8 | Event snapshot\nSynthetic data as at 20 November 2026. Confirmed tickets are not attendees. Ratings represent respondents only. Filters are not security."
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 1
+          },
+          "widget": {
+            "name": "filter_city",
+            "queries": [
+              {
+                "name": "filter_city_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "city_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "city",
+                    "displayName": "city",
+                    "queryName": "filter_city_query"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "City"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 1
+          },
+          "widget": {
+            "name": "filter_status",
+            "queries": [
+              {
+                "name": "filter_status_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "event_status",
+                      "expression": "`event_status`"
+                    },
+                    {
+                      "name": "event_status_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "event_status",
+                    "displayName": "event_status",
+                    "queryName": "filter_status_query"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Event status"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 1
+          },
+          "widget": {
+            "name": "filter_date",
+            "queries": [
+              {
+                "name": "filter_date_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "event_date",
+                      "expression": "`event_date`"
+                    },
+                    {
+                      "name": "event_date_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "event_date",
+                    "displayName": "event_date",
+                    "queryName": "filter_date_query"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Event date"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 2
+          },
+          "widget": {
+            "name": "events",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "count(event_id)",
+                      "expression": "COUNT(`event_id`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(event_id)",
+                  "displayName": "Events"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Events"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 2
+          },
+          "widget": {
+            "name": "confirmed_tickets",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "sum(confirmed_tickets)",
+                      "expression": "SUM(`confirmed_tickets`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(confirmed_tickets)",
+                  "displayName": "Confirmed tickets"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Confirmed tickets"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 3,
+            "height": 5
+          },
+          "widget": {
+            "name": "tickets_by_city",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "sum(confirmed_tickets)",
+                      "expression": "SUM(`confirmed_tickets`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "city",
+                  "displayName": "City",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  },
+                  "axis": {
+                    "title": "City"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(confirmed_tickets)",
+                  "displayName": "Confirmed tickets",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Confirmed tickets"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Confirmed tickets by city"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 3,
+            "y": 5,
+            "width": 3,
+            "height": 5
+          },
+          "widget": {
+            "name": "tickets_by_month",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "name": "monthly(event_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `event_date`)"
+                    },
+                    {
+                      "name": "sum(confirmed_tickets)",
+                      "expression": "SUM(`confirmed_tickets`)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(event_date)",
+                  "displayName": "Event month",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Event month"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(confirmed_tickets)",
+                  "displayName": "Confirmed tickets",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Confirmed tickets"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Confirmed tickets by event month"
+              }
+            }
+          }
+        },
+        {
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 6,
+            "height": 8
+          },
+          "widget": {
+            "name": "event_detail",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "event_metrics",
+                  "disaggregated": true,
+                  "fields": [
+                    {
+                      "name": "event_id",
+                      "expression": "`event_id`"
+                    },
+                    {
+                      "name": "event_name",
+                      "expression": "`event_name`"
+                    },
+                    {
+                      "name": "city",
+                      "expression": "`city`"
+                    },
+                    {
+                      "name": "event_date",
+                      "expression": "`event_date`"
+                    },
+                    {
+                      "name": "event_status",
+                      "expression": "`event_status`"
+                    },
+                    {
+                      "name": "capacity",
+                      "expression": "`capacity`"
+                    },
+                    {
+                      "name": "confirmed_tickets",
+                      "expression": "`confirmed_tickets`"
+                    },
+                    {
+                      "name": "available_seats",
+                      "expression": "`available_seats`"
+                    },
+                    {
+                      "name": "fill_rate",
+                      "expression": "`fill_rate`"
+                    },
+                    {
+                      "name": "feedback_count",
+                      "expression": "`feedback_count`"
+                    },
+                    {
+                      "name": "average_rating",
+                      "expression": "`average_rating`"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "event_id",
+                    "displayName": "Event",
+                    "title": "Event",
+                    "type": "string",
+                    "displayAs": "string",
+                    "alignContent": "left",
+                    "visible": true,
+                    "order": 100000
+                  },
+                  {
+                    "fieldName": "event_name",
+                    "displayName": "Name",
+                    "title": "Name",
+                    "type": "string",
+                    "displayAs": "string",
+                    "alignContent": "left",
+                    "visible": true,
+                    "order": 100001
+                  },
+                  {
+                    "fieldName": "city",
+                    "displayName": "City",
+                    "title": "City",
+                    "type": "string",
+                    "displayAs": "string",
+                    "alignContent": "left",
+                    "visible": true,
+                    "order": 100002
+                  },
+                  {
+                    "fieldName": "event_date",
+                    "displayName": "Date",
+                    "title": "Date",
+                    "type": "date",
+                    "displayAs": "datetime",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100003
+                  },
+                  {
+                    "fieldName": "event_status",
+                    "displayName": "Status",
+                    "title": "Status",
+                    "type": "string",
+                    "displayAs": "string",
+                    "alignContent": "left",
+                    "visible": true,
+                    "order": 100004
+                  },
+                  {
+                    "fieldName": "capacity",
+                    "displayName": "Capacity",
+                    "title": "Capacity",
+                    "type": "integer",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100005
+                  },
+                  {
+                    "fieldName": "confirmed_tickets",
+                    "displayName": "Confirmed tickets",
+                    "title": "Confirmed tickets",
+                    "type": "integer",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100006
+                  },
+                  {
+                    "fieldName": "available_seats",
+                    "displayName": "Available seats",
+                    "title": "Available seats",
+                    "type": "integer",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100007
+                  },
+                  {
+                    "fieldName": "fill_rate",
+                    "displayName": "Fill rate",
+                    "title": "Fill rate",
+                    "type": "float",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100008,
+                    "numberFormat": "0.0%"
+                  },
+                  {
+                    "fieldName": "feedback_count",
+                    "displayName": "Responses",
+                    "title": "Responses",
+                    "type": "integer",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100009
+                  },
+                  {
+                    "fieldName": "average_rating",
+                    "displayName": "Average rating",
+                    "title": "Average rating",
+                    "type": "float",
+                    "displayAs": "number",
+                    "alignContent": "right",
+                    "visible": true,
+                    "order": 100010,
+                    "numberFormat": "0.00"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Event detail"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

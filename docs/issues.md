@@ -25,6 +25,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
 | S21 | Fixed, not live verified | Module 1b's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 3 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
+| S22 | Implemented, not live validated | Module 1b now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 
 ## S01: persistent settings
 
@@ -63,8 +64,9 @@ No production behaviour or expected data value was relaxed.
 
 **Scope:** one opt-in, ownership-guarded `event_metrics` view, one row per event. Bookings and feedback are
 aggregated separately before joining, so feedback cannot multiply tickets. Revenue is not reported because
-there is no payment ledger. Dashboard and Genie assets are created by the learner in the UI; the notebook makes
-no API or AI calls. **Checks:** `tests/test_descriptive.py`, offline only.
+there is no payment ledger. Dashboard and Genie setup is learner-triggered, with no AI calls from the notebook.
+S22 adds an optional dashboard-file write and a read-only SDK object-type lookup.
+**Checks:** `tests/test_descriptive.py`, offline only.
 **Uncertainty:** labels, Genie availability, generated SQL and benchmark behaviour need one approved live
 checkpoint on Free Edition. Until then checkpoints D and G are unverified.
 
@@ -76,6 +78,20 @@ notebook. `dbutils.widgets.getAll()` showed `create_reporting_view = no`, so the
 **Fix:** a separate cell creates the gate widget and finishes normally; the create cell skips the write when it
 is no, and an `A8.require` check then stops with a named missing view. Offline tests cover default-no and cell order.
 **Limit:** the widget display has not been re-observed in the workspace yet.
+
+## S22: shorter dashboard build and portable definition
+
+**Need:** teach datasets, counters and field filters without spending the whole lesson configuring widgets.
+**Change:** build one dataset, one counter and one city filter manually, then opt in to generating a complete
+dashboard file from `dashboards/event_snapshot.lvdash.template.json`. Only the learner's reporting-view SQL is
+inserted. The file is saved beside their settings, never intentionally replaced, and its workspace object type
+is read using native SDK authentication. If stored as FILE rather than DASHBOARD, use the documented UI import.
+No API creation, publishing, sharing, scheduling or AI requests are added. API dashboard deployment and Genie
+creation belong to planned Module 8; Module 7 uses the conversation API with an existing Genie space.
+**Checks:** offline execution covers the generated SQL, dataset/widget field bindings, default-no, existing-file
+preservation and user-folder path. These checks do not prove UI rendering, filter interactivity or import.
+**Remaining uncertainty:** whether a notebook-written file is recognised as DASHBOARD, exact UI import behaviour
+and the supplied widget specs still need live observation. Cleanup remains manual by exact path/URL/ID.
 
 For new issues record symptom, scope, evidence/cause, fix or blocker, checks and remaining uncertainty.
 Never include credentials, private logs or personal workspace paths.

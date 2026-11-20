@@ -1,6 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 1. Files to trusted lakehouse data
+# MAGIC **Where this sits:** the data foundation for descriptive analytics in Module 1b and prediction in Module 3.
+# MAGIC
 # MAGIC **By the end of this notebook you will have:**
 # MAGIC - the raw CSV files in a governed **volume**
 # MAGIC - three typed **Delta tables**: events, bookings and feedback

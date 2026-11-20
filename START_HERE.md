@@ -20,7 +20,10 @@ and a Genie space (called **Genie Agent** in newer UIs). Both use your existing 
 SQL-only fallback is available if a UI feature is blocked; it does not count as completing that feature.
 Read the opt-in, quota and AI-request notices before running or creating anything; do not publish or share.
 
-The [full curriculum](docs/index.md) includes GenAI functions,
+The [analytics-level map and full curriculum](docs/index.md) distinguish descriptive (1b) and predictive (3)
+from planned diagnostic and prescriptive modules. Automation is planned in Modules 6 and 8;
+platform, governance, GenAI and retrieval capabilities support these levels.
+The later curriculum includes GenAI functions,
 RAG, agents, MCP, an app using your learner tables, deployment and governance.
 These later modules are planned, not supplied yet. The earlier fixture-based app has been removed.
 

@@ -153,6 +153,11 @@ class Course:
         return f"/Users/{self.cfg.user}/a8learn_{self.cfg.tag}_attendance"
 
     @property
+    def dashboard_path(self) -> Path:
+        """Module 1b's generated dashboard file, beside the learner's saved settings."""
+        return config_path(self.cfg.user).parent / f"A8 {self.cfg.tag} event snapshot.lvdash.json"
+
+    @property
     def endpoint_name(self) -> str:
         return f"a8-{self.cfg.tag}-attendance"
 

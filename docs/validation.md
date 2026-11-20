@@ -9,6 +9,7 @@ Python 3.12.13 on Windows, dependencies scoped to this repository's ignored `.pa
 
 | Check | Evidence |
 |---|---|
+| Final offline suite, including Module 1b file generation | 54 passed; includes Ruff over `lib notebooks tests`. Strict MkDocs build passed |
 | `python -m unittest discover -s tests -v` | 37 passed (20 November 2026), including real split/pipeline code, latest-score SQL, lint, partial/repeated cleanup and MLflow ownership helpers |
 | `python -m ruff check lib notebooks tests data` | Passed (20 November 2026); also executed by the unit suite |
 | `python -m mkdocs build --strict` | Passed after the all-module code-standard rewrite (20 November 2026) |
@@ -91,18 +92,25 @@ Not yet validated:
 
 | Check | Evidence |
 |---|---|
-| `tests/test_descriptive.py` | 13 passed: the notebook's Python cells execute against the shipped CSVs in SQLite; all 60 `event_metrics` rows match an independent Python aggregation |
+| `tests/test_descriptive.py` | 17 passed: the notebook's Python cells execute against the shipped CSVs in SQLite; all 60 `event_metrics` rows match an independent Python aggregation |
+| Generated dashboard file | JSON round-trip, learner-view SQL, one dataset, two counters, two bars, one table, city/status/date field bindings, default-no, existing-file preservation and user-folder path checked offline; SDK metadata read mocked |
 | Dashboard filter states | All, scheduled, scheduled Leeds and scheduled Leeds in December 2026 reference SQL match independent counts and ticket sums; each state is non-empty |
 | Genie SQL | Three example and three held-out reference queries match independent results; example and held-out sets are disjoint |
 | Exercises 1b.1, 1b.2 | Solutions pass; a row count and an unweighted average of averages are rejected |
 | Edge cases | Empty event, cancelled-only, unknown attendance, zero capacity and several feedback rows per event give no double-counting and NULL, not zero, where evidence is absent |
 | Safety | Default-no gate writes nothing and stops at a named missing-view check; the gate has its own cell; ownership failure stops before CREATE; rerun/resume does not change sources; only one CREATE OR REPLACE VIEW; no personal fields in the view or dashboard dataset |
-| Cleanup | `event_metrics` is dropped before its source tables; dashboards and Genie spaces are explicitly out of scope of the cleanup notebook |
+| Cleanup | `event_metrics` is dropped before its source tables; generated files, dashboards and Genie spaces are explicitly out of scope of the cleanup notebook |
 
 SQLite checks relational logic only. Not validated: Spark SQL/Unity Catalog execution of the view, the
-rendered dashboard, filter bindings, Genie availability on Free Edition, Genie answers, benchmarks, UI labels,
-and manual UI cleanup. `live_smoke.py` does not run Module 1b, and its acceptance notebook now checks only the
+rendered dashboard, live filter behaviour, notebook-written file recognition as FILE versus DASHBOARD, UI import,
+Genie availability on Free Edition, Genie answers, benchmarks, UI labels and manual UI cleanup.
+The widget-display fix is covered by offline cell-order checks but has not been re-observed live.
+`live_smoke.py` does not run Module 1b, and its acceptance notebook now checks only the
 original five exercises, so it makes no claim about this module.
+
+The overview now maps analytics levels to modules and labels diagnostic/prescriptive content as planned.
+Notebook headers identify their place in that map. This framing is documentation, not evidence of new capability.
+Dashboard API deployment and programmatic Genie creation are deferred to Module 8; Module 7 is conversation-only.
 
 No GenAI, RAG, MCP or app validation is claimed: these are Stage 2 modules, not supplied in this release.
 

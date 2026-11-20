@@ -1,6 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 1b. Describe the business with AI/BI and Genie
+# MAGIC **Where this sits:** descriptive analytics, what happened or is booked. Prediction is Module 3;
+# MAGIC diagnostic and prescriptive analytics are planned separately.
+# MAGIC
 # MAGIC **Outcome:** build a private draft dashboard and a Genie space over your own governed event metrics,
 # MAGIC then prove their answers with SQL. Descriptive analytics asks **what happened or is booked**, not what will
 # MAGIC happen or why. Event management is the case study; Databricks datasets, dashboards and Genie are the skills.
@@ -20,10 +23,12 @@
 # MAGIC   The SQL-only fallback below still teaches metrics; it does not count as completing dashboard or Genie.
 # MAGIC
 # MAGIC **Approval and cost boundary:** this notebook can create or replace exactly one tagged view, behind a
-# MAGIC default-no switch. Reads consume compute quota. The later UI steps save a dashboard and Genie configuration;
+# MAGIC default-no switch, plus an optional dashboard file behind a second default-no switch.
+# MAGIC Reads consume compute quota. The later UI steps save a dashboard and Genie configuration;
 # MAGIC asking Genie invokes partner-powered AI and can run SQL. On paid workspaces these operations may incur charges.
-# MAGIC Obtain your workspace owner's approval before those UI actions. No model endpoint, job, schedule or API call
-# MAGIC is deployed by this notebook. An assisting agent must ask separately before performing any live cloud work.
+# MAGIC Obtain your workspace owner's approval before those actions. The SDK reads the generated file's object type;
+# MAGIC it does not create dashboards or Genie spaces through an API. No model endpoint, job or schedule is deployed.
+# MAGIC An assisting agent must ask separately before performing any live cloud work.
 # MAGIC Keep assets in your own user folder, inspect inherited access, and stop if it is not private enough.
 # MAGIC Do not publish, share, embed credentials for dashboard viewers, or alter permissions in this lesson.
 # MAGIC
@@ -34,6 +39,14 @@
 # COMMAND ----------
 
 # MAGIC %run ./_config
+
+# COMMAND ----------
+
+# WHAT: imports the libraries used in this lesson.
+# LOOK FOR: no output; JSON reads the dashboard template and the SDK checks how the file was stored.
+import json
+
+from databricks.sdk import WorkspaceClient
 
 # COMMAND ----------
 
@@ -194,7 +207,7 @@ A8.expect(invalid == 0, "Scheduled attendance and ratings without feedback must 
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 3. Build a draft AI/BI dashboard
+# MAGIC ## 3. Build a small AI/BI dashboard by hand (about 5 minutes)
 # MAGIC A dashboard **dataset** is the SQL result available to widgets, not a new Delta table.
 # MAGIC A widget aggregates that dataset at its chart grain. We retain event rows so field filters can change
 # MAGIC the set of events **before each widget aggregates**. A single grand-total dataset would not retain city/date.
@@ -208,8 +221,11 @@ A8.expect(invalid == 0, "Scheduled attendance and ratings without feedback must 
 # MAGIC 2. Use the suggested title printed below. Keep the dashboard a **draft**; do not click Publish.
 # MAGIC 3. Select the existing serverless warehouse, then **Data → Add SQL dataset**. Name it `Event metrics`.
 # MAGIC    Paste the SQL printed below, run it and inspect the result. Expect 60 rows with baseline fixtures.
-# MAGIC 4. Return to the page/canvas. Add the widgets from the recipe. Every widget uses **Event metrics**.
-# MAGIC    Configure fields manually; this path does not need AI-generated chart authoring.
+# MAGIC 4. On the page/canvas add **one counter**: Events, COUNT(event_id). Then **Add a filter (field/parameter)**:
+# MAGIC    single value on `city`. Select Leeds and watch the counter change; reset it to All.
+# MAGIC    That is the core idea: widgets aggregate one dataset, and field filters narrow it first.
+# MAGIC 5. Stop building by hand here. Section 3b loads the complete dashboard from a file, so you can compare
+# MAGIC    your draft with a finished one. Delete your hand-built draft afterwards if you do not need it.
 
 # COMMAND ----------
 
@@ -228,9 +244,73 @@ print(dashboard_sql)
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ### Widget recipe, one dataset, one page
-# MAGIC Add a text box first: **A8 | Event snapshot · synthetic data as at 20 November 2026**.
-# MAGIC Include: "Confirmed tickets are not attendees. Ratings represent respondents only. Filters are not security."
+# MAGIC ## 3b. A dashboard is a file: load the complete version
+# MAGIC An AI/BI dashboard draft is stored as a `.lvdash.json` file: a list of **datasets** (SQL) and **pages** of
+# MAGIC **widgets**, each with its query fields and a chart spec. Open `dashboards/event_snapshot.lvdash.template.json`
+# MAGIC in this Git folder to read one. It deliberately has no SQL and is not named `.lvdash.json`, so it is not itself
+# MAGIC a dashboard. The next cells copy it, insert `dashboard_sql` with **your** view name, and save it to your own
+# MAGIC `a8learn` user folder. Exporting, editing and importing this file is how dashboards move between workspaces;
+# MAGIC deploying them automatically is Module 8.
+# MAGIC
+# MAGIC Writing the file is a workspace write, so it is opt-in: run the next cell, set `write_dashboard_file` to
+# MAGIC **yes**, rerun that gate cell, then run the following cells. An existing file is left unchanged; to
+# MAGIC regenerate, move your own copy to trash first. Opening the dashboard runs its dataset on your SQL warehouse.
+
+# COMMAND ----------
+
+# WHAT: asks for permission to write your dashboard file.
+# LOOK FOR: a write_dashboard_file widget above the notebook, defaulting to no, and the exact target path.
+write_dashboard_file = A8.gate("write_dashboard_file", "Write your dashboard file to your user folder?")
+dashboard_path = A8.dashboard_path
+print("Approved:" if write_dashboard_file else "Not approved yet. Set the widget to yes, then rerun this cell.",
+      dashboard_path)
+
+# COMMAND ----------
+# WHAT: fills the supplied template with your dataset SQL; nothing is written yet.
+# LOOK FOR: no output; dashboard is an ordinary Python dict parsed from JSON.
+template = ROOT / "dashboards" / "event_snapshot.lvdash.template.json"
+dashboard = json.loads(template.read_text(encoding="utf-8"))
+dashboard["datasets"][0]["queryLines"] = dashboard_sql.splitlines(keepends=True)
+
+# COMMAND ----------
+# WHAT: Check: confirms the file reads only your view and every widget uses that one dataset.
+# LOOK FOR: two pass messages before anything is written.
+A8.expect(len(dashboard["datasets"]) == 1 and event_metrics in "".join(dashboard["datasets"][0]["queryLines"]),
+          "The dashboard must have one dataset reading your event_metrics view.")
+used = {q["query"]["datasetName"] for item in dashboard["pages"][0]["layout"]
+        for q in item["widget"].get("queries", [])}
+A8.expect(used == {dashboard["datasets"][0]["name"]}, "Every widget must use the Event metrics dataset.")
+
+# COMMAND ----------
+# WHAT: writes the dashboard file once, after your opt-in; never overwrites an existing file.
+# LOOK FOR: "Written", "Already exists" or "Not written".
+if not write_dashboard_file:
+    print("Not written. Set write_dashboard_file to yes and rerun the cells above.")
+elif dashboard_path.exists():
+    print("Already exists, left unchanged:", dashboard_path)
+else:
+    dashboard_path.write_text(json.dumps(dashboard, indent=2), encoding="utf-8")
+    print("Written:", dashboard_path)
+
+# COMMAND ----------
+# WHAT: reads how the workspace stored the file; this is a read, not a write.
+# LOOK FOR: DASHBOARD means open it directly; FILE means use the import route below.
+if dashboard_path.exists():
+    status = WorkspaceClient().workspace.get_status(str(dashboard_path).removeprefix("/Workspace"))
+    print("Stored as:", status.object_type)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ### Open the dashboard
+# MAGIC Go to **Workspace → Users → you → a8learn**. If the cell above printed **DASHBOARD**, open
+# MAGIC *A8 &lt;tag&gt; event snapshot*. If it printed **FILE**, download that file from its menu, then use
+# MAGIC **Dashboards → Import dashboard from file**. Then move the generated file in `a8learn` to trash.
+# MAGIC Either way: select your existing serverless warehouse if asked, keep it a **draft**, do not publish or share.
+# MAGIC Behaviour of a file written from a notebook is not live validated yet; record which route you used.
+# MAGIC
+# MAGIC ### What the complete dashboard contains, one dataset, one page
+# MAGIC Compare each widget below with the JSON and with your own draft. The heading text box says:
+# MAGIC "Confirmed tickets are not attendees. Ratings represent respondents only. Filters are not security."
 # MAGIC Keep labels readable, use GBP only for actual GBP measures (none here), and never rely on colour alone.
 # MAGIC A8 text branding is sufficient; palette values are provisional.
 # MAGIC
@@ -249,12 +329,12 @@ print(dashboard_sql)
 # MAGIC For grouped ratings use SUM(rating_sum) / SUM(feedback_count); for grouped fill use
 # MAGIC SUM(confirmed_tickets) / SUM(capacity). A small event and a large event must not receive equal weight.
 # MAGIC
-# MAGIC ### Add filters, then prove that they work
-# MAGIC On the same page use **Add a filter (field/parameter)**. Choose **field filters**, not SQL parameters:
+# MAGIC ### Prove that the filters work
+# MAGIC The file includes three **field filters**, not SQL parameters. Inspect each one's field binding:
 # MAGIC - **City:** single value on `Event metrics.city`, default All.
 # MAGIC - **Event status:** single value on `Event metrics.event_status`, default All.
 # MAGIC - **Event date:** date range on `Event metrics.event_date`, default full range/All.
-# MAGIC Connect them to that dataset, so they affect **every** widget. Do not configure ignored filters.
+# MAGIC Each is bound to that dataset, so it affects **every** widget. Check no widget is set to ignore filters.
 # MAGIC Do not select "last 30 days": this is a fixed historical snapshot and includes scheduled future events.
 # MAGIC
 # MAGIC 1. Clear every filter and cross-filter. Compare both counters with the `all_events` SQL below.
@@ -464,6 +544,9 @@ A8.check("1b.2", answer_1b_2)
 # MAGIC - To delete UI assets, first open each recorded URL/ID, check it is **your** draft/space with the tagged title
 # MAGIC   and exact source, then use its menu's **Move to trash / Delete** and confirm. Do not select by title alone,
 # MAGIC   bulk-delete by prefix, or remove another learner's asset. If uncertain, stop rather than guessing.
+# MAGIC - Also inspect the exact `dashboard_path` printed in section 3b. If a generated file remains in your own
+# MAGIC   `a8learn` folder, move that file to trash. The hand-built draft, imported dashboard and generated file may
+# MAGIC   be separate assets; check each one. Keep saved settings and the supplied Git template.
 # MAGIC - `99_pause_and_cleanup` can drop your guarded `event_metrics` view along with other course UC objects.
 # MAGIC   It does **not** delete dashboards, Genie spaces, conversations or caches. Delete your UI assets first if
 # MAGIC   finishing; otherwise they remain but their queries break after the view is dropped. Deletion is not a
