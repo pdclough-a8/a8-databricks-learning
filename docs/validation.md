@@ -9,7 +9,7 @@ Python 3.12.13 on Windows, dependencies scoped to this repository's ignored `.pa
 
 | Check | Evidence |
 |---|---|
-| `python -m unittest discover -s tests -v` | 27 passed, including real split/pipeline code and partial/repeated cleanup |
+| `python -m unittest discover -s tests -v` | 32 passed (20 November 2026), including real split/pipeline code, partial/repeated cleanup and MLflow ownership helpers |
 | `python -m mkdocs build --strict` | Passed at first Stage 1 checkpoint |
 | Data regeneration | All three generated CSVs byte-identical to supplied data; 60 / 4,204 / 395 rows |
 | Independent SQL checks | Exercise 1.1 and 1.2 queries run in SQLite, compared to Python aggregations |
@@ -42,6 +42,20 @@ Run 4 (tag `smoke2`) passed every task:
 Afterwards, CLI listing confirmed no `a8_smoke*` tables, views, volumes, functions, models or `a8-smoke*`
 endpoints remain. Test folders and test settings were deleted. Soft-deleted MLflow experiments remain in
 MLflow's normal retention; they hold no endpoint or data objects.
+
+### Explanatory rewrite, 20 November 2026
+
+Two further full runs on a8-free with tag `smoke3`, each setup → data → governance → ML with serving →
+acceptance → cleanup → cleanup again. Every task succeeded in both.
+
+| Run | What it covered |
+|---|---|
+| 1 | Pushed commit `0ebadd0`: rewritten Module 3, new `claim_experiment`/`claim_model` helpers and folder-lookup fallback |
+| 2 | Local rewrite of Modules 0–2 and cleanup; also reused the soft-deleted smoke3 experiment, exercising the restore path |
+
+Afterwards no `a8_smoke3*` tables, views, functions, volumes, models or `a8-smoke3*` endpoints remained;
+test folders and test settings were deleted. The vanished-working-folder fallback (S12) was not triggered by
+these jobs and remains unverified live. The Git beginner guide is documentation only.
 
 Not yet validated:
 

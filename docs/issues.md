@@ -16,7 +16,8 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S10 | Fixed, live verified | Rerun ownership check used a non-existent `routine_comment` column |
 | S11 | Fixed, live verified | Unity Catalog model tag keys reject `.`; course MLflow/model tags now `a8learn_course`, `a8learn_tag` |
 | S12 | Fixed, not live verified | `FileNotFoundError` from `pkgutil` after a Git folder merge: Python's working folder had been replaced |
-| S13 | In progress | Code cells did not explain themselves; Module 3 rewritten, Modules 0–2 pending |
+| S13 | Implemented | Code cells did not explain themselves; Modules 0–3 and cleanup rewritten with WHAT/LOOK FOR comments |
+| S14 | Implemented | First-time learners did not know how to clone, pull or recover from Git conflicts |
 
 ## S01: persistent settings
 
@@ -68,7 +69,16 @@ into the folder by path. **Limit:** the stale-folder case has not been reproduce
 Learner feedback: dense cells mixed course safety checks with the Databricks concepts and had no explanation.
 Module 3 now starts every code cell with WHAT/LOOK FOR comments, comments the key lines, adds predict prompts,
 explains the expected pip warning, and moves experiment/model ownership checks into tested helpers
-(`claim_experiment`, `mark_experiment`, `claim_model`). Modules 0–2 and cleanup still need the same treatment.
+(`claim_experiment`, `mark_experiment`, `claim_model`). Modules 0–2 and cleanup now follow the same pattern,
+and Module 1 introduces the `A8` helpers in a table before they are used.
+
+## S14: Git folders for beginners
+
+The author, new to Databricks, hit three Git problems in one session: obsolete notebooks kept after a pull,
+an unclear conflict screen, and conflict markers written into a notebook. `docs/git-folders.md` now explains
+clone, pull, discard and recovery in plain terms, with a symptom table. `README.md`, `START_HERE.md`, the overview
+and `00_setup` link to it. UI labels follow the Databricks documentation and the author's screenshots;
+the guide has not been walked through by a new learner.
 
 ## S09: notebook environment compatibility
 

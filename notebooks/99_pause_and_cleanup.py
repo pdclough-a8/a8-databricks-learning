@@ -12,17 +12,23 @@
 # MAGIC
 # MAGIC To resume, reopen the next lesson and run its configuration cell. Saved settings reload from your workspace user folder.
 # MAGIC Rerun Module 1 only if you intend to reset its source fixtures; rerun Module 3 to create a new model version.
+# MAGIC
+# MAGIC The next two cells install the MLflow client this notebook needs and restart Python, as in Module 3.
+# MAGIC A red pip dependency message about `databricks-agents` is expected and harmless here.
 
 # COMMAND ----------
 # MAGIC %pip install mlflow-skinny==3.6.0 typing_extensions==4.15.0
 
 # COMMAND ----------
+# WHAT: restarts Python so the package just installed is the one imported.
 dbutils.library.restartPython()
 
 # COMMAND ----------
 # MAGIC %run ./_config
 
 # COMMAND ----------
+# WHAT: lists the exact names of every object this course can create for your tag. Nothing is deleted.
+# LOOK FOR: your endpoint name, then one line per object, and links to Serving and your schema.
 from a8learn import OBJECTS
 from a8learn.lifecycle import cleanup
 from databricks.sdk import WorkspaceClient
@@ -52,6 +58,8 @@ A8.links(("Serving: check whether your endpoint exists", "serving", ""),
 # MAGIC **Default is preview only.** To keep your data and stop optional serving charges choose `endpoint_only`.
 
 # COMMAND ----------
+# WHAT: does nothing on preview; otherwise deletes exactly what you chose, after ownership checks.
+# LOOK FOR: "Preview only", or a summary of what was deleted. A PermissionError means nothing was deleted.
 dbutils.widgets.dropdown("cleanup_action", "preview", ["preview", "endpoint_only", "all_course_objects"], "Cleanup action")
 dbutils.widgets.text("confirm_tag", "", "Type your learner tag to delete")
 action = dbutils.widgets.get("cleanup_action")

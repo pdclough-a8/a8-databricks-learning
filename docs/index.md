@@ -26,6 +26,9 @@ Allow about an hour per lesson, plus deployment waits. These are planning estima
 
 ## Start and stop
 
+First time in Databricks? [Git folders for beginners](git-folders.md) shows how to clone the course,
+pull updates and recover from conflicts.
+
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance`
 → `03_predictive_ml` → `99_pause_and_cleanup`.
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.

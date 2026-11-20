@@ -2,7 +2,8 @@
 
 **The course is in the Databricks notebooks, not a separate website.**
 
-1. Open this repository as a Databricks **Git folder**.
+1. Open this repository as a Databricks **Git folder**. New to Git? Follow
+   [Git folders for beginners](docs/git-folders.md): clone once, pull for updates, never push.
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data`, `02_governance`, then `03_predictive_ml`.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
