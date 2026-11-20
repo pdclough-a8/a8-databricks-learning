@@ -136,3 +136,21 @@ Timing estimates have not been tested with novice learners. One owner identity d
 multi-user separation. The demo mask is not anonymisation. This synthetic turnout model is not a
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
+
+## Module 1c: diagnostic analytics
+
+**Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_diagnostic.py` | 11 tests: the notebook's Python cells execute against an `event_metrics` table built from the shipped CSVs by independent Python, not by 01b's SQL |
+| Drill-downs | City, topic, format and month results match an independent aggregation (events, tickets, attendance %, responses, rating) |
+| Mix versus rate | Attendance and rating splits match an independent two-segment calculation; effects add to the overall gap. On the shipped data: attendance gap -17.7 points = mix +1.1 and rate -18.9; rating gap -0.11 = mix -0.01 and rate -0.10 |
+| Permutation test | Observed gap equals the SQL gap; seeded, repeatable; p agrees with a separate stdlib shuffle (different RNG, 20,000 runs) within 0.01; a six-event case matches exact enumeration of all 20 labelings within 0.02. Shipped data: p = 0.0003 with 10,000 shuffles, the floor for that count |
+| Exercises 1c.1, 1c.2 | Solutions pass; unweighted averages of event-level rates/ratings and blank answers are rejected |
+| Safety | No CREATE/DROP/INSERT/UPDATE/DELETE, no gate, no file write; imports only numpy; missing `event_metrics` stops before any query; unknown drill-down dimensions are rejected |
+
+SQLite checks relational logic only. Not validated: Spark SQL execution (notably `substr` on a DATE column for the month cut),
+`toPandas()` on serverless, the dashboard filter walk-through, Genie availability and answers (checkpoint G2), UI labels.
+The test explains chance only for one segment pair; it does not adjust for confounders, and the data cannot separate
+city from format for online events.

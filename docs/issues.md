@@ -25,6 +25,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
 | S21 | Fixed, not live verified | Module 1b's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 3 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
+| S23 | Implemented, not live validated | Module 1c diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
 | S22 | Implemented, not live validated | Module 1b now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 
 ## S01: persistent settings
@@ -178,3 +179,11 @@ Training and experiment tracking had already succeeded. MLflow experiment, run a
 underscores, matching the serving endpoint tags. Delta table properties keep `a8learn.course`, which Delta accepts.
 The earlier smoke experiment was soft-deleted with old-style tags; the notebook correctly refuses to adopt it,
 so the retest uses a new tag rather than weakening the ownership check.
+
+## S23: diagnostic analytics module
+
+**Scope:** Module 1c reads `event_metrics` only. It writes nothing and makes no AI call. The optional Genie "why" question is learner-triggered.
+**Checks:** `tests/test_diagnostic.py`, offline only; Spark/serverless execution and Genie behaviour are not live validated.
+**Limits:** the online gap is a pattern, not a proven cause. In this data online is both a city and a format, so they
+cannot be separated, and only 48 completed events (15 online) support the comparison. Confounder adjustment and
+Simpson's paradox are deferred. The failure modes listed for Genie are expected risks, not observed results.

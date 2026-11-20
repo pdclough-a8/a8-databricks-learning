@@ -47,6 +47,53 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
                    "Missing feedback remains unknown, not a zero-star review.",
         "ordered": True,
     },
+    "1c.1": {
+        "task": "For completed events, return topic and gap_pp: online ticket-weighted attendance minus "
+                "not-online ticket-weighted attendance, in percentage points rounded to 1 decimal place, "
+                "ordered by topic.",
+        "hint": "Use IDENTIFIER(a8_event_metrics). Two conditional sums per segment: "
+                "SUM(CASE WHEN format = 'online' THEN attended_tickets END) over the matching known_outcome_tickets. "
+                "Multiply by 1.0 first so the division is fractional.",
+        "solution": """SELECT topic,
+round(100.0 * (1.0 * sum(CASE WHEN format = 'online' THEN attended_tickets END)
+  / nullif(sum(CASE WHEN format = 'online' THEN known_outcome_tickets END), 0)
+  - 1.0 * sum(CASE WHEN format <> 'online' THEN attended_tickets END)
+  / nullif(sum(CASE WHEN format <> 'online' THEN known_outcome_tickets END), 0)), 1) AS gap_pp
+FROM IDENTIFIER(a8_event_metrics)
+WHERE event_status = 'completed' GROUP BY topic ORDER BY topic""",
+        "explain": "Each segment's rate is its own attended tickets over its own known-outcome tickets. "
+                   "Subtracting averages of per-event rates would weight a small event like a large one.",
+        "ordered": True,
+    },
+    "1c.2": {
+        "task": "Split the gap in average feedback rating between online and not-online completed events "
+                "(online minus not online) into a topic-mix effect and a within-topic rate effect. Return one row: "
+                "mix_effect, rate_effect, total_gap, each rounded to 2 decimals.",
+        "hint": "Same shape as the attendance split in the notebook: weight by feedback_count, rate is "
+                "SUM(rating_sum) / SUM(feedback_count) per topic and segment. Mix = (online share - other share) "
+                "x average of the two rates; rate = (online rate - other rate) x average of the two shares.",
+        "solution": """WITH cells AS (
+  SELECT CASE WHEN format = 'online' THEN 'online' ELSE 'other' END AS segment, topic,
+    sum(feedback_count) AS n, sum(rating_sum) AS s
+  FROM IDENTIFIER(a8_event_metrics) WHERE event_status = 'completed'
+  GROUP BY CASE WHEN format = 'online' THEN 'online' ELSE 'other' END, topic
+), shares AS (
+  SELECT c.topic, c.segment, 1.0 * c.n / t.total AS share, 1.0 * c.s / nullif(c.n, 0) AS rate
+  FROM cells c JOIN (SELECT segment, sum(n) AS total FROM cells GROUP BY segment) t
+    ON c.segment = t.segment
+), paired AS (
+  SELECT o.share AS o_share, p.share AS p_share, o.rate AS o_rate, p.rate AS p_rate
+  FROM shares o JOIN shares p ON o.topic = p.topic
+  WHERE o.segment = 'online' AND p.segment = 'other'
+)
+SELECT round(sum((o_share - p_share) * (o_rate + p_rate) / 2), 2) AS mix_effect,
+  round(sum((o_rate - p_rate) * (o_share + p_share) / 2), 2) AS rate_effect,
+  round(sum((o_share - p_share) * (o_rate + p_rate) / 2
+    + (o_rate - p_rate) * (o_share + p_share) / 2), 2) AS total_gap
+FROM paired""",
+        "explain": "The two effects add up exactly to the gap. Mix says the segments contain different topics; "
+                   "rate says the same topic is rated differently. Neither says why.",
+    },
     "2.1": {
         "task": "Return city and row count from bookings_governed, grouped and ordered by city.",
         "hint": "Query IDENTIFIER(a8_bookings_governed), not the unrestricted bookings table.",

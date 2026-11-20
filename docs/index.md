@@ -16,7 +16,7 @@ Using an LLM does not automatically make an answer predictive or prescriptive.
 | Level | Question | Course home |
 |---|---|---|
 | Descriptive | What happened, or what is booked? | Module 1b: dashboard and SQL-checked Genie answers |
-| Diagnostic | Why did it happen? | Planned module: investigate drivers; association alone is not causation |
+| Diagnostic | Why did it happen? | Module 1c: drill-downs, mix versus rate and a chance test; association alone is not causation |
 | Predictive | What is likely to happen? | Module 3: attendance probabilities and expected turnout |
 | Prescriptive | What should we do, given objectives and constraints? | Planned module: compare and choose actions |
 | Automation | How can approved work run repeatedly or take bounded actions? | Modules 6 and 8, planned |
@@ -32,7 +32,7 @@ several levels; they are not new analytics levels.
 | 0. Workbench | Git folders, compute, catalog/schema, permissions and persistent configuration | Stage 1 |
 | 1. Lakehouse data | Volumes, `read_files`, typed Delta tables, SQL and PySpark, joins, views, history/time travel, lineage | Stage 1 |
 | 1b. Descriptive AI/BI and Genie | Event-grain reporting view, metrics, draft dashboard datasets/charts/filters, Genie instructions/examples and SQL-checked answers | Supplied; offline checked, no live validation |
-| Diagnostic analytics (number to be assigned) | Investigate differences and drivers, test explanations and distinguish association from causation | Planned; not supplied |
+| 1c. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
 | 2. Governance | Grants and identity, comments/tags, real row filters and column masks, lineage and optional audit system tables | Stage 1 |
 | 3. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
 | Prescriptive analytics (number to be assigned) | Compare actions against explicit objectives, constraints and uncertainty | Planned; not supplied |
@@ -49,8 +49,8 @@ several levels; they are not new analytics levels.
 First time in Databricks? [Git folders for beginners](git-folders.md) shows how to clone the course,
 pull updates and recover from conflicts.
 
-Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `01b_descriptive_analytics` → `02_governance`
-→ `03_predictive_ml` → `99_pause_and_cleanup`.
+Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `01b_descriptive_analytics` → `01c_diagnostic_analytics`
+→ `02_governance` → `03_predictive_ml` → `99_pause_and_cleanup`.
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
 
@@ -74,6 +74,17 @@ The supplied SQL is checked offline; dashboard rendering/interactivity, Genie qu
 compatibility are **not live validated**. If a UI feature is unavailable, use the labelled SQL-only
 fallback and record that checkpoint as blocked. Exact UI-asset cleanup is manual; the cleanup notebook
 drops the reporting view but does not delete generated files, dashboard drafts, Genie spaces, conversations or caches.
+
+## Module 1c: diagnostic analytics, not causation
+
+Explain why completed online events attend less than in-person and hybrid ones, using the Module 1b
+`event_metrics` view. You drill down by city, topic, format and month, split the gap into a **mix** effect
+(different kinds of events) and a **rate** effect (same kind, different behaviour), and run one seeded permutation test
+(numpy, no new library) to ask whether the gap is bigger than chance. Then you ask your existing Genie space a
+"why" question and check its SQL and prose against the reference. Two checked exercises follow the 1b style.
+
+The notebook states plainly that nothing in it proves causation. It writes nothing, deploys nothing and makes no AI call.
+The optional Genie step is learner-triggered and needs approval. Confounder adjustment and Simpson's paradox are deferred.
 
 ## Workspace boundaries
 

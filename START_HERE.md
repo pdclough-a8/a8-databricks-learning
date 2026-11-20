@@ -5,7 +5,7 @@
 1. Open this repository as a Databricks **Git folder**. New to Git? Follow
    [Git folders for beginners](docs/git-folders.md): clone once, pull for updates, never push.
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
-3. Continue with `01_lakehouse_data`, `01b_descriptive_analytics`, `02_governance`, then `03_predictive_ml`.
+3. Continue with `01_lakehouse_data`, `01b_descriptive_analytics`, `01c_diagnostic_analytics`, `02_governance`, then `03_predictive_ml`.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -20,8 +20,12 @@ and a Genie space (called **Genie Agent** in newer UIs). Both use your existing 
 SQL-only fallback is available if a UI feature is blocked; it does not count as completing that feature.
 Read the opt-in, quota and AI-request notices before running or creating anything; do not publish or share.
 
-The [analytics-level map and full curriculum](docs/index.md) distinguish descriptive (1b) and predictive (3)
-from planned diagnostic and prescriptive modules. Automation is planned in Modules 6 and 8;
+Module **1c** adds diagnostic analytics: drill-downs, mix versus rate, a seeded permutation test and a
+"why" question for your Module 1b Genie space. It reads `event_metrics` only, writes nothing and does not prove causation.
+It is supplied and offline checked, not live validated.
+
+The [analytics-level map and full curriculum](docs/index.md) distinguish descriptive (1b), diagnostic (1c) and predictive (3)
+from the planned prescriptive module. Automation is planned in Modules 6 and 8;
 platform, governance, GenAI and retrieval capabilities support these levels.
 The later curriculum includes GenAI functions,
 RAG, agents, MCP, an app using your learner tables, deployment and governance.

@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # A8 | 1b. Describe the business with AI/BI and Genie
 # MAGIC **Where this sits:** descriptive analytics, what happened or is booked. Prediction is Module 3;
-# MAGIC diagnostic and prescriptive analytics are planned separately.
+# MAGIC diagnostic analytics follows in Module 1c; prescriptive analytics is planned separately.
 # MAGIC
 # MAGIC **Outcome:** build a private draft dashboard and a Genie space over your own governed event metrics,
 # MAGIC then prove their answers with SQL. Descriptive analytics asks **what happened or is booked**, not what will
@@ -569,7 +569,7 @@ A8.check("1b.2", answer_1b_2)
 # MAGIC **Completion requires:** SQL reconciliation and both exercises, observed dashboard checkpoint D, and
 # MAGIC observed Genie checkpoint G, plus your explanations. Nothing automatically marks those UI checkpoints passed.
 # MAGIC If blocked, keep the checkpoint and continue to Module 2 without claiming full completion.
-# MAGIC **Next:** `02_governance`, enforce who can see what.
+# MAGIC **Next:** `01c_diagnostic_analytics`, explain why a difference exists. Then `02_governance`.
 # MAGIC
 # MAGIC ### Official references, checked 20 November 2026, not workspace acceptance
 # MAGIC - [Free Edition limits](https://docs.databricks.com/aws/en/getting-started/free-edition-limitations)
