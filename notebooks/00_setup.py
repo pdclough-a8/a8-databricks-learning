@@ -21,10 +21,23 @@
 # MAGIC If serverless or a privilege is missing, ask your admin. Do not switch to shared admin credentials.
 
 # COMMAND ----------
+import os
 import sys
 from pathlib import Path
 
-_here = Path.cwd()
+
+def _notebook_dir():
+    try:
+        return Path.cwd()
+    except FileNotFoundError:
+        # Python's working folder vanishes if a Git pull or merge rewrites it mid-session.
+        context = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
+        return Path("/Workspace" + context.notebookPath().get()).parent
+
+
+_here = _notebook_dir()
+# Re-enter the folder by path: imports that scan sys.path fail if the old folder handle is stale.
+os.chdir(_here)
 ROOT = next((p for p in [_here, *_here.parents]
              if (p / "lib" / "a8learn").is_dir() and (p / "data" / "raw").is_dir()), None)
 if ROOT is None:

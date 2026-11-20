@@ -17,7 +17,7 @@ def endpoint_for_cleanup(course, workspace):
 
 def model_for_cleanup(course, workspace, client):
     import mlflow
-    name = f"{course.cfg.catalog}.{course.cfg.schema}.{course.name('attendance_model')}"
+    name = course.model_name
     try:
         model = client.get_registered_model(name)
     except mlflow.exceptions.MlflowException as error:

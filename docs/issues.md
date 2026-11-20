@@ -15,6 +15,8 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S09 | Fixed, live verified | MLflow import used old runtime-loaded typing_extensions after dependency installation |
 | S10 | Fixed, live verified | Rerun ownership check used a non-existent `routine_comment` column |
 | S11 | Fixed, live verified | Unity Catalog model tag keys reject `.`; course MLflow/model tags now `a8learn_course`, `a8learn_tag` |
+| S12 | Fixed, not live verified | `FileNotFoundError` from `pkgutil` after a Git folder merge: Python's working folder had been replaced |
+| S13 | In progress | Code cells did not explain themselves; Module 3 rewritten, Modules 0–2 pending |
 
 ## S01: persistent settings
 
@@ -51,6 +53,22 @@ No production behaviour or expected data value was relaxed.
 
 For new issues record symptom, scope, evidence/cause, fix or blocker, checks and remaining uncertainty.
 Never include credentials, private logs or personal workspace paths.
+
+## S12: vanished working folder
+
+**Symptom:** in an interactive Git folder, after resolving a merge and pulling, Module 3's import cell failed
+with `FileNotFoundError: [Errno 2]` inside `pkgutil.get_importer`, with no filename.
+**Cause:** the `''` entry on `sys.path` means the working folder; the merge had replaced that folder, so
+`os.getcwd()` failed while an import scanned the path. Resetting the environment cleared it.
+**Fix:** `_config` and `00_setup` fall back to the notebook path from the Databricks context and `os.chdir`
+into the folder by path. **Limit:** the stale-folder case has not been reproduced live.
+
+## S13: explaining code to learners
+
+Learner feedback: dense cells mixed course safety checks with the Databricks concepts and had no explanation.
+Module 3 now starts every code cell with WHAT/LOOK FOR comments, comments the key lines, adds predict prompts,
+explains the expected pip warning, and moves experiment/model ownership checks into tested helpers
+(`claim_experiment`, `mark_experiment`, `claim_model`). Modules 0–2 and cleanup still need the same treatment.
 
 ## S09: notebook environment compatibility
 

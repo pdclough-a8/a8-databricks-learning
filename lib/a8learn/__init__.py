@@ -155,6 +155,16 @@ class Course:
     def endpoint_name(self) -> str:
         return f"a8-{self.cfg.tag}-attendance"
 
+    @property
+    def model_name(self) -> str:
+        """Three-part Unity Catalog name of this learner's registered model."""
+        return f"{self.cfg.catalog}.{self.cfg.schema}.{self.name('attendance_model')}"
+
+    @property
+    def course_tags(self) -> dict:
+        """MLflow, model and endpoint tags. UC model tag keys reject '.', hence underscores."""
+        return {"a8learn_course": COURSE_ID, "a8learn_tag": self.cfg.tag}
+
     def fmt(self, sql: str) -> str:
         """Replace {events}, {bookings}, {volume_path}, {schema}, {tag} ... with real names."""
         extras = {"schema": self.schema_fqn, "catalog": quote(self.cfg.catalog), "tag": self.cfg.tag,
@@ -245,6 +255,44 @@ class Course:
                   "<p>Run the named notebook(s) first, then come back. Your configuration is fine.</p>",
                   tone="warn")
         raise RuntimeError("Missing prerequisites: " + ", ".join(self.name(k) for k in missing))
+
+    # ---------- MLflow ownership checks ----------
+    def _is_course_run(self, tags) -> bool:
+        return all((tags or {}).get(k) == v for k, v in self.course_tags.items())
+
+    def claim_experiment(self, client):
+        """Refuse a foreign experiment at our path; restore ours if cleanup soft-deleted it.
+
+        Must run before mlflow.set_experiment, which cannot select a deleted experiment
+        and would otherwise silently adopt somebody else's.
+        """
+        experiment = client.get_experiment_by_name(self.experiment_path)
+        if experiment is None:
+            return
+        if not self._is_course_run(experiment.tags):
+            raise PermissionError(
+                f"{self.experiment_path} exists but is not marked as this course run. "
+                "Nothing was changed. Choose another learner tag in 00_setup.")
+        if experiment.lifecycle_stage == "deleted":
+            client.restore_experiment(experiment.experiment_id)
+
+    def mark_experiment(self, client, experiment):
+        for key, value in self.course_tags.items():
+            client.set_experiment_tag(experiment.experiment_id, key, value)
+
+    def claim_model(self, client, workspace):
+        """Create the registered model with course tags, or confirm an existing one is ours."""
+        try:
+            existing = client.get_registered_model(self.model_name)
+        except Exception as error:
+            if getattr(error, "error_code", None) != "RESOURCE_DOES_NOT_EXIST":
+                raise
+            client.create_registered_model(self.model_name, tags=self.course_tags)
+            return
+        if not self._is_course_run(existing.tags):
+            raise PermissionError(f"{self.model_name} is not marked as this course run. Choose another tag.")
+        if workspace.registered_models.get(self.model_name).owner != self.cfg.user:
+            raise PermissionError(f"{self.model_name} is not owned by you. Choose another tag.")
 
     # ---------- running SQL ----------
     def sql(self, sql: str):

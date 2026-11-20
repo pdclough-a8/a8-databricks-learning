@@ -249,6 +249,59 @@ class LifecycleTests(unittest.TestCase):
         self.assertLess(names.index("delete_registered_model"), names.index("delete_experiment"))
 
 
+class MlflowOwnershipTests(unittest.TestCase):
+    def setUp(self):
+        self.course = Course(Config("workspace", "default", "learner8", "student@example.com", "https://example.com"))
+        self.client, self.w = Mock(), Mock()
+        self.mine = {"a8learn_course": "a8-databricks-learning", "a8learn_tag": "learner8"}
+
+    def test_new_experiment_path_is_left_for_mlflow_to_create(self):
+        self.client.get_experiment_by_name.return_value = None
+        self.course.claim_experiment(self.client)
+        self.client.restore_experiment.assert_not_called()
+
+    def test_foreign_experiment_is_refused_and_own_deleted_one_restored(self):
+        self.client.get_experiment_by_name.return_value = SimpleNamespace(
+            tags={"a8learn_course": "a8-databricks-learning", "a8learn_tag": "other"},
+            lifecycle_stage="active", experiment_id="1")
+        with self.assertRaises(PermissionError):
+            self.course.claim_experiment(self.client)
+        self.client.get_experiment_by_name.return_value = SimpleNamespace(
+            tags=self.mine, lifecycle_stage="deleted", experiment_id="7")
+        self.course.claim_experiment(self.client)
+        self.client.restore_experiment.assert_called_once_with("7")
+
+    def test_mark_experiment_sets_both_tags(self):
+        self.course.mark_experiment(self.client, SimpleNamespace(experiment_id="7"))
+        self.assertEqual({c.args[1:] for c in self.client.set_experiment_tag.call_args_list},
+                         set(self.mine.items()))
+
+    def test_claim_model_creates_missing_and_checks_existing(self):
+        class Missing(Exception):
+            error_code = "RESOURCE_DOES_NOT_EXIST"
+
+        self.client.get_registered_model.side_effect = Missing()
+        self.course.claim_model(self.client, self.w)
+        self.client.create_registered_model.assert_called_once_with(
+            "workspace.default.a8_learner8_attendance_model", tags=self.mine)
+
+        self.client.get_registered_model.side_effect = None
+        self.client.get_registered_model.return_value = SimpleNamespace(tags={})
+        with self.assertRaises(PermissionError):
+            self.course.claim_model(self.client, self.w)
+        self.client.get_registered_model.return_value = SimpleNamespace(tags=self.mine)
+        self.w.registered_models.get.return_value.owner = "other@example.com"
+        with self.assertRaises(PermissionError):
+            self.course.claim_model(self.client, self.w)
+        self.w.registered_models.get.return_value.owner = "student@example.com"
+        self.course.claim_model(self.client, self.w)
+
+    def test_other_registry_errors_are_not_swallowed(self):
+        self.client.get_registered_model.side_effect = RuntimeError("network")
+        with self.assertRaises(RuntimeError):
+            self.course.claim_model(self.client, self.w)
+        self.client.create_registered_model.assert_not_called()
+
 class NotebookTests(unittest.TestCase):
     def test_sources_and_run_targets(self):
         paths = list((ROOT / "notebooks").glob("*.py"))

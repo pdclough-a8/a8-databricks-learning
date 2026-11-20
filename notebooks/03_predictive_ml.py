@@ -1,132 +1,212 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # A8 | 3. Predict attendance, track it and put it to work
-# MAGIC **Outcome:** a tracked classifier, a versioned Unity Catalog model with a `Champion` alias,
-# MAGIC batch-scored future bookings and an event turnout forecast. Optional: a live model serving request.
-# MAGIC **60–75 minutes:** features 10 · split/baseline 10 · train/track 15 · registry 10 · score/UI 15 · serving 10 optional.
-# MAGIC Requires Module 1. Module 2's governed sandbox is intentionally not the model's source.
-# MAGIC Writes four course data objects, an MLflow experiment and a registered model version on each training run.
-# MAGIC Batch inference needs no endpoint. **Serving is opt-in and can bill while provisioned. Delete it before leaving.**
+# MAGIC **By the end of this notebook you will have:**
+# MAGIC - a classifier that predicts whether a confirmed booking turns up
+# MAGIC - an MLflow run that records how it was trained and how well it did
+# MAGIC - a versioned model in Unity Catalog with a `Champion` alias
+# MAGIC - predictions for future bookings and an expected-turnout view for each event
+# MAGIC - optionally, a live model serving endpoint
+# MAGIC
+# MAGIC **60–75 minutes:** environment 5 · MLflow 5 · features 10 · split and baseline 10 · train 15 · register 10 · score 15 · serving 10 (optional).
+# MAGIC
+# MAGIC **Before you start:** run Module 1. Module 2 is not needed; its governed copy is deliberately not used for training.
+# MAGIC
+# MAGIC **What this writes:** a features table, a predictions table, a forecast view, an MLflow experiment,
+# MAGIC and a new model version each time you train.
+# MAGIC Batch scoring needs no endpoint. **Serving is opt-in and can bill while it exists. Delete it before leaving.**
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ## 0. Prepare the Python environment (5 minutes)
+# MAGIC Serverless notebooks come with many libraries already installed. We **pin exact versions** so that every
+# MAGIC learner trains with the same code, and the saved model records versions that serving can reproduce later.
+# MAGIC
+# MAGIC `%pip install` installs packages **for this notebook only**. Other notebooks and other users are not affected.
+# MAGIC
+# MAGIC **Expect a red `ERROR: pip's dependency resolver…` message.** The environment also contains
+# MAGIC `databricks-agents`, which wants a newer MLflow. This lesson does not use it, so the message is harmless.
+# MAGIC The cell has worked if it ends with `Successfully installed … mlflow-3.6.0 …`.
+# MAGIC A yellow notice that pandas changed version is the pin taking effect, not a fault.
 
 # COMMAND ----------
 # MAGIC %pip install mlflow==3.6.0 scikit-learn==1.7.2 pandas==2.2.3 typing_extensions==4.15.0
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC Python has already loaded the old versions into memory. **Restarting Python** makes the next imports
+# MAGIC use the versions you just installed. It also clears all variables, so we restart before doing anything else.
+# MAGIC Then `_config` reloads the settings you saved in `00_setup` and recreates the `A8` helper.
+
+# COMMAND ----------
+# WHAT: restarts this notebook's Python process so the pinned packages are the ones imported.
+# LOOK FOR: no output. The next cell will print your catalog, schema and tag.
 dbutils.library.restartPython()
 
 # COMMAND ----------
 # MAGIC %run ./_config
 
 # COMMAND ----------
-A8.require("events", "bookings")
-import mlflow
-import numpy as np
-import pandas as pd
-from mlflow.models import infer_signature
-from mlflow import MlflowClient
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.dummy import DummyClassifier
-from sklearn.metrics import accuracy_score, roc_auc_score, log_loss
+# MAGIC %md
+# MAGIC ## 1. Connect to MLflow (5 minutes)
+# MAGIC **MLflow** keeps the evidence of machine learning work. Two parts matter today:
+# MAGIC - **Tracking.** An *experiment* is a folder of *runs*. A run stores the settings, scores and files
+# MAGIC   from one training attempt, so you can compare attempts and reproduce the one you chose.
+# MAGIC - **Model registry.** A place to publish a trained model as numbered *versions*. Here the registry is
+# MAGIC   **Unity Catalog**, so a model is governed like a table: `catalog.schema.model_name`, with permissions and lineage.
+# MAGIC
+# MAGIC Your experiment lives in your workspace user folder; the printed link opens it.
 
+# COMMAND ----------
+# WHAT: checks Module 1's tables exist, then points MLflow at Unity Catalog and at your experiment.
+# LOOK FOR: "MLflow 3.6.0" and your experiment path. A PermissionError means another course run uses this tag.
+A8.require("events", "bookings")  # stops with a clear message if Module 1 has not been run
+
+import mlflow
+from mlflow import MlflowClient
+from mlflow.models import infer_signature  # used in section 4 to record the model's input/output contract
+
+# Publish models to Unity Catalog, not the older per-workspace model registry.
 mlflow.set_registry_uri("databricks-uc")
-experiment = mlflow.get_experiment_by_name(A8.experiment_path)
-if experiment and (experiment.tags.get("a8learn_course") != "a8-databricks-learning" or
-                   experiment.tags.get("a8learn_tag") != A8.cfg.tag):
-    raise PermissionError("Existing experiment is not marked as this course run. Choose another tag.")
-if experiment and experiment.lifecycle_stage == "deleted":
-    MlflowClient().restore_experiment(experiment.experiment_id)
-mlflow.set_experiment(A8.experiment_path)
-experiment = mlflow.get_experiment_by_name(A8.experiment_path)
-MlflowClient().set_experiment_tag(experiment.experiment_id, "a8learn_course", "a8-databricks-learning")
-MlflowClient().set_experiment_tag(experiment.experiment_id, "a8learn_tag", A8.cfg.tag)
-print("MLflow", mlflow.__version__)
+client = MlflowClient()  # lower-level API, used for tags, aliases and the registry
+
+# Course safety, not an MLflow concept: refuse an experiment at this path that belongs to another
+# course run, and restore yours if an earlier cleanup deleted it.
+A8.claim_experiment(client)
+# Create the experiment the first time, or select it on later runs. Every run below is logged here.
+experiment = mlflow.set_experiment(A8.experiment_path)
+A8.mark_experiment(client, experiment)  # course tags let cleanup find exactly this experiment
+print("MLflow", mlflow.__version__, "| experiment:", experiment.name)
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 1. Define the prediction, then features (10 minutes)
-# MAGIC We predict **whether a confirmed booking attends**, not whether an event sells out.
-# MAGIC Each booking's party is treated as attending together, an explicit simplification of the synthetic data.
-# MAGIC Use only facts available at booking time. Feedback and eventual attendance would leak the answer.
-# MAGIC The data is frozen at 20 November 2026; scheduled events have unknown labels, not zero labels.
-# MAGIC This is a classroom example, not a validated operational forecasting product.
+# MAGIC ## 2. Decide what to predict, then build features (10 minutes)
+# MAGIC **The prediction:** will a *confirmed booking* turn up? One row per booking. The **label** (the answer the
+# MAGIC model learns) is 1 for attended and 0 for no-show. We are not predicting whether an event sells out.
 # MAGIC
-# MAGIC Read the join. Which status belongs to the booking and which to the event?
-# MAGIC Why do we exclude cancelled bookings? Why might one person's repeated bookings make a random split optimistic?
+# MAGIC **The golden rule:** use only facts known **when the booking was made**. Feedback and attendance are only
+# MAGIC known afterwards. Using them would *leak* the answer: the model would score brilliantly in testing and fail in use.
+# MAGIC
+# MAGIC Two simplifications, because the data is synthetic:
+# MAGIC - everyone in one booking attends together
+# MAGIC - the data is frozen at 20 November 2026, so scheduled events have an **unknown** label (NULL), not 0
+# MAGIC
+# MAGIC **Predict before you run:** the query joins bookings to events, and both have a `status`.
+# MAGIC Which one is filtered, and why are cancelled bookings left out?
 
 # COMMAND ----------
+# WHAT: builds one Delta table of features and label, one row per confirmed booking.
+# LOOK FOR: completed events have label 0 or 1; scheduled events have label null (not known yet).
 from a8learn import COURSE_ID
-A8.guard("booking_features")
+
+A8.guard("booking_features")  # course safety: never replace a table you do not own
 A8.run(f"""CREATE OR REPLACE TABLE {{booking_features}} USING DELTA
 COMMENT 'a8-databricks-learning booking-time attendance features'
 TBLPROPERTIES ('a8learn.course' = '{COURSE_ID}', 'a8learn.tag' = '{A8.cfg.tag}')
-AS SELECT b.booking_id, b.event_id, b.tickets, b.ticket_type, b.organisation_type,
-e.format, e.city, e.start_hour, dayofweek(e.event_date) AS weekday,
-datediff(e.event_date, b.booked_date) AS lead_days,
+AS SELECT b.booking_id, b.event_id,                   -- identifiers: for joining back, not features
+b.tickets, b.ticket_type, b.organisation_type,        -- facts about the booking
+e.format, e.city, e.start_hour,                       -- facts about the event
+dayofweek(e.event_date) AS weekday,
+datediff(e.event_date, b.booked_date) AS lead_days,   -- how far ahead the booking was made
 e.price_gbp, e.event_date, e.status AS event_status,
-CAST(b.attended AS INT) AS label
+CAST(b.attended AS INT) AS label                      -- the answer: 1, 0, or NULL if not yet known
 FROM {{bookings}} b JOIN {{events}} e USING (event_id)
-WHERE b.status = 'confirmed'""")
+WHERE b.status = 'confirmed'                          -- cancelled bookings cannot attend
+""")
 display(A8.sql("SELECT event_status, label, count(*) AS bookings FROM {booking_features} GROUP BY ALL"))
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 2. Split chronologically and establish a baseline (10 minutes)
-# MAGIC Train on earlier events and evaluate on later **completed** events. The scheduled set is for future scoring.
-# MAGIC A random row split can put bookings from the same event on both sides, making the test easier than deployment.
-# MAGIC We hold out the final 10 completed events, not a random sample of their bookings.
-# MAGIC Do not tune repeatedly against this holdout. Real deployment would also require validation over several time windows.
-# MAGIC Accuracy can reward "everyone attends"; log loss tests probability quality, and AUC tests ranking.
+# MAGIC ## 3. Split by time and set a baseline (10 minutes)
+# MAGIC A model is only useful on bookings it has not seen. We **train on earlier events** and **test on the
+# MAGIC 10 most recent completed events**, which mimics using the model on the future.
+# MAGIC A random split would put bookings from the same event on both sides and make the test too easy.
+# MAGIC
+# MAGIC A **baseline** is the simplest honest guess: give every booking the overall attendance rate.
+# MAGIC A model that cannot beat it is not worth deploying.
+# MAGIC
+# MAGIC **How we score:**
+# MAGIC - **Log loss** (lower is better) rewards confident correct probabilities and punishes confident mistakes.
+# MAGIC   It is our main measure.
+# MAGIC - **AUC** (0.5 is guessing, 1.0 is perfect) asks whether attendees get higher probabilities than no-shows.
+# MAGIC - **Accuracy** can look good just by predicting "everyone attends", so never use it alone.
+# MAGIC
+# MAGIC Do not keep tweaking the model against this one test set; you would slowly fit the test instead of the problem.
 
 # COMMAND ----------
-frame = spark.table(A8.t("booking_features")).toPandas()
+# WHAT: loads the features into pandas, splits by event date, checks the split, then scores the baseline.
+# LOOK FOR: three booking counts, and the baseline log loss. The model in section 4 must beat this number.
+import pandas as pd
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import log_loss
+
+frame = spark.table(A8.t("booking_features")).toPandas()  # small data, so pandas on one machine is fine
 categorical = ["ticket_type", "organisation_type", "format", "city"]
 numeric = ["tickets", "start_hour", "weekday", "lead_days", "price_gbp"]
-features = categorical + numeric
-frame[numeric] = frame[numeric].astype("float64")
-completed = frame[frame.label.notna()].copy()
+features = categorical + numeric  # identifiers, dates and the label are deliberately left out
+frame[numeric] = frame[numeric].astype("float64")  # one numeric type for training and the model signature
+
+completed = frame[frame.label.notna()].copy()  # only rows with a known answer can train or test
 completed["label"] = completed.label.astype(int)
+# Order completed events by date and hold out the last 10: train on the past, test on the "future".
 event_order = completed[["event_id", "event_date"]].drop_duplicates().sort_values(["event_date", "event_id"])
 held_out = set(event_order.tail(10).event_id)
 train = completed[~completed.event_id.isin(held_out)]
 test = completed[completed.event_id.isin(held_out)]
-future = frame[frame.event_status == "scheduled"].copy()
-assert not set(train.event_id) & set(test.event_id)
-assert train.event_date.max() <= test.event_date.min()
+future = frame[frame.event_status == "scheduled"].copy()  # no labels yet; scored in section 6
+
+# Guard rails: if any of these fail, the split is wrong, so stop rather than train on it.
+assert not set(train.event_id) & set(test.event_id)  # no event on both sides
+assert train.event_date.max() <= test.event_date.min()  # training is strictly earlier
 assert future.label.isna().all() and len(future) > 0
 assert not {"customer_email", "customer_name", "label", "event_id", "event_date"} & set(features)
 assert set(train.label) == {0, 1} and set(test.label) == {0, 1}
 
+# "prior" predicts the training attendance rate for every booking and ignores the features.
 baseline = DummyClassifier(strategy="prior").fit(train[features], train.label)
-baseline_p = baseline.predict_proba(test[features])[:, 1]
+baseline_p = baseline.predict_proba(test[features])[:, 1]  # column 1 is P(attend)
 baseline_loss = log_loss(test.label, baseline_p)
 print(f"Train {len(train)}, holdout {len(test)}, future {len(future)} bookings")
 print(f"Baseline attendance probability {train.label.mean():.3f}, holdout log loss {baseline_loss:.3f}")
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 3. Train a transparent pipeline and track the evidence (15 minutes)
-# MAGIC One-hot encoding converts categories to indicator columns. Standardisation puts numeric features on comparable scales.
-# MAGIC A scikit-learn Pipeline fits preprocessing on **training data only** and packages it with the classifier.
-# MAGIC MLflow records parameters, metrics, artefacts and a model signature (input/output schema), not just a pickle file.
-# MAGIC A run that completes is not automatically a good model. Compare the baseline and inspect the holdout.
+# MAGIC ## 4. Train a transparent model and record the evidence (15 minutes)
+# MAGIC Models need numbers, so we prepare the columns first:
+# MAGIC - **One-hot encoding** turns a category such as `city` into 0/1 columns, one per city.
+# MAGIC - **Standardisation** puts numbers such as price and lead time on a similar scale.
+# MAGIC
+# MAGIC A scikit-learn **Pipeline** chains preparation and the model. It learns the preparation from the
+# MAGIC **training data only** and saves both together, so scoring later prepares data in exactly the same way.
+# MAGIC **Logistic regression** is a simple, explainable classifier that outputs a probability.
+# MAGIC
+# MAGIC Inside `mlflow.start_run()` we log **parameters** (choices), **metrics** (scores), a small evaluation file
+# MAGIC and the **model** itself with its *signature* (expected input columns and output shape).
+# MAGIC
+# MAGIC **Predict before you run:** will the model beat the baseline log loss you just printed? By a lot or a little?
 
 # COMMAND ----------
+# WHAT: builds the preparation + logistic regression pipeline, trains it inside an MLflow run and logs the evidence.
+# LOOK FOR: four metrics (compare holdout_log_loss with baseline_log_loss) and a link to your experiment.
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
 preprocess = ColumnTransformer([
+    # ignore unseen categories at scoring time instead of failing
     ("categories", OneHotEncoder(handle_unknown="ignore"), categorical),
     ("numbers", StandardScaler(), numeric),
 ])
 pipeline = Pipeline([("prepare", preprocess),
                      ("classifier", LogisticRegression(max_iter=500, random_state=8))])
-with mlflow.start_run(run_name="booking-attendance-logistic") as run:
-    mlflow.set_tags({"a8learn_course": COURSE_ID, "a8learn_tag": A8.cfg.tag,
-                     "evaluation": "last 10 completed events held out"})
+with mlflow.start_run(run_name="booking-attendance-logistic") as run:  # everything below belongs to one run
+    mlflow.set_tags({**A8.course_tags, "evaluation": "last 10 completed events held out"})
     mlflow.log_params({"model": "logistic_regression", "seed": 8, "holdout_events": 10,
                        "train_bookings": len(train), "test_bookings": len(test)})
-    pipeline.fit(train[features], train.label)
-    probabilities = pipeline.predict_proba(test[features])[:, 1]
+    pipeline.fit(train[features], train.label)  # training happens here
+    probabilities = pipeline.predict_proba(test[features])[:, 1]  # P(attend) for each holdout booking
     metrics = {
         "holdout_accuracy": accuracy_score(test.label, probabilities >= 0.5),
         "holdout_auc": roc_auc_score(test.label, probabilities),
@@ -134,53 +214,51 @@ with mlflow.start_run(run_name="booking-attendance-logistic") as run:
         "baseline_log_loss": baseline_loss,
     }
     mlflow.log_metrics(metrics)
+    # A file recording how the model was judged and what it cannot do. Reviewers read this, not just scores.
     mlflow.log_dict({"features": features, "held_out_events": sorted(held_out),
                      "snapshot": "2026-11-20", "limitations": [
                          "synthetic data", "one temporal holdout", "party attends together",
                          "future bookings not yet made are excluded"]}, "evaluation_contract.json")
     example = train[features].head(5)
     model_info = mlflow.sklearn.log_model(
-        pipeline, name="attendance", input_example=example,
-        signature=infer_signature(example, pipeline.predict_proba(example)),
-        pyfunc_predict_fn="predict_proba",
-        pip_requirements=["scikit-learn==1.7.2", "pandas==2.2.3", "numpy==1.26.4"],
+        pipeline, name="attendance",
+        input_example=example,  # sample input shown in the UI and used to test serving
+        signature=infer_signature(example, pipeline.predict_proba(example)),  # input/output contract
+        pyfunc_predict_fn="predict_proba",  # generic loaders return probabilities, not 0/1 guesses
+        pip_requirements=["scikit-learn==1.7.2", "pandas==2.2.3", "numpy==1.26.4"],  # to reload it elsewhere
     )
 print(pd.Series(metrics))
 if metrics["holdout_log_loss"] >= baseline_loss:
     print("Model did not beat the baseline on log loss. Investigate; registration below is for learning, not production approval.")
-experiment = mlflow.get_experiment_by_name(A8.experiment_path)
 A8.links(("Experiment: inspect this run", "experiment", experiment.experiment_id))
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC **UI step:** open the experiment. Inspect parameters, metrics, `evaluation_contract.json`, the model signature and example.
-# MAGIC In a team, compare challenger runs before promotion. Explain why AUC alone is not a calibrated turnout forecast.
-# MAGIC Optional local experiment: change `C` on LogisticRegression, run once more and compare. Preserve the first run.
+# MAGIC **UI step:** open the experiment, then the run. Find the parameters, the metrics, `evaluation_contract.json`,
+# MAGIC and under the model: its signature and input example.
+# MAGIC Why is AUC alone not enough to forecast how many people will turn up?
 # MAGIC
-# MAGIC ## 4. Register a version, assign an alias (10 minutes)
-# MAGIC An experiment run is evidence. A **registered model version** is a governable release artefact.
-# MAGIC `Champion` is a mutable alias, not a stage and not proof of quality. Serving should pin a tested version.
-# MAGIC The safety check refuses a pre-existing model without this course's ownership tags.
+# MAGIC **Your turn (optional):** add `C=0.1` to `LogisticRegression(...)` above (smaller `C` means a simpler model),
+# MAGIC run the cell again and compare the two runs in the experiment's chart view. Both runs are kept.
+# MAGIC
+# MAGIC ## 5. Register a version and assign an alias (10 minutes)
+# MAGIC A run is **evidence**. A **registered model version** is a **release**: a numbered, permission-controlled copy
+# MAGIC that other people and jobs can use. Each registration adds a version; old versions are never overwritten.
+# MAGIC
+# MAGIC An **alias** such as `Champion` is a movable label pointing at one version. Code that loads
+# MAGIC `@Champion` gets whichever version the label points to, so you can promote or roll back without changing code.
+# MAGIC An alias is not proof of quality; the evidence in the run is.
 
 # COMMAND ----------
+# WHAT: publishes the run's model as a new version in Unity Catalog and points Champion at it.
+# LOOK FOR: "Champion → version N". N goes up by one each time you train again.
 from databricks.sdk import WorkspaceClient
-from databricks.sdk.errors import NotFound
-w = WorkspaceClient()
-client = MlflowClient()
-model_name = f"{A8.cfg.catalog}.{A8.cfg.schema}.{A8.name('attendance_model')}"
-try:
-    existing = client.get_registered_model(model_name)
-except mlflow.exceptions.MlflowException as error:
-    if error.error_code != "RESOURCE_DOES_NOT_EXIST":
-        raise
-    existing = None
-if existing is not None:
-    if existing.tags.get("a8learn_course") != COURSE_ID or existing.tags.get("a8learn_tag") != A8.cfg.tag:
-        raise PermissionError("Existing model is not this course run. Choose another tag.")
-    if w.registered_models.get(model_name).owner != A8.cfg.user:
-        raise PermissionError("Existing model is not owned by this learner.")
-else:
-    client.create_registered_model(model_name, tags={"a8learn_course": COURSE_ID, "a8learn_tag": A8.cfg.tag})
+
+w = WorkspaceClient()  # Databricks SDK, signed in as you
+model_name = A8.model_name  # catalog.schema.a8_<tag>_attendance_model
+# Course safety: create the registered model with course tags, or confirm an existing one is yours.
+A8.claim_model(client, w)
+# Copy the model logged in this run into the registry as the next version.
 version = mlflow.register_model(model_info.model_uri, model_name)
 client.set_registered_model_alias(model_name, "Champion", version.version)
 A8.links(("Registered model: versions and aliases", "model", "attendance_model"))
@@ -188,28 +266,39 @@ print(f"Champion → version {version.version}")
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 5. Score through the registered model, not the in-memory estimator (15 minutes)
-# MAGIC Reloading tests the packaged model. The pyfunc contract returns **[P(no-show), P(attend)]** in classes `[0,1]`.
-# MAGIC Here a small table fits in pandas; production batch scoring should distribute work (for example `mlflow.pyfunc.spark_udf`).
-# MAGIC The forecast sums tickets × probability for **existing confirmed bookings**.
-# MAGIC It does not predict future sales, partial-party attendance or uncertainty intervals.
+# MAGIC ## 6. Score future bookings with the released model (15 minutes)
+# MAGIC We now load the model **from the registry**, not the `pipeline` variable in memory. That tests what other
+# MAGIC people would actually use. It returns two columns: **[P(no-show), P(attend)]**.
+# MAGIC
+# MAGIC Then we forecast turnout per event: **sum of tickets × P(attend)** over the confirmed bookings so far.
+# MAGIC It does not predict bookings that have not been made yet, and it gives no uncertainty range.
+# MAGIC This table is small, so pandas is fine; for large tables you would score in Spark with `mlflow.pyfunc.spark_udf`.
+# MAGIC
+# MAGIC **Predict before you run:** can an event's expected attendees ever exceed its confirmed tickets? Why not?
 
 # COMMAND ----------
+# WHAT: loads Champion from Unity Catalog, scores future bookings, saves them, then builds a per-event forecast view.
+# LOOK FOR: one forecast row per scheduled event (12), with expected_attendees below confirmed_tickets.
+import numpy as np
+
 released = mlflow.pyfunc.load_model(f"models:/{model_name}@Champion")
 scores = np.asarray(released.predict(future[features]))
+# Check the released model behaves like the one we trained before writing anything.
 assert scores.shape == (len(future), 2)
 assert np.isfinite(scores).all() and ((scores >= 0) & (scores <= 1)).all()
-assert np.allclose(scores.sum(axis=1), 1)
+assert np.allclose(scores.sum(axis=1), 1)  # the two probabilities add up to 1
 assert np.allclose(scores[:, 1], pipeline.predict_proba(future[features])[:, 1])
 scored = future[["booking_id", "event_id", "tickets"]].copy()
 scored["attendance_probability"] = scores[:, 1]
-scored["model_version"] = str(version.version)
+scored["model_version"] = str(version.version)  # record which release made each prediction
 A8.guard("attendance_predictions")
+# Hand the pandas result to Spark as a temporary view, then save it as a Delta table.
 spark.createDataFrame(scored).createOrReplaceTempView("a8_scored_bookings")
 A8.run("""CREATE OR REPLACE TABLE {attendance_predictions} USING DELTA
 COMMENT 'a8-databricks-learning probabilities for confirmed future bookings'
 AS SELECT * FROM a8_scored_bookings""")
 A8.guard("event_forecast")
+# LEFT JOIN keeps scheduled events that have no bookings yet; coalesce turns their empty sums into 0.
 A8.run("""CREATE OR REPLACE VIEW {event_forecast}
 COMMENT 'a8-databricks-learning expected turnout from existing bookings only'
 AS SELECT e.event_id, e.event_name, e.event_date, e.capacity,
@@ -225,37 +314,51 @@ WHERE expected_attendees < 0 OR expected_attendees > confirmed_tickets""").first
 A8.links(("Forecast: inspect upstream lineage", "table", "event_forecast"))
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC ### Exercise 3.1: write the forecast yourself
+# MAGIC Using only `{attendance_predictions}`, return `event_id` and `expected_attendees`
+# MAGIC (the sum of tickets × attendance_probability), one row per event, ordered by `event_id`.
+# MAGIC Put your SQL between the triple quotes and run the cell. A blank answer shows a hint.
+
+# COMMAND ----------
+# WHAT: checks your SQL against the course's answer on your own tables.
+# LOOK FOR: a green "correct" card. `A8.solution("3.1")` shows a worked answer if you are stuck.
 answer_3_1 = """"""
 A8.check("3.1", answer_3_1)
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC **UI exercise:** chart confirmed tickets and expected attendees by event. Which difference might an organiser misinterpret?
-# MAGIC Explain to a colleague: "Expected attendance covers only bookings we already have." Which extra model would predict new sales?
+# MAGIC **UI exercise:** in the forecast output above, add a bar chart of confirmed tickets and expected attendees by event.
+# MAGIC Which difference might an organiser misread? Explain: "Expected attendance covers only bookings we already have."
+# MAGIC What extra model would you need to predict bookings not yet made?
 # MAGIC
-# MAGIC ## 6. Optional: deploy a real-time endpoint
-# MAGIC Batch tables cost no continuously provisioned serving endpoint. Online serving adds a REST API and its own permissions.
-# MAGIC Set `deploy_serving` to yes **only** if your workspace allows custom model serving and you accept the cost.
-# MAGIC This uses the smallest workload and scale-to-zero, but does not guarantee zero cost. Provisioning can take many minutes.
-# MAGIC Free Edition availability/quotas differ; a capability error does not invalidate batch inference.
-# MAGIC Existing endpoints are never updated here. If this cell is interrupted, open Serving and delete the exact endpoint
-# MAGIC below, or run `99_pause_and_cleanup`. Do not keep retrying quota errors.
+# MAGIC ## 7. Optional: deploy a real-time endpoint (10 minutes)
+# MAGIC Batch scoring, as above, runs when you choose and needs no endpoint. **Model serving** instead keeps the model
+# MAGIC available behind a REST API, so an app can ask for a prediction at any moment. That convenience has a cost.
+# MAGIC
+# MAGIC Set the `deploy_serving` widget to **yes** only if your workspace allows custom model serving and you accept the cost.
+# MAGIC - It uses the smallest size and *scale to zero*, which reduces but does not guarantee zero cost.
+# MAGIC - Provisioning can take many minutes. Free Edition quotas differ; a capability error does not affect batch scoring.
+# MAGIC - It only creates a new endpoint; it never updates an existing one. If interrupted, delete the endpoint in
+# MAGIC   **Serving** or run `99_pause_and_cleanup`. Do not keep retrying quota errors.
 
 # COMMAND ----------
+# WHAT: if you opted in, creates an endpoint serving the Champion version, sends two bookings, and compares answers.
+# LOOK FOR: "Online response matches batch probabilities", or "Serving skipped" if you left the widget at no.
 if A8.gate("deploy_serving", "Create a billable attendance serving endpoint?"):
     from databricks.sdk.service.serving import (
         EndpointCoreConfigInput, ServedEntityInput, EndpointTag,
     )
-    # Create only: a collision fails, never updates an existing endpoint.
+    # Create only: a name collision fails rather than updating someone else's endpoint.
     endpoint = w.serving_endpoints.create_and_wait(
         name=A8.endpoint_name,
         config=EndpointCoreConfigInput(served_entities=[
-            ServedEntityInput(entity_name=model_name, entity_version=str(version.version),
+            ServedEntityInput(entity_name=model_name, entity_version=str(version.version),  # pin a tested version
                               workload_size="Small", scale_to_zero_enabled=True)
         ]),
-        tags=[EndpointTag(key="a8learn_course", value=COURSE_ID),
-              EndpointTag(key="a8learn_tag", value=A8.cfg.tag)],
+        tags=[EndpointTag(key=k, value=v) for k, v in A8.course_tags.items()],
     )
+    # The REST request body: two bookings in pandas "split" format (column names plus rows).
     payload = {"dataframe_split": future[features].head(2).to_dict(orient="split")}
     response = w.api_client.do("POST", f"/serving-endpoints/{A8.endpoint_name}/invocations", body=payload)
     online = np.asarray(response["predictions"])
@@ -267,16 +370,20 @@ else:
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC **UI alternative:** Serving → Create endpoint → choose this model/version → Small → scale to zero.
-# MAGIC Name it exactly as printed by `A8.endpoint_name`; add the two course tags shown in code before creating.
-# MAGIC Query it using the model input example, inspect permissions and logs, then **delete**, not just stop compute.
-# MAGIC Serving an sklearn predictor is not a GenAI model call. Next stage adds both, then connects them to an app.
+# MAGIC **UI alternative:** Serving → Create endpoint → choose this model and version → Small → scale to zero.
+# MAGIC Use exactly the name printed below, and add the two course tags (`a8learn_course`, `a8learn_tag`).
+# MAGIC Query it with the model's input example, look at its permissions and logs, then **delete** it.
+# MAGIC Stopping compute is not enough. Serving this scikit-learn model is not a GenAI call; Module 4 adds those.
 # MAGIC
-# MAGIC **Recap:** identify the unit of prediction, the temporal split, the baseline, run ID, model version,
-# MAGIC alias and batch output. Which are immutable evidence, and which can move?
+# MAGIC ## Recap
+# MAGIC Name the unit of prediction, the time-based split, the baseline, the run, the model version, the alias and
+# MAGIC the batch output. **Which of these are fixed evidence, and which can move?**
+# MAGIC (The run and version are fixed; the alias and the forecast view change when you retrain.)
+# MAGIC
 # MAGIC **Stop here for Stage 1.** Modules 4–8 are planned, not yet supplied. Remove any serving endpoint now.
 
 # COMMAND ----------
+# WHAT: prints your endpoint's name and summarises what you built.
 print("Optional endpoint name:", A8.endpoint_name)
 A8.next_step(["Booking-time feature table and temporal holdout", "MLflow run with baseline and metrics",
               "UC model version and Champion alias", "Registered-model batch inference and event turnout view"],
