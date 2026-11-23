@@ -177,6 +177,11 @@ bookings is an assumption; costs are assumed teaching parameters with no payment
 
 ## Module 4: diagnostic analytics
 
+**Readability pilot (23 November 2026), offline only:** one setup cell, an "Under the hood" helper table, three optional
+`<details>` background blocks (event terms, mix versus rate, p-value) and three computed "Reading" cells that state the
+real values with their limits. `tests/test_diagnostic.py` checks the single setup cell and the reading variables.
+Not validated: Databricks rendering of `<details>` in Markdown cells, and whether learners find it clearer (no learner testing).
+
 **Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
 
 | Check | Evidence |

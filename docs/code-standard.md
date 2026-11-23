@@ -8,6 +8,8 @@ Python practice and the same lint settings.
 
 1. **One idea per cell.** A code cell does one thing a learner can name: load, transform, write, check or show.
    Aim for 15 lines or fewer. If a cell needs "and then" to describe it, split it.
+   Exception: one **setup cell** per notebook may hold the imports, prerequisite check and name resolution,
+   ending in a single "Ready" line, so learners are not walked through several empty cells.
 2. **Standard Databricks first.** Use Spark DataFrames, `spark.table`, `spark.sql`, `%sql` cells, MLflow and the
    Databricks SDK as their documentation shows them. Prefer Spark for data work; use pandas only where a library
    needs it (scikit-learn training) and say why.
@@ -19,7 +21,7 @@ Python practice and the same lint settings.
 4. **Helpers only for course plumbing.** `A8` helpers exist for settings, names, ownership checks, UI links and
    exercise checking. They never hide a Databricks operation the lesson is teaching.
 5. **Checks are explicit and separate.** Validation goes in its own "Check" cell using `A8.expect(condition, message)`,
-   which raises a clear error. Do not use bare `assert` for runtime checks: Python can skip it, and its failure says nothing.
+   which raises a clear error. A prerequisite check may sit in the setup cell. Do not use bare `assert` for runtime checks: Python can skip it, and its failure says nothing.
 6. **Each cell reads on its own.** A cell may use variables from earlier cells in the same section; anything from
    further back is named in the section's text. Rerunning a cell must not drift data (no repeated `+ 1`).
 7. **Imports at the top of the module**, in one commented cell after `%run ./_config`. Exception: the optional serving

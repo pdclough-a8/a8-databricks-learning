@@ -219,6 +219,20 @@ FROM event_metrics WHERE event_status = 'completed'""",
         self.assertIn("Nothing in this notebook proves\n# MAGIC causation", SOURCE)
         self.assertIn("**Where this sits:**", SOURCE)
 
+    def test_setup_is_one_cell_and_readings_use_real_values(self):
+        setup = [c for c in SOURCE.split("# COMMAND ----------") if "import numpy" in c]
+        self.assertEqual(len(setup), 1)
+        for call in ('A8.require("event_metrics")', 'A8.t("event_metrics")'):
+            self.assertIn(call, setup[0])
+        self.run_lesson()
+        rows = self.namespace["format_rows"]
+        self.assertEqual({r["segment"] for r in rows}, {"online", "in_person", "hybrid"})
+        self.assertEqual(self.namespace["verdict"], "hard to explain by label-shuffling alone")
+        self.assertLess(self.namespace["gap"], 0)
+        text = SOURCE.replace("# MAGIC ", "")
+        for phrase in ("Under the hood", "Optional background: what a p-value means", "all mix"):
+            self.assertIn(phrase, text)
+
     def test_course_navigation_points_to_module_1c(self):
         descriptive = (ROOT / "notebooks/03_descriptive_analytics.py").read_text(encoding="utf-8")
         self.assertIn("04_diagnostic_analytics", descriptive)

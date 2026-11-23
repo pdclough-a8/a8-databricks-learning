@@ -211,6 +211,8 @@ Fairness to turned-away attendees needs human judgement (checkpoint H1). The pre
 
 ## S23: diagnostic analytics module
 
+**Readability pilot:** learner feedback said modules were hard to follow (hidden helpers, assumed event/statistics knowledge, no result interpretation, scattered setup cells). Module 4 now has a single setup cell, a helper "Under the hood" table, optional background blocks and computed readings; `docs/code-standard.md` allows one setup cell. Not yet applied to Modules 0-3 and 5-7; not live validated, not learner tested.
+
 **Scope:** Module 4 reads `event_metrics` only. It writes nothing and makes no AI call. The optional Genie "why" question is learner-triggered.
 **Checks:** `tests/test_diagnostic.py`, offline only; Spark/serverless execution and Genie behaviour are not live validated.
 **Limits:** the online gap is a pattern, not a proven cause. In this data online is both a city and a format, so they

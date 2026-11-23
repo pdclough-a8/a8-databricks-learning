@@ -47,25 +47,47 @@
 
 # COMMAND ----------
 
-# WHAT: imports numpy for the seeded permutation test later.
-# LOOK FOR: no output; numpy ships with the Databricks runtime, so nothing is installed.
+# WHAT: one setup cell: imports numpy, checks Module 3's view exists and resolves its full name.
+# LOOK FOR: one "Ready" line naming your real view. If the view is missing you get a card naming the notebook to run.
 import numpy as np
 
-# COMMAND ----------
-
-# WHAT: Check: stops here if the Module 3 reporting view is missing.
-# LOOK FOR: no output when it exists; otherwise a card naming the prerequisite notebook.
 A8.require("event_metrics")
-
-# COMMAND ----------
-
-# WHAT: resolves your validated name for the reporting view.
-# LOOK FOR: no output; SQL copied into the SQL editor will use this real name.
 event_metrics = A8.t("event_metrics")
+print(f"Ready. Every query below reads {event_metrics}, completed events only. Nothing is written.")
 
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Under the hood: what the `A8` helpers do
+# MAGIC The helpers only cover course plumbing; every query is ordinary Spark SQL you can paste into the SQL editor.
+# MAGIC | Helper | Plain Databricks equivalent |
+# MAGIC |---|---|
+# MAGIC | `A8.t("event_metrics")` | The full three-part name as text; the "Ready" line shows it. |
+# MAGIC | `A8.require(...)` | `spark.catalog.tableExists(name)` for each object, with a friendlier message. |
+# MAGIC | `A8.expect(condition, message)` | `if not condition: raise AssertionError(message)`, plus a tick. |
+# MAGIC | `A8.check("4.1", answer)` | Runs your SQL and the stored solution and compares the rows. |
+# MAGIC
+# MAGIC To run a query elsewhere, copy it from `print(drill_down_sql("format"))` and it will already contain your
+# MAGIC real name.
+# MAGIC The exercises use `IDENTIFIER(a8_event_metrics)`, a session variable holding that same name; replace it with the
+# MAGIC full name outside this course.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC <details>
+# MAGIC <summary>Optional background: the event terms used here</summary>
+
+# MAGIC - **Confirmed tickets** are what people bought. **Attended tickets** are what was scanned or recorded at the
+# MAGIC   door.
+# MAGIC   **Attendance** is attended over confirmed tickets, so 90% means nine in ten ticket holders came.
+# MAGIC - **Known outcome** means the event has finished and attendance was recorded; scheduled events are left out
+# MAGIC   because zero attendance there means "not yet", not "nobody came".
+# MAGIC - **Ticket-weighted** means we add tickets first, then divide, so a large event counts for more than a small
+# MAGIC   one.
+# MAGIC - A **segment** is any group of events we compare: a city, topic, format or month.
+# MAGIC </details>
+
 # MAGIC ## 2. Drill down: where is the difference?
 # MAGIC A drill-down repeats one descriptive question across the values of one dimension. The rule from Module 3 still
 # MAGIC applies: add counts and sums, then divide, so a three-ticket event does not outweigh a three-hundred-ticket one.
@@ -93,8 +115,23 @@ GROUP BY {expression} ORDER BY {expression}"""
 # COMMAND ----------
 
 # WHAT: drills down by format, the dimension behind our question.
-# LOOK FOR: online attendance clearly below in-person and hybrid, with 15 online events behind it.
+# LOOK FOR: one row per format. attendance_pct is attended tickets over tickets with a known outcome.
 display(spark.sql(drill_down_sql("format")))
+
+# COMMAND ----------
+
+# WHAT: Reading: restates the format table in plain sentences, with the number of events behind each figure.
+# LOOK FOR: which format is lowest, by how many points, and a warning for any segment with fewer than 10 events.
+format_rows = spark.sql(drill_down_sql("format")).collect()
+for row in format_rows:
+    thin = "  (thin: treat with caution)" if row["events"] < 10 else ""
+    print(f"{row['segment']}: {row['attendance_pct']}% of {row['known_outcome_tickets']} tickets attended, "
+          f"{row['events']} events, average rating {row['average_rating']}{thin}")
+lowest = min(format_rows, key=lambda row: row["attendance_pct"])
+highest = max(format_rows, key=lambda row: row["attendance_pct"])
+print(f"Lowest: {lowest['segment']} at {lowest['attendance_pct']}%, "
+      f"{highest['attendance_pct'] - lowest['attendance_pct']:.1f} points below {highest['segment']}.")
+print("That describes a pattern. It does not say why, or whether chance could produce it.")
 
 # COMMAND ----------
 
@@ -122,6 +159,21 @@ display(spark.sql(drill_down_sql("month")))
 # MAGIC in another, which is why the next section asks whether the *composition* of each segment explains the gap.
 # MAGIC
 # MAGIC ## 3. Mix versus rate: is it the kind of events, or how they behave?
+# MAGIC <details>
+# MAGIC <summary>Optional background: a worked example with two topics</summary>
+
+# MAGIC Suppose Leadership events attend at 70% and AI events at 90%, **in both** online and other formats (so
+# MAGIC behaviour is
+# MAGIC identical). Online runs 75% Leadership and 25% AI. Other formats run 25% Leadership and 75% AI.
+# MAGIC Online attendance: 0.75 × 70% + 0.25 × 90% = 75%. Other: 0.25 × 70% + 0.75 × 90% = 85%. The 10-point gap is
+# MAGIC **all mix**,
+# MAGIC because online simply holds more of the lower-attending topic. The **rate** effect is zero.
+# MAGIC Now imagine online Leadership attended at only 60%. That extra shortfall would be a **rate** effect: the
+# MAGIC same topic
+# MAGIC behaving worse online. The split below gives each topic's share of the gap, in points, and the two parts add
+# MAGIC to the total.
+# MAGIC </details>
+
 # MAGIC The online gap in attendance can arise two ways. If online has a larger share of a low-attendance topic, that
 # MAGIC is a
 # MAGIC **mix** effect. If the same topic attends worse online than offline, that is a **rate** effect. The split below
@@ -204,8 +256,24 @@ A8.expect(abs(split["mix_effect"] + split["rate_effect"] - split["total_gap"]) <
 
 # COMMAND ----------
 
+# WHAT: Reading: turns the split into sentences that say which part is larger and what that does not tell you.
+# LOOK FOR: a total gap, then mix and rate in points. Negative means online is lower.
+mix, rate, gap = split["mix_effect"], split["rate_effect"], split["total_gap"]
+direction = "lower" if gap < 0 else "higher"
+print(f"Online attendance is {abs(gap):.1f} points {direction} than the other formats.")
+print(f"Mix (different topic shares) contributes {mix:+.1f} points; "
+      f"rate (same topic, different behaviour) {rate:+.1f}.")
+if abs(rate) > abs(mix):
+    print("Rate is the larger part: online attends worse even topic by topic, so topic mix does not explain it.")
+else:
+    print("Mix is the larger part: online mainly holds topics that attend less everywhere.")
+print("Neither part says why. The by-topic table shows which topics carry it.")
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC **Read the split.** A large rate effect with a small mix effect says online events attend worse even when
+# MAGIC **Read the split.** The cell above states it in numbers. In general, a large rate effect with a small mix
+# MAGIC effect says online events attend worse even when
 # MAGIC compared topic by topic, so the topic mix does not explain the gap. Look at the by-topic table to see which
 # MAGIC topics
 # MAGIC carry it. That narrows the search; it does not name the reason. Reasons that could fit a rate effect include
@@ -215,6 +283,19 @@ A8.expect(abs(split["mix_effect"] + split["rate_effect"] - split["total_gap"]) <
 # MAGIC That is exercise 4.2. Ratings come from respondents only, so a ratings gap may reflect who answers.
 # MAGIC
 # MAGIC ## 4. Is the gap bigger than chance? A permutation test
+# MAGIC <details>
+# MAGIC <summary>Optional background: what a p-value means</summary>
+
+# MAGIC Imagine writing "online" or "not online" on 48 cards and dealing the labels out at random 10,000 times. Most
+# MAGIC random
+# MAGIC deals give a gap near zero; a few give a large one by luck. The **p-value** is the share of deals at least
+# MAGIC as extreme as
+# MAGIC your real gap. A p-value of 0.02 means about 2 random deals in 100 matched it, so luck alone is an awkward
+# MAGIC explanation.
+# MAGIC A p-value of 0.40 means luck matches it easily. The 0.05 line many people use is a convention, not a law.
+# MAGIC It measures surprise under label-shuffling only; it is not the chance that you are right.
+# MAGIC </details>
+
 # MAGIC Each event is one unit: tickets within an event share a venue, topic and date, so we shuffle whole events, not
 # MAGIC tickets. The test asks: if the online/not-online label were unrelated to attendance, how often would shuffled
 # MAGIC labels give a gap at least as large as the one we saw, in either direction?
@@ -273,6 +354,15 @@ A8.expect(small_gap == 1.0 and 0.05 < small_p < 0.16,
 observed_gap, p_value = permutation_test(events_frame["known"], events_frame["attended"], events_frame["is_online"])
 print(f"Observed gap (online minus not online): {100 * observed_gap:.1f} percentage points")
 print(f"Two-sided permutation p-value, 10,000 shuffles, seed 2026: {p_value:.4f}")
+
+# COMMAND ----------
+
+# WHAT: Reading: states the test result in plain words with its limits.
+# LOOK FOR: a sentence naming the gap and the p-value, then what that does and does not show.
+verdict = "hard to explain by label-shuffling alone" if p_value < 0.05 else "not clearly different from chance"
+print(f"A gap of {100 * observed_gap:.1f} points with p = {p_value:.4f}: {verdict}.")
+print("This says the gap is unlikely to be luck of the draw. It does not say online format caused it.")
+print("Different audiences, timing or reminders could also produce it; the data holds none of those.")
 
 # COMMAND ----------
 
