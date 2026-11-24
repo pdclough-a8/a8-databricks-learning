@@ -137,6 +137,26 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 13: Pipelines and jobs
+
+**Supplied, offline checked, not live validated.** A Free Edition write probe (24 November 2026) created, ran and
+deleted a one-table pipeline and a job with a paused schedule on serverless; this module's own three-layer pipeline,
+pipeline settings and system-table reads have not run live.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_pipelines.py` | The notebook runs against recording stand-ins for the SDK and Spark, with a small Python model of the pipeline's three layers |
+| Batches | Deterministic: 43 rows each (40 valid, 3 bad); the bad rows break the ticket, status and id rules |
+| Gates | The default run lands batch 1 in your volume and nothing else; create, run, job and delete are separate default-no switches |
+| Pipeline | Serverless, triggered, development mode, created from the repo SQL file with your table names as settings; reused only if it is yours |
+| Independent check | Gold's seats left equal Module 1's seats left minus the valid confirmed tickets counted in Python from the batch rows |
+| Job | Created with a paused schedule and course tags; run once; reused only if it is yours |
+| Cleanup | The job, then the pipeline, then the three tables (deleting a pipeline leaves them behind) after exact-name, creator and marker checks; `99_pause_and_cleanup` uses the same code |
+| Exercises 13.1, 13.2 | The solutions equal independent Python results; blank and naive answers fail |
+
+Not validated offline: pipeline settings substitution in SQL, update time, the event-log quality counts, the system
+tables and quota.
+
 ## Module 12: Deploy and govern
 
 **Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the packaged agent

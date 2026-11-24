@@ -516,4 +516,4 @@ A8.next_step(["The agent packaged as plain code with a snapshot, tested before r
               "An MLflow run and a Unity Catalog model version with a Champion alias",
               "A serving endpoint queried over REST and checked against the local answers",
               "A read of who can use the model and endpoint, and a scoped deletion"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "13_pipelines_and_jobs", "Keep the numbers fresh with a pipeline and a job")

@@ -57,6 +57,33 @@ def delete_vector_search(course, workspace, index, endpoint, wait_seconds=180):
         workspace.vector_search_endpoints.delete_endpoint(course.vector_endpoint_name)
 
 
+def pipeline_for_cleanup(course, workspace):
+    """The learner's own bookings pipeline (Module 13) by exact name, creator and course marker, or None."""
+    found = [p for p in workspace.pipelines.list_pipelines(filter=f"name LIKE '{course.pipeline_name}'")
+             if p.name == course.pipeline_name]
+    if not found:
+        return None
+    info = workspace.pipelines.get(found[0].pipeline_id)
+    configuration = (info.spec.configuration if info.spec else None) or {}
+    if (info.creator_user_name != course.cfg.user or configuration.get("a8learn_course") != COURSE_ID
+            or configuration.get("a8learn_tag") != course.cfg.tag):
+        raise PermissionError("Pipeline creator/course settings do not match. Nothing deleted.")
+    return info
+
+
+def job_for_cleanup(course, workspace):
+    """The learner's own refresh job (Module 13) by exact name, creator and course tags, or None."""
+    found = [j for j in workspace.jobs.list(name=course.job_name) if j.settings and j.settings.name == course.job_name]
+    if not found:
+        return None
+    job = found[0]
+    tags = job.settings.tags or {}
+    if (job.creator_user_name != course.cfg.user or tags.get("a8learn_course") != COURSE_ID
+            or tags.get("a8learn_tag") != course.cfg.tag):
+        raise PermissionError("Job creator/course tags do not match. Nothing deleted.")
+    return job
+
+
 def model_for_cleanup(course, workspace, client, name=None):
     import mlflow
     name = name or course.model_name
@@ -80,6 +107,8 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     endpoint = endpoint_for_cleanup(course, workspace)
     agent_endpoint = endpoint_for_cleanup(course, workspace, course.agent_endpoint_name)
     index, vector_endpoint = vector_search_for_cleanup(course, workspace)
+    pipeline = pipeline_for_cleanup(course, workspace)
+    job = job_for_cleanup(course, workspace)
     keys = [k for k in reversed(OBJECTS) if OBJECTS[k][0] != "model"] if tables else []
     present = [k for k in keys if course.exists(k)]
     # Preflight every intended target before the first delete.
@@ -94,6 +123,12 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     if endpoint:
         endpoint_for_cleanup(course, workspace)
         workspace.serving_endpoints.delete(course.endpoint_name)
+    if job:  # the job runs the pipeline, so it goes first
+        job_for_cleanup(course, workspace)
+        workspace.jobs.delete(job.job_id)
+    if pipeline:
+        pipeline_for_cleanup(course, workspace)
+        workspace.pipelines.delete(pipeline.pipeline_id)
     if agent_endpoint:
         endpoint_for_cleanup(course, workspace, course.agent_endpoint_name)
         workspace.serving_endpoints.delete(course.agent_endpoint_name)
@@ -110,17 +145,22 @@ def cleanup(course, workspace, client, confirmation, tables=False):
                     client.delete_model_version(found.name, version.version)
                 client.delete_registered_model(found.name)
         # Reverse creation order: views and governed table before its UDF dependencies.
-        order = ["doc_chunks", "event_forecast", "attendance_predictions", "booking_features",
-                 "bookings_governed", "city_filter", "mask_email", "event_metrics", "event_availability",
-                 "feedback", "bookings", "events", "raw"]
+        order = ["seats_live", "bookings_clean", "bookings_bronze", "doc_chunks", "event_forecast",
+                 "attendance_predictions", "booking_features", "bookings_governed", "city_filter",
+                 "mask_email", "event_metrics", "event_availability", "feedback", "bookings", "events", "raw"]
         for key in order:
             if key in present:
                 course.guard(key)
+                if OBJECTS[key][0] == "pipeline_table":
+                    # Deleting a pipeline leaves its tables behind, and DROP needs the exact kind of table.
+                    workspace.tables.delete(f"{course.cfg.catalog}.{course.cfg.schema}.{course.name(key)}")
+                    continue
                 kind = OBJECTS[key][0].upper()
                 course.run(f"DROP {kind} {course.t(key)}")
         if experiment and experiment.lifecycle_stage != "deleted":
             client.delete_experiment(experiment.experiment_id)
     return {"endpoint_deleted": bool(endpoint), "data_objects_deleted": len(present),
             "model_deleted": bool(model), "agent_endpoint_deleted": bool(agent_endpoint),
-            "agent_model_deleted": bool(agent_model), "vector_index_deleted": index is not None,
+            "agent_model_deleted": bool(agent_model), "pipeline_deleted": bool(pipeline),
+            "job_deleted": bool(job), "vector_index_deleted": index is not None,
             "vector_endpoint_deleted": vector_endpoint is not None}

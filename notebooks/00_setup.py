@@ -76,7 +76,9 @@
 # MAGIC 10. `08c_vector_search` (optional): a managed Vector Search index; the endpoint bills until deleted
 # MAGIC 11. `09_agents` (optional): an agent that chooses between two read-only tools, with a step cap and a trace
 # MAGIC 12. `12_deploy_and_govern` (optional): log, register, serve and govern the agent; the endpoint can bill
-# MAGIC 13. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 13. `13_pipelines_and_jobs` (optional): a pipeline with quality rules and a scheduled job that keep seats left
+# MAGIC    fresh; the pipeline and job use quota
+# MAGIC 14. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

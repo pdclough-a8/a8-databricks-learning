@@ -36,6 +36,9 @@ OBJECTS = {
     "event_forecast": ("view", "05_predictive_ml"),
     "doc_chunks": ("table", "08b_rag"),
     "agent_model": ("model", "12_deploy_and_govern"),
+    "bookings_bronze": ("pipeline_table", "13_pipelines_and_jobs"),
+    "bookings_clean": ("pipeline_table", "13_pipelines_and_jobs"),
+    "seats_live": ("pipeline_table", "13_pipelines_and_jobs"),
 }
 
 
@@ -174,6 +177,21 @@ class Course:
         return f"{self.cfg.catalog}.{self.cfg.schema}.{self.name('agent_model')}"
 
     @property
+    def pipeline_name(self) -> str:
+        """This learner's bookings pipeline (Module 13)."""
+        return f"a8-{self.cfg.tag}-bookings"
+
+    @property
+    def job_name(self) -> str:
+        """This learner's scheduled refresh job (Module 13)."""
+        return f"a8-{self.cfg.tag}-refresh"
+
+    @property
+    def incoming_path(self) -> str:
+        """Volume folder where new booking files land (Module 13)."""
+        return f"{self.volume_path}/incoming"
+
+    @property
     def vector_endpoint_name(self) -> str:
         """This learner's Vector Search endpoint (Module 8c). Billable while it exists."""
         return f"a8-{self.cfg.tag}-vs"
@@ -226,6 +244,8 @@ class Course:
                      f"WHERE table_schema = {schema} AND table_name = {name}",
             "view": f"SELECT table_owner AS owner FROM {catalog}.information_schema.tables "
                     f"WHERE table_schema = {schema} AND table_name = {name}",
+            "pipeline_table": f"SELECT table_owner AS owner FROM {catalog}.information_schema.tables "
+                              f"WHERE table_schema = {schema} AND table_name = {name}",
             "volume": f"SELECT volume_owner AS owner FROM {catalog}.information_schema.volumes "
                       f"WHERE volume_schema = {schema} AND volume_name = {name}",
             "function": f"SELECT routine_owner AS owner FROM {catalog}.information_schema.routines "
@@ -261,6 +281,7 @@ class Course:
             source, schema_col, name_col, comment_col = {
                 "table": ("tables", "table_schema", "table_name", "comment"),
                 "view": ("tables", "table_schema", "table_name", "comment"),
+                "pipeline_table": ("tables", "table_schema", "table_name", "comment"),
                 "volume": ("volumes", "volume_schema", "volume_name", "comment"),
                 "function": ("routines", "routine_schema", "routine_name", "comment"),
             }[kind]
@@ -392,6 +413,8 @@ class Course:
             "vector_search": f"{h}/compute/vector-search",
             "apps": f"{h}/apps",
             "jobs": f"{h}/jobs",
+            "job": f"{h}/jobs/{name}",
+            "pipeline": f"{h}/pipelines/{name}",
         }[kind]
 
     def links(self, *items):

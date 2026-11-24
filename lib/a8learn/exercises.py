@@ -285,6 +285,27 @@ WHERE status = 'scheduled' GROUP BY city ORDER BY seats_left DESC, city""",
                    "a new version of the model, would be needed, which is why releases are numbered.",
         "ordered": True,
     },
+    "13.1": {
+        "task": "Return event_id and new_tickets (the sum of tickets) for confirmed rows in the cleaned bookings, "
+                "ordered by new_tickets from highest to lowest, then event_id.",
+        "hint": "Filter status = 'confirmed', GROUP BY event_id and sum(tickets). Read from "
+                "IDENTIFIER(a8_bookings_clean).",
+        "solution": """SELECT event_id, sum(tickets) AS new_tickets FROM IDENTIFIER(a8_bookings_clean)
+WHERE status = 'confirmed' GROUP BY event_id ORDER BY new_tickets DESC, event_id""",
+        "explain": "The cleaned table has already lost the rows that broke the quality rules, so a plain sum is safe. "
+                   "Run the same query on the bronze table and the zero and negative ticket rows would be counted.",
+        "ordered": True,
+    },
+    "13.2": {
+        "task": "Return event_name, city and available for scheduled events in the gold table with fewer than 30 "
+                "seats left, ordered by available from lowest to highest, then event_name, then city.",
+        "hint": "Filter status = 'scheduled' AND available < 30. Read from IDENTIFIER(a8_seats_live).",
+        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_seats_live)
+WHERE status = 'scheduled' AND available < 30 ORDER BY available, event_name, city""",
+        "explain": "Gold already combines the history and the new bookings, so the query only filters and sorts. "
+                   "Compare it with the same question on Module 1's view to see which events the stale numbers hid.",
+        "ordered": True,
+    },
 }
 
 
@@ -431,6 +452,18 @@ REFLECTIONS = {
         "model": "The seat numbers and documents are frozen at the time of logging, so answers drift from reality. "
                  "Either log and release a new version on a schedule, or have the served agent read live data "
                  "through a governed connection, which needs its own authentication and access review.",
+    },
+    "13.a": {
+        "question": "Why are bad rows kept in bronze but dropped from silver?",
+        "model": "Bronze is the record of what arrived, so nothing is lost and a rule can be fixed and rerun. "
+                 "Silver is what the business counts, so rows that should not be there must not be. Keeping both "
+                 "also lets you measure how many rows were dropped and why.",
+    },
+    "13.b": {
+        "question": "What does a declarative pipeline give you that rerunning a notebook does not?",
+        "model": "It reads only new files, remembers what it has processed, orders the tables itself, records how "
+                 "many rows passed each quality rule and can be run on a schedule with a history, so the result "
+                 "does not depend on someone pressing run in the right order.",
     },
 }
 

@@ -190,6 +190,8 @@ class LifecycleTests(unittest.TestCase):
         from databricks.sdk.errors import NotFound
         self.w.vector_search_indexes.get_index.side_effect = NotFound("none")
         self.w.vector_search_endpoints.get_endpoint.side_effect = NotFound("none")
+        self.w.pipelines.list_pipelines.return_value = []
+        self.w.jobs.list.return_value = []
         from databricks.sdk.errors import NotFound as Missing
         mine = SimpleNamespace(
             creator=self.course.cfg.user,
@@ -400,7 +402,7 @@ class NotebookTests(unittest.TestCase):
             "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
             "06_prescriptive_analytics", "02_governance", "07_genai",
             "05_predictive_ml", "08a_embeddings", "08b_rag", "08c_vector_search", "09_agents",
-            "12_deploy_and_govern", "99_pause_and_cleanup", "_config",
+            "12_deploy_and_govern", "13_pipelines_and_jobs", "99_pause_and_cleanup", "_config",
         })
         for path in paths:
             source = path.read_text(encoding="utf-8")

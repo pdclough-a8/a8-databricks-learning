@@ -1,8 +1,8 @@
-"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-12 and the Python routes. Not a unit test.
+"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-13 and the Python routes. Not a unit test.
 
 Run with Python and the Databricks SDK installed, using the browser OAuth profile a8-free. Uploads the course to a
-unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b, 08c, 09 and 12 as serverless notebook tasks
-under its own learner tag and saved-settings profile, then always runs scoped cleanup, deletes the uploaded
+unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b, 08c, 09, 12 and 13 as serverless notebook
+tasks under its own learner tag and saved-settings profile, then always runs scoped cleanup, deletes the uploaded
 folder and its settings file, and writes the notebook outputs to .local-validation/stage2-validation.txt (git-ignored).
 
 Model requests and a billable Vector Search endpoint are approved by whoever runs this, with --approve-cloud-writes.
@@ -26,18 +26,20 @@ PROFILE = "val8cfg"
 
 def upload(w, remote):
     w.workspace.mkdirs(remote)
-    for folder in ["lib", "data/raw", "data/docs", "dashboards", "notebooks"]:
+    for folder in ["lib", "data/raw", "data/docs", "dashboards", "notebooks", "pipelines"]:
         for source in (ROOT / folder).rglob("*"):
             if not source.is_file() or "__pycache__" in source.parts:
                 continue
             target = f"{remote}/{source.relative_to(ROOT).as_posix()}"
-            notebook = folder == "notebooks"
+            notebook = folder in {"notebooks", "pipelines"}
+            sql = source.suffix == ".sql"
             if notebook:
-                target = target.removesuffix(".py")
+                target = target.removesuffix(".py").removesuffix(".sql")
             w.workspace.mkdirs(target.rsplit("/", 1)[0])
+            language = (Language.SQL if sql else Language.PYTHON) if notebook else None
             w.workspace.upload(target, source.read_bytes(),
                                format=ImportFormat.SOURCE if notebook else ImportFormat.RAW,
-                               language=Language.PYTHON if notebook else None, overwrite=False)
+                               language=language, overwrite=False)
 
 
 def build_tasks(remote, tag, wait_minutes, skip_vector=False, only=None):
@@ -57,6 +59,8 @@ def build_tasks(remote, tag, wait_minutes, skip_vector=False, only=None):
         ("agents", "09_agents", {"ask_agent": "yes", "native_tools": "yes"}, 1800),
         ("deploy", "12_deploy_and_govern",
          {"register_agent": "yes", "deploy_agent": "yes", "delete_agent_endpoint": "yes"}, 3000),
+        ("pipelines", "13_pipelines_and_jobs",
+         {"create_pipeline": "yes", "run_pipeline": "yes", "run_job": "yes", "delete_pipeline_objects": "yes"}, 3600),
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:
