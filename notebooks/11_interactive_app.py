@@ -74,7 +74,7 @@ availability = A8.t("event_availability")
 warehouse_id = A8.cfg.warehouse_id
 if not warehouse_id:
     warehouses = list(w.warehouses.list())
-    A8.expect(len(warehouses) == 1, "Set warehouse_id in 00_setup: this workspace has no single obvious warehouse.")
+    A8.expect(len(warehouses) == 1, "This workspace has one SQL warehouse (otherwise set warehouse_id in 00_setup).")
     warehouse_id = warehouses[0].id
 print(f"Ready | app {A8.app_name} | reads {availability} | warehouse {warehouse_id}")
 

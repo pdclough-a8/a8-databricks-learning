@@ -26,7 +26,7 @@ PROFILE = "val8cfg"
 
 def upload(w, remote):
     w.workspace.mkdirs(remote)
-    for folder in ["lib", "data/raw", "data/docs", "dashboards", "notebooks", "pipelines"]:
+    for folder in ["lib", "data/raw", "data/docs", "dashboards", "notebooks", "pipelines", "app"]:
         for source in (ROOT / folder).rglob("*"):
             if not source.is_file() or "__pycache__" in source.parts:
                 continue

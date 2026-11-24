@@ -163,12 +163,17 @@ Not live validated: paid-workspace behaviour, and the system-table read-out of t
 
 ## Module 11: Interactive app
 
-**Supplied and offline checked. The module has not been run live.** Separately, a throwaway probe on `a8-free` on
-24 November 2026 proved the platform steps it relies on: creating an app, deploying from a source path that begins
-`/Workspace` (without that prefix the deploy is rejected), the app reaching RUNNING with ACTIVE compute, a signed-in
-request returning 200 with the viewer's email in `X-Forwarded-Email`, and deleting the app (which finishes a few seconds
-after the call). Not probed: Streamlit itself, the warehouse resource and `valueFrom`, the service principal's grants,
-and the statement-execution query inside the app.
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026 (serverless notebook run).** Live
+result: the app was created with the warehouse resource and course marker; the service principal received the three
+grants and `SHOW GRANTS` listed `SELECT` on the view; deploying from `/Workspace` plus the folder succeeded (without
+that prefix the deploy is rejected), the app reached RUNNING, a signed-in request returned 200, the app ran as a
+different identity from the learner, exercise 11.1 passed, and the notebook deleted the app, grants and folder; the
+workspace app list was empty afterwards and the scoped cleanup found nothing left. A separate probe showed the viewer's
+email arrives in `X-Forwarded-Email`.
+
+**Not verified:** what the page itself shows. The check only proves the Streamlit shell is served (HTTP 200), so the
+warehouse query inside the app, the `valueFrom` warehouse id and the identity panel were not seen rendered; open the
+app once in a browser to confirm. Revokes were run but not read back.
 
 | Check | Evidence |
 |---|---|
@@ -181,7 +186,7 @@ and the statement-execution query inside the app.
 | App source | Read-only, no credentials in the source, takes its warehouse and view from the environment |
 | Exercise 11.1 | The solution equals an independent result; blank and naive answers fail |
 
-Not live validated: everything above beyond the probe, and paid-workspace behaviour.
+Not live validated: the rendered page (see above) and paid-workspace behaviour.
 
 ## Module 12: Deploy and govern
 

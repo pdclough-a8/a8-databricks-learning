@@ -61,7 +61,7 @@ validated live on Free Edition.
 Module **11** (interactive app) deploys a small read-only Streamlit app on Databricks Apps, gives its service
 principal `SELECT` on one view, and shows the app's identity beside the viewer's. Creating, granting and deploying are
 default-no switches, the app keeps compute running while it exists, and `99_pause_and_cleanup` removes it. Offline
-checked only; not yet validated live.
+checked and run live on Free Edition; the page content itself was not seen rendered in that run.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft
