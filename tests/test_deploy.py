@@ -152,7 +152,7 @@ class DeployTests(unittest.TestCase):
                 tags=[SimpleNamespace(key=k, value=v) for k, v in self.course.course_tags.items()])
 
         class Dbutils:
-            pass
+            library = SimpleNamespace(restartPython=lambda: None)
 
         gates = {"register_agent": False, "deploy_agent": False, "delete_agent_endpoint": False, **approvals}
         namespace = {"A8": self.course, "spark": self.spark, "dbutils": Dbutils, "ROOT": ROOT,

@@ -61,6 +61,22 @@
 # MAGIC - [Free Edition limits](https://docs.databricks.com/aws/en/getting-started/free-edition-limitations)
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC **Install the MLflow version this lesson was written for.** `%pip install` installs packages **for this
+# MAGIC notebook only**. Logging a model changed its call between MLflow versions, so we pin one. **Expect a red
+# MAGIC `ERROR: pip's dependency resolver…` message:** the environment also contains `databricks-agents`, which wants a
+# MAGIC newer MLflow. This lesson does not use it, so the message is harmless.
+
+# COMMAND ----------
+# MAGIC %pip install mlflow==3.6.0 typing_extensions==4.15.0
+
+# COMMAND ----------
+
+# WHAT: restarts this notebook's Python process so the pinned packages are the ones imported.
+# LOOK FOR: no output. The next cell will print your catalog, schema and tag.
+dbutils.library.restartPython()
+
+# COMMAND ----------
 
 # MAGIC %run ./_config
 
