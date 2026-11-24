@@ -163,6 +163,16 @@ class Course:
         return f"a8-{self.cfg.tag}-attendance"
 
     @property
+    def vector_endpoint_name(self) -> str:
+        """This learner's Vector Search endpoint (Module 8c). Billable while it exists."""
+        return f"a8-{self.cfg.tag}-vs"
+
+    @property
+    def vector_index_name(self) -> str:
+        """Three-part, unquoted name of this learner's Vector Search index, as the SDK expects it."""
+        return f"{self.cfg.catalog}.{self.cfg.schema}.{self.prefix}doc_index"
+
+    @property
     def model_name(self) -> str:
         """Three-part Unity Catalog name of this learner's registered model."""
         return f"{self.cfg.catalog}.{self.cfg.schema}.{self.name('attendance_model')}"
@@ -367,6 +377,7 @@ class Course:
             "sql_editor": f"{h}/sql/editor",
             "playground": f"{h}/ml/playground",
             "serving": f"{h}/ml/endpoints",
+            "vector_search": f"{h}/compute/vector-search",
             "apps": f"{h}/apps",
             "jobs": f"{h}/jobs",
         }[kind]
@@ -390,6 +401,7 @@ class Course:
         if blank:
             self.card(f"{exercise_id}: not attempted yet",
                       f"<p>{html.escape(ex['task'])}</p><p><b>Hint:</b> {html.escape(ex['hint'])}</p>"
+                      f"<p>Answer with a SQL string, a Spark DataFrame or a pandas DataFrame.</p>"
                       f"<p>Stuck? Run <code>A8.solution('{exercise_id}')</code>.</p>", tone="warn")
             return False
         try:
@@ -414,6 +426,11 @@ class Course:
     def _rows(self, answer):
         if isinstance(answer, str):
             answer = self.sql(answer)
+        if hasattr(answer, "itertuples"):  # a pandas DataFrame: plain Python values, NaN as None
+            def plain(value):
+                value = value.item() if hasattr(value, "item") else value
+                return None if value != value else value
+            return list(answer.columns), [tuple(plain(v) for v in row) for row in answer.itertuples(index=False)]
         if hasattr(answer, "collect"):
             columns = list(answer.columns)
             return columns, [tuple(r) for r in answer.collect()]

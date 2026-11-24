@@ -11,8 +11,9 @@ Python practice and the same lint settings.
    Exception: one **setup cell** per notebook may hold the imports, prerequisite check and name resolution,
    ending in a single "Ready" line, so learners are not walked through several empty cells.
 2. **Standard Databricks first.** Use Spark DataFrames, `spark.table`, `spark.sql`, `%sql` cells, MLflow and the
-   Databricks SDK as their documentation shows them. Prefer Spark for data work; use pandas only where a library
-   needs it (scikit-learn training) and say why.
+   Databricks SDK as their documentation shows them. Prefer Spark for data work. Where a data scientist would naturally use pandas or the Python SDK, add a labelled
+   `PYTHON ROUTE` cell that builds the same result and checks it against the SQL result; say why pandas is fine
+   (small tables, a library that needs it). Exercises accept SQL, Spark and pandas answers.
 3. **No private SQL dialect.** Write SQL that would run in the SQL editor:
    - In `%sql` cells and exercises, refer to course objects with session variables: `IDENTIFIER(a8_events)`.
    - In Python, build names once (`events = A8.t("events")`) and use f-strings. Names are validated by the

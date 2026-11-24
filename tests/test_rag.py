@@ -81,7 +81,7 @@ class StandInSpark(OfflineSpark):
             self.chat_calls.append((statement, args))
             count = len(args) // 2
             return Rows([{"question": args[f"q{i}"],
-                          "result": {"response": f"Stand-in answer citing [1]. {args[f'q{i}'][:10]}",
+                          "reply": {"result": f"Stand-in answer citing [1]. {args[f'q{i}'][:10]}",
                                      "errorMessage": None}} for i in range(count)])
         if statement.startswith("SELECT * FROM VALUES"):
             self.statements.append(statement)
@@ -218,7 +218,9 @@ class RagTests(unittest.TestCase):
     def test_notebook_standard_scope_and_cleanup(self):
         tree = ast.parse(SOURCE)
         self.assertFalse(any(isinstance(n, ast.Assert) for n in ast.walk(tree)))
-        for forbidden in ("A8.run", "A8.sql", "mlflow", "serving_endpoints", "vector_search", "VectorSearch"):
+        forbidden_text = ("A8.run", "A8.sql", "mlflow", "serving_endpoints", "vector_search_endpoints",
+                          "vector_search_indexes")
+        for forbidden in forbidden_text:
             self.assertNotIn(forbidden, SOURCE)
         text = SOURCE.replace("# MAGIC ", "")
         phrases = ("**Where this sits:**", "Free first", "Terms in this lesson", "live validated yet", "If it differs")

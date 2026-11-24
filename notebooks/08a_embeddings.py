@@ -63,6 +63,7 @@ import re
 
 import numpy as np
 from a8learn import sql_string
+from databricks.sdk import WorkspaceClient
 
 # COMMAND ----------
 
@@ -269,6 +270,46 @@ else:
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ### Python route: the same call through the Databricks SDK
+# MAGIC `ai_query` is SQL. From Python you call the same serving endpoint with the Databricks SDK, which is how you
+# MAGIC would embed text inside a pandas or scikit-learn workflow. It sends the same 30 texts again behind its own
+# MAGIC default-no switch, so it doubles the quota used: skip it if you only need one route. If you did run the SQL step
+# MAGIC above, the cell also checks that both routes return (almost) the same vectors.
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: asks for your approval before the second set of embedding requests.
+# LOOK FOR: an embed_python widget above the notebook, defaulting to no. Set it to yes, then rerun this cell.
+embed_python_approved = A8.gate("embed_python", "Embed the same 30 texts through the Python SDK (cost/quota)?")
+print("Approved." if embed_python_approved else "Not approved yet: set the widget to yes and rerun this cell.")
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: embeds the same texts with the Databricks SDK and keeps the vectors in memory.
+# LOOK FOR: no output if approved; otherwise a note that the step was skipped. Do not retry errors in a loop.
+python_vectors = None
+if embed_python_approved:
+    response = WorkspaceClient().serving_endpoints.query(name=EMBEDDING_ENDPOINT, input=texts)
+    ordered = sorted(response.data, key=lambda item: item.index)
+    python_vectors = {text: np.array(item.embedding, dtype=float) for text, item in zip(texts, ordered, strict=True)}
+else:
+    print("Python route skipped. The SQL route above gives the same result.")
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: Check: the SDK vectors have the right shape and, if you ran both routes, match the SQL vectors.
+# LOOK FOR: pass messages; each text should have cosine similarity close to 1 between the two routes.
+if python_vectors is not None:
+    A8.expect(len(python_vectors) == len(texts), "Every text received an embedding through the SDK.")
+    if embeddings is not None:
+        closest = min(cosine(python_vectors[t], embeddings[t]) for t in texts)
+        A8.expect(closest > 0.999, "The SQL and SDK routes return the same vectors.")
+        print(f"Lowest similarity between the two routes: {closest:.5f}")
+else:
+    print("Skipped: no SDK vectors to check.")
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC ## 5. Search by meaning
 # MAGIC The search is the same as before: compute the cosine similarity between the query vector and every comment
 # MAGIC vector and keep the best. Only the vectors changed. In RAG the query is a question and the items are passages.
@@ -357,7 +398,7 @@ A8.check("8a.2", answer_8a_2)
 # MAGIC ## 8. Recap, explain before you move on
 # MAGIC Write your answers in the two cells below. Also think about: why did we embed 27 comments instead of 395, and
 # MAGIC what would change if the corpus were 100,000 comments? (You would store the vectors in an index so a search does
-# MAGIC not compare against every vector. That is **Vector Search**, planned for Module 8c.)
+# MAGIC not compare against every vector. That is **Vector Search**, taught in `08c_vector_search`.)
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, your explanations and, if you approved it, the real
 # MAGIC embedding step. Skipping or being blocked on that step is fine: record it, and do not count the real-embedding

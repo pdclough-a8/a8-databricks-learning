@@ -302,6 +302,46 @@ display(by_city)
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ### Python route: the same availability in pandas
+# MAGIC The view above is SQL. A data scientist would often pull the tables into pandas and build the same thing with
+# MAGIC `merge` and `groupby`. The data is small (60 events, 4,204 bookings), so `toPandas()` is fine; for large
+# MAGIC tables you
+# MAGIC would keep the work in Spark. The trap is the same: a LEFT JOIN keeps events with no bookings. In pandas that
+# MAGIC means `how="left"` and then `fillna(0)`. Filtering the bookings to `confirmed` **before** the merge is the
+# MAGIC equivalent of putting the condition in the `JOIN ... ON`.
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: defines availability in pandas: confirmed tickets per event, merged onto every event.
+# LOOK FOR: no output; events with no confirmed bookings get 0 booked, not a missing row.
+def seats_available(events_pd, bookings_pd):
+    booked = bookings_pd[bookings_pd["status"] == "confirmed"].groupby("event_id")["tickets"].sum().rename("booked")
+    result = events_pd.merge(booked, on="event_id", how="left")
+    result["booked"] = result["booked"].fillna(0).astype(int)
+    result["available"] = result["capacity"] - result["booked"]
+    return result[["event_id", "event_name", "city", "event_date", "status", "capacity", "booked", "available"]]
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: loads the two tables into pandas and computes availability for the scheduled events.
+# LOOK FOR: the same events and seat counts as the SQL view, fullest seats first.
+events_pd = spark.table(events).toPandas()
+bookings_pd = spark.table(bookings).toPandas()
+availability_pd = seats_available(events_pd, bookings_pd)
+print(availability_pd[availability_pd["status"] == "scheduled"].sort_values("available").head(5).to_string(index=False))
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: Check: the pandas result equals the SQL view for every event.
+# LOOK FOR: three pass messages; a difference means the pandas filter or merge differs from the view.
+view_pd = spark.table(event_availability).toPandas()
+compared = availability_pd.merge(view_pd, on="event_id", suffixes=("_pandas", "_sql"))
+A8.expect(len(compared) == len(view_pd) == len(availability_pd), "Both routes return one row per event.")
+A8.expect((compared["booked_pandas"] == compared["booked_sql"].astype(int)).all(), "Booked tickets agree.")
+A8.expect((compared["available_pandas"] == compared["available_sql"].astype(int)).all(), "Available seats agree.")
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC **If it differs:** an empty availability list means the view was created before the bookings loaded; rerun the
 # MAGIC load cells, then this one. **Undo:** `99_pause_and_cleanup` drops the view; the tables are not affected.
 # MAGIC
@@ -310,7 +350,9 @@ display(by_city)
 # MAGIC 2. Exercise 1.1: write the SQL version of the completed-events-by-city query.
 # MAGIC 3. Exercise 1.2: total confirmed **tickets** for each scheduled event. Counting rows is deliberately wrong here.
 # MAGIC
-# MAGIC Put your SQL between the triple quotes and run the cell. Use `IDENTIFIER(a8_events)` and
+# MAGIC Put your SQL between the triple quotes and run the cell. Prefer Python? Replace the quotes with a pandas or
+# MAGIC Spark DataFrame, for example `answer_1_1 = spark.table(events).where(...)...`; the checker compares the rows.
+# MAGIC Use `IDENTIFIER(a8_events)` and
 # MAGIC `IDENTIFIER(a8_bookings)` for table names, just as in the `%sql` example.
 # MAGIC A blank answer shows the task and a hint. `A8.solution("1.2")` shows a worked answer.
 

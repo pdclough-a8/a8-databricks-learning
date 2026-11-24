@@ -52,6 +52,10 @@ class Result:
     def first(self):
         return self.rows[0]
 
+    def toPandas(self):
+        import pandas as pd
+        return pd.DataFrame([tuple(r) for r in self.rows], columns=self.columns)
+
     def collect(self):
         return self.rows
 
@@ -348,7 +352,7 @@ WHERE event_status = 'completed' GROUP BY topic ORDER BY topic"""),
         tree = ast.parse(SOURCE)
         imports = {alias.name for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))
                    for alias in node.names}
-        self.assertEqual(imports, {"json", "WorkspaceClient"})
+        self.assertEqual(imports, {"json", "numpy", "WorkspaceClient"})
         self.run_lesson()
         writes = [query for query in self.spark.statements
                   if re.match(r"\s*(?:CREATE|DROP|ALTER|INSERT|UPDATE|DELETE)\b", query)]

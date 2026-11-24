@@ -231,6 +231,18 @@ WHERE lower(content) LIKE '%refund%' ORDER BY doc_name, section""",
                    "back uses different words, which is why retrieval by meaning (embeddings) matters.",
         "ordered": True,
     },
+    "8c.1": {
+        "task": "Using PySpark rather than SQL, return a DataFrame with doc_name and chunks (the number of chunks) for "
+                "the venue documents only (doc_name starting 'venue-') from your chunk table, ordered by doc_name.",
+        "hint": "spark.table(A8.t('doc_chunks')), then where(F.col('doc_name').startswith('venue-')), groupBy "
+                "('doc_name'), agg(F.count('*').alias('chunks')) and orderBy('doc_name'). Import F with "
+                "from pyspark.sql import functions as F.",
+        "solution": """SELECT doc_name, count(*) AS chunks FROM IDENTIFIER(a8_doc_chunks)
+WHERE doc_name LIKE 'venue-%' GROUP BY doc_name ORDER BY doc_name""",
+        "explain": "PySpark and SQL describe the same plan. Filtering before grouping keeps only the venue documents, "
+                   "and each venue document has the same number of sections here.",
+        "ordered": True,
+    },
 }
 
 
@@ -342,6 +354,17 @@ REFLECTIONS = {
         "model": "The chunk may be too large or too small, so its meaning is blurred or its context is lost. The "
                  "question may use different words from the document and the search may rank another chunk higher. "
                  "The document may also be missing or out of date.",
+    },
+    "8c.a": {
+        "question": "When does a managed vector index become worthwhile compared with searching by hand?",
+        "model": "Searching by hand compares a question with every vector, which is fine for a few dozen chunks. "
+                 "Once there are thousands or millions, or you need the index to follow a changing table without "
+                 "your own code, a managed index is built for fast nearest-neighbour search and syncing.",
+    },
+    "8c.b": {
+        "question": "Why must you delete the endpoint even though the chunk table and documents are kept?",
+        "model": "The endpoint is the compute that hosts the index and it bills for as long as it exists, whether or "
+                 "not anyone queries it. The table is only stored data, and the index can be rebuilt from it.",
     },
 }
 

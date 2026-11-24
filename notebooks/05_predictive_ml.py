@@ -178,6 +178,50 @@ A8.expect(known_scheduled == 0, "Every scheduled-event booking has an unknown (n
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ### Python route: the same features in pandas
+# MAGIC Feature building is where data scientists live, so here is the same table in pandas: filter to confirmed
+# MAGIC bookings,
+# MAGIC `merge` the event columns, and derive `weekday`, `lead_days` and the label. One trap: Spark's `dayofweek`
+# MAGIC numbers
+# MAGIC **Sunday as 1**, while pandas numbers **Monday as 0**. A silent difference like that is exactly why we check the
+# MAGIC pandas result against the SQL table before training on it.
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: defines the booking-time features in pandas, with Spark's weekday numbering and a missing label for unknowns.
+# LOOK FOR: no output; features use only facts known when the booking was made.
+def attended_label(value):
+    return np.nan if value is None or value != value else float(bool(value))
+
+
+def booking_features_pandas(events_pd, bookings_pd):
+    confirmed = bookings_pd[bookings_pd["status"] == "confirmed"]
+    merged = confirmed.merge(events_pd, on="event_id", suffixes=("_booking", "_event"))
+    event_date = pd.to_datetime(merged["event_date"])
+    return pd.DataFrame({
+        "booking_id": merged["booking_id"], "event_id": merged["event_id"], "tickets": merged["tickets"],
+        "ticket_type": merged["ticket_type"], "organisation_type": merged["organisation_type"],
+        "format": merged["format"], "city": merged["city"], "start_hour": merged["start_hour"],
+        "weekday": (event_date.dt.dayofweek + 1) % 7 + 1,  # Spark: Sunday = 1 ... Saturday = 7
+        "lead_days": (event_date - pd.to_datetime(merged["booked_date"])).dt.days,
+        "price_gbp": merged["price_gbp"], "event_status": merged["status_event"],
+        "label": merged["attended"].map(attended_label),
+    })
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: Check: the pandas features equal the SQL feature table for every booking.
+# LOOK FOR: three pass messages; a difference in weekday or lead_days points at a date rule.
+features_pd = booking_features_pandas(spark.table(events).toPandas(), spark.table(bookings).toPandas())
+table_pd = spark.table(booking_features).toPandas()
+same = features_pd.merge(table_pd, on="booking_id", suffixes=("_py", "_sql"))
+A8.expect(len(same) == len(table_pd) == len(features_pd), "Both routes return one row per confirmed booking.")
+for column in ["weekday", "lead_days", "label"]:
+    A8.expect(bool(np.allclose(same[column + "_py"].astype(float), same[column + "_sql"].astype(float),
+                               equal_nan=True)), f"{column} agrees between pandas and SQL.")
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC ## 3. Split by time and set a baseline (10 minutes)
 # MAGIC A model is only useful on bookings it has not seen. We **train on earlier events** and **test on the
 # MAGIC 10 most recent completed events**, which mimics using the model on the future.

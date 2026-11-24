@@ -137,6 +137,21 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 8c: Vector Search
+
+**Supplied, offline checked, not live validated** until the live record below is added.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_vector_search.py` | The notebook runs against an in-memory stand-in for the Databricks SDK's Vector Search endpoints and indexes |
+| Gates | The default run makes no create, query, chat or delete call; each billable step is its own default-no switch |
+| Index definition | Built from the SDK's typed classes: your chunk table as source, `chunk_id` as key, `content` embedded with the saved embedding endpoint, triggered sync, columns listed |
+| Cleanup | The index is deleted before the endpoint; resources not created by you, or an endpoint hosting other indexes, are refused; `99_pause_and_cleanup` uses the same code |
+| Exercise 8c.1 | A PySpark-style result equals the SQL solution; blank and wrong answers fail |
+
+Not validated offline: endpoint and index creation, build time, quota, query results, the embedding and chat endpoints
+and notebook rendering.
+
 ## Module 8b: RAG
 
 **Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.

@@ -7,7 +7,8 @@
 # MAGIC **Outcome:** build a small **retrieval-augmented generation (RAG)** pipeline over a fictional A8 Events
 # MAGIC knowledge base: split documents into chunks, find the chunks closest to a question, ask a model to answer
 # MAGIC **only** from them with citations, refuse when the documents do not say, and measure how well retrieval works.
-# MAGIC Everything is built by hand so you can see each part. Module 8c then swaps the hand-built search for Databricks
+# MAGIC Everything is built by hand so you can see each part. `08c_vector_search` then swaps the hand-built search
+# MAGIC for Databricks
 # MAGIC **Vector Search**.
 # MAGIC
 # MAGIC **About 75 minutes, an estimate:** orient 10 · documents and chunks 20 · retrieval 15 · grounded answer 15 ·
@@ -177,7 +178,8 @@ print(chunks[1])
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 3. Store the chunks in a Delta table
-# MAGIC Keeping chunks in a table makes them governed and queryable, and Module 8c builds a Vector Search index from
+# MAGIC Keeping chunks in a table makes them governed and queryable, and `08c_vector_search` builds a Vector Search
+# MAGIC index from
 # MAGIC this
 # MAGIC table. We turn on **change data feed** so an index can follow changes to the table. We build the table the same
 # MAGIC way as in Module 1: a temporary view of the values first, then `CREATE OR REPLACE TABLE ... AS SELECT`.
@@ -410,7 +412,7 @@ if ask_approved:
     values = ", ".join(f"(:q{i}, :p{i})" for i in range(len(prompts)))
     args = {**{f"q{i}": q for i, (q, _) in enumerate(ask)}, **{f"p{i}": p for i, p in enumerate(prompts)}}
     answers = spark.sql(f"""SELECT question, ai_query({sql_string(CHAT_ENDPOINT)}, prompt, failOnError => false,
-modelParameters => named_struct('max_tokens', 300, 'temperature', CAST(0.0 AS DOUBLE))) AS result
+modelParameters => named_struct('max_tokens', 300, 'temperature', CAST(0.0 AS DOUBLE))) AS reply
 FROM VALUES {values} AS input(question, prompt)""", args=args).collect()
 else:
     print("Chat requests skipped. You can still read the prompts above and do the evaluation and exercises.")
@@ -421,14 +423,14 @@ else:
 # LOOK FOR: the transfer answer cites the booking document; the weather question gets the refusal sentence.
 if answers is not None:
     for row, (_, passages) in zip(answers, ask, strict=True):
-        result = row["result"]
-        if result["errorMessage"]:
-            print(row["question"], "->", "ERROR:", result["errorMessage"])
+        reply = row["reply"]  # a struct with the fields result and errorMessage
+        if reply["errorMessage"]:
+            print(row["question"], "->", "ERROR:", reply["errorMessage"])
             continue
-        cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", result["response"])})
+        cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", reply["result"])})
         sources = [passages[n - 1][1]["doc_name"] for n in cited if 1 <= n <= len(passages)]
-        print(f"Q: {row['question']}\nA: {result['response'].strip()}\nCited: {sources}\n"
-              f"Refused: {REFUSAL.lower() in result['response'].lower()}\n")
+        print(f"Q: {row['question']}\nA: {reply['result'].strip()}\nCited: {sources}\n"
+              f"Refused: {REFUSAL.lower() in reply['result'].lower()}\n")
 else:
     print("Skipped: approve the chat step above to see answers.")
 
@@ -516,7 +518,7 @@ A8.check("8b.2", answer_8b_2)
 # MAGIC
 # MAGIC **Pause:** this lesson wrote nine files and one table. `99_pause_and_cleanup` removes both with the rest of
 # MAGIC your course objects. No endpoint or index exists.
-# MAGIC **Next:** Module 8c (Vector Search: a managed index in place of the hand-built search) is planned.
+# MAGIC **Next:** `08c_vector_search` replaces the hand-built search with a managed Vector Search index.
 
 # COMMAND ----------
 # WHAT: asks why the model is given retrieved passages instead of being asked directly.

@@ -70,9 +70,10 @@
 # COMMAND ----------
 
 # WHAT: imports the libraries used in this lesson.
-# LOOK FOR: no output; JSON reads the dashboard template and the SDK checks how the file was stored.
+# LOOK FOR: no output; JSON reads the dashboard template, numpy compares results and the SDK checks the file.
 import json
 
+import numpy as np
 from databricks.sdk import WorkspaceClient
 
 # COMMAND ----------
@@ -231,6 +232,68 @@ invalid = spark.sql(f"""SELECT count(*) FROM {event_metrics}
 WHERE (event_status = 'scheduled' AND (attended_tickets IS NOT NULL OR attendance_rate IS NOT NULL))
 OR (feedback_count = 0 AND average_rating IS NOT NULL)""").first()[0]
 A8.expect(invalid == 0, "Scheduled attendance and ratings without feedback must remain unknown.")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ### Python route: the same metrics in pandas
+# MAGIC The reporting view is one SQL statement. The same logic in pandas is: aggregate bookings and feedback **by event
+# MAGIC first**, then `merge` each onto the events, then compute the ratios. Aggregating before merging is the same
+# MAGIC "grain" rule as the CTE, and it stops tickets being counted twice. A pandas answer is handy for analysis; the
+# MAGIC view
+# MAGIC is what dashboards and Genie use, so we keep both and check they agree.
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: defines the event metrics in pandas, with the same rules as the SQL view.
+# LOOK FOR: no output; ratios are missing (NaN) where the SQL gives NULL, never zero by default.
+def known_flag(value):
+    return None if value is None or value != value else float(bool(value))
+
+
+def event_metrics_pandas(events_pd, bookings_pd, feedback_pd):
+    confirmed = bookings_pd[bookings_pd["status"] == "confirmed"].copy()
+    confirmed["flag"] = confirmed["attended"].map(known_flag)
+    confirmed["known_tickets"] = confirmed["tickets"].where(confirmed["flag"].notna(), 0)
+    confirmed["attended_only"] = confirmed["tickets"].where(confirmed["flag"] == 1.0, 0)
+    booking_totals = confirmed.groupby("event_id").agg(
+        confirmed_bookings=("booking_id", "count"), confirmed_tickets=("tickets", "sum"),
+        known_outcome_tickets=("known_tickets", "sum"), attended_tickets=("attended_only", "sum")).reset_index()
+    feedback_totals = feedback_pd.groupby("event_id").agg(
+        feedback_count=("feedback_id", "count"), rating_sum=("rating", "sum")).reset_index()
+    out = events_pd.merge(booking_totals, on="event_id", how="left").merge(feedback_totals, on="event_id", how="left")
+    counts = ["confirmed_bookings", "confirmed_tickets", "known_outcome_tickets", "attended_tickets",
+              "feedback_count", "rating_sum"]
+    out[counts] = out[counts].fillna(0)
+    completed = out["status"] == "completed"
+    out["available_seats"] = out["capacity"] - out["confirmed_tickets"]
+    out["fill_rate"] = out["confirmed_tickets"] / out["capacity"]
+    out["known_outcome_tickets"] = out["known_outcome_tickets"].where(completed, 0)
+    known = out["known_outcome_tickets"].where(out["known_outcome_tickets"] > 0)
+    out["attendance_rate"] = (out["attended_tickets"] / known).where(completed)
+    out["average_rating"] = out["rating_sum"] / out["feedback_count"].where(out["feedback_count"] > 0)
+    return out
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: builds the metrics in pandas from your three tables and shows a few completed events.
+# LOOK FOR: one row per event with fill rate, attendance rate and average rating.
+metrics_pd = event_metrics_pandas(spark.table(A8.t("events")).toPandas(), spark.table(A8.t("bookings")).toPandas(),
+                                  spark.table(A8.t("feedback")).toPandas())
+shown = ["event_id", "city", "confirmed_tickets", "available_seats", "fill_rate", "attendance_rate", "average_rating"]
+print(metrics_pd[metrics_pd["status"] == "completed"][shown].head(5).round(3).to_string(index=False))
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: Check: the pandas metrics equal the SQL view for every event, treating missing values as equal.
+# LOOK FOR: one pass message per metric; a difference means the pandas rule differs from the view.
+view_metrics = spark.table(event_metrics).toPandas()
+both = metrics_pd.merge(view_metrics, on="event_id", suffixes=("_py", "_sql"))
+A8.expect(len(both) == len(view_metrics) == len(metrics_pd), "Both routes return one row per event.")
+for metric in ["confirmed_tickets", "available_seats", "known_outcome_tickets", "fill_rate", "attendance_rate",
+               "average_rating"]:
+    python_values = both[metric + "_py"].astype(float).to_numpy()
+    sql_values = both[metric + "_sql"].astype(float).to_numpy()
+    A8.expect(bool(np.allclose(python_values, sql_values, equal_nan=True)), f"{metric} agrees between pandas and SQL.")
 
 # COMMAND ----------
 # MAGIC %md

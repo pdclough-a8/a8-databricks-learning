@@ -10,6 +10,7 @@ import sys
 import unittest
 import zlib
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
@@ -70,9 +71,20 @@ class EmbeddingTests(unittest.TestCase):
         class Dbutils:
             pass
 
+        self.sdk_calls = []
+
+        def query(name, input):
+            """Stands in for serving_endpoints.query: same vectors as the SQL stand-in, returned out of order."""
+            self.sdk_calls.append((name, list(input)))
+            vectors = [np.random.default_rng(zlib.crc32(t.encode())).normal(size=8) for t in input]
+            return SimpleNamespace(data=[SimpleNamespace(index=i, embedding=list(v))
+                                         for i, v in reversed(list(enumerate(vectors)))])
+
+        fake_client = SimpleNamespace(serving_endpoints=SimpleNamespace(query=query))
+
         namespace = {"A8": self.course, "spark": self.spark, "dbutils": Dbutils, "ROOT": ROOT,
                      "display": lambda *_: None}
-        with patch.object(self.course, "require"), \
+        with patch.object(self.course, "require"), patch("databricks.sdk.WorkspaceClient", return_value=fake_client), \
              patch.object(self.course, "gate", lambda name, label: approve), \
              contextlib.redirect_stdout(io.StringIO()) as out:
             exec(compile(SOURCE, str(NOTEBOOK), "exec"), namespace)
@@ -86,6 +98,18 @@ class EmbeddingTests(unittest.TestCase):
         writes = ("CREATE", "DROP", "ALTER", "INSERT", "UPDATE", "DELETE")
         self.assertFalse([q for q in self.spark.statements if q.lstrip().upper().startswith(writes)])
         self.assertIn("Embedding skipped", self.output)
+        self.assertEqual(self.sdk_calls, [])
+        self.assertIsNone(namespace["python_vectors"])
+
+    def test_python_route_sends_the_same_texts_through_the_sdk_and_matches_sql(self):
+        namespace = self.run_lesson(approve=True)
+        self.assertEqual(len(self.sdk_calls), 1)
+        name, texts = self.sdk_calls[0]
+        self.assertEqual(name, "databricks-gte-large-en")
+        self.assertEqual(texts, namespace["texts"])
+        self.assertEqual(len(self.spark.ai_statements), 1)  # the SQL route still sends one query
+        self.assertEqual(set(namespace["python_vectors"]), set(texts))
+        self.assertIn("Lowest similarity between the two routes", self.output)
 
     def test_distinct_comments_cover_every_feedback_row(self):
         namespace = self.run_lesson()

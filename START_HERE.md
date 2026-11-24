@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai`, `08a_embeddings` and `08b_rag` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings`, `08b_rag` and `08c_vector_search` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -33,6 +33,15 @@ Module **8b** (RAG) answers customer questions from a fictional nine-document A8
 documents, retrieves by word overlap and by embeddings, builds a grounded, cited prompt and scores retrieval. It is
 supplied and offline checked, **not live validated**. It writes nine files and one table; the embedding and chat
 requests each need your approval. A managed Vector Search index follows in 8c.
+
+**Choose your route.** Every lesson works in SQL. Where the analysis could be done in Python, a `PYTHON ROUTE` cell
+(pandas, or the Databricks SDK in 8a) builds the same result and checks it against the SQL. Data scientists can start
+from those cells and answer exercises with a DataFrame; analysts can follow the SQL. See `00_setup`, "Choose your route".
+
+Module **8c** (Vector Search) creates a Vector Search endpoint and a managed Delta Sync index over the 8b chunk table,
+queries it, compares it with the hand-built search and ends by deleting both. It is supplied and offline checked, **not
+live validated**. The endpoint **bills while it exists** and can take 15 to 20 minutes to become usable, so each create
+and delete step needs your approval and `99_pause_and_cleanup` also removes them.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

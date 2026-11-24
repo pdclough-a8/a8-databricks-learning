@@ -73,7 +73,8 @@
 # MAGIC 7. `07_genai` (optional): read feedback comments with a foundation model
 # MAGIC 8. `08a_embeddings` (optional): find comments by meaning with embeddings
 # MAGIC 9. `08b_rag` (optional): answer customer questions from our own documents with retrieval
-# MAGIC 10. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 10. `08c_vector_search` (optional): a managed Vector Search index; the endpoint bills until deleted
+# MAGIC 11. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.
@@ -86,6 +87,26 @@
 # MAGIC - Lines starting `A8.` call small course helpers that handle names and safety checks, so the Databricks
 # MAGIC   code stays in view. Lesson 1 explains them.
 # MAGIC - Run one cell at a time with **Shift+Enter**. Avoid **Run all** until you have read a lesson's cost notes.
+# MAGIC
+# MAGIC ## Choose your route: SQL, Python or both
+# MAGIC Databricks supports both languages and each has a natural home. **SQL** is the language of governance, views,
+# MAGIC dashboards and AI Functions, so the platform features are taught in SQL. **Python** (pandas, PySpark,
+# MAGIC scikit-learn) is where most analysis and machine learning is done.
+# MAGIC
+# MAGIC Every lesson works in SQL. Where the analysis could equally be done in Python, the lesson adds a **Python
+# MAGIC route** (cells marked `PYTHON ROUTE`) that builds the same result in pandas or the Python SDK and **checks it
+# MAGIC against the SQL result**. You do not need to do both.
+# MAGIC
+# MAGIC | If you are mainly a… | Start with | Then |
+# MAGIC |---|---|---|
+# MAGIC | Analyst or BI developer | the SQL cells and exercises | skim the Python route cells |
+# MAGIC | Data scientist or ML engineer | the Python route cells and DataFrame answers | read the SQL too |
+# MAGIC | Data engineer | both, comparing the two | |
+# MAGIC
+# MAGIC Exercises accept a **SQL string, a Spark DataFrame or a pandas DataFrame**: the checker compares the rows, not
+# MAGIC the language. A pandas DataFrame is fine for these small tables (`spark.table(...).toPandas()`); for large
+# MAGIC tables
+# MAGIC you would keep the work in Spark.
 # MAGIC
 # MAGIC ## Your Git folder, and getting updates
 # MAGIC This notebook lives in a **Git folder**: your own copy of the course, linked to GitHub. You only ever **pull**.

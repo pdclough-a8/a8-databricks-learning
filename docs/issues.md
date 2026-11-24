@@ -220,3 +220,4 @@ cannot be separated, and only 48 completed events (15 online) support the compar
 Simpson's paradox are deferred. The failure modes listed for Genie are expected risks, not observed results.
 | S28 | Implemented, not live validated | Module 8a embeddings: `ai_query` against an embedding endpoint is unconfirmed live; Free Edition quota and endpoint names to be checked in the first live run |
 | S29 | Implemented, not live validated | Module 8b RAG: embedding and chat `ai_query` calls, `failOnError`, volume subfolder creation and refusal behaviour unconfirmed live; Unity Gateway may require `system.ai.` endpoint names |
+| S30 | Implemented, not live validated | Module 8c Vector Search: endpoint and index creation, 15-20 minute build and Free Edition quota unconfirmed until a live run; the endpoint bills while it exists, so cleanup is gated and also in 99_pause_and_cleanup |

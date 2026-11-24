@@ -187,6 +187,9 @@ class LifecycleTests(unittest.TestCase):
     def setUp(self):
         self.course = Course(Config("workspace", "default", "smoke", "student@example.com", "https://example.com"))
         self.w, self.client = Mock(), Mock()
+        from databricks.sdk.errors import NotFound
+        self.w.vector_search_indexes.get_index.side_effect = NotFound("none")
+        self.w.vector_search_endpoints.get_endpoint.side_effect = NotFound("none")
         self.w.serving_endpoints.get.return_value = SimpleNamespace(
             creator=self.course.cfg.user,
             tags=[SimpleNamespace(key="a8learn_course", value="a8-databricks-learning"),
@@ -263,6 +266,50 @@ class LifecycleTests(unittest.TestCase):
         for source in ["events", "bookings", "feedback"]:
             self.assertLess(dropped.index("event_metrics"), dropped.index(source))
         self.assertEqual(dropped[-1], "raw")
+
+    def test_vector_search_index_then_endpoint_for_the_owner_only(self):
+        from a8learn.lifecycle import cleanup
+        from databricks.sdk.errors import NotFound
+        mine = self.course.cfg.user
+        index = SimpleNamespace(creator=mine, endpoint_name="a8-smoke-vs")
+        endpoint = SimpleNamespace(creator=mine, num_indexes=1)
+        gone = []
+
+        def get_index(_name):
+            if gone:
+                raise NotFound("gone")
+            return index
+
+        self.w.vector_search_indexes.get_index.side_effect = get_index
+        self.w.vector_search_indexes.delete_index.side_effect = lambda _name: gone.append(True)
+        self.w.vector_search_endpoints.get_endpoint.side_effect = None
+        self.w.vector_search_endpoints.get_endpoint.return_value = endpoint
+        self.w.serving_endpoints.get.side_effect = NotFound("none")
+        with patch("a8learn.lifecycle.time.sleep"):
+            result = cleanup(self.course, self.w, self.client, "smoke")
+        self.assertTrue(result["vector_index_deleted"] and result["vector_endpoint_deleted"])
+        self.w.vector_search_indexes.delete_index.assert_called_once_with("workspace.default.a8_smoke_doc_index")
+        self.w.vector_search_endpoints.delete_endpoint.assert_called_once_with("a8-smoke-vs")
+        names = [c[0] for c in self.w.mock_calls if "delete" in c[0]]
+        self.assertLess(names.index("vector_search_indexes.delete_index"),
+                        names.index("vector_search_endpoints.delete_endpoint"))
+
+    def test_vector_search_foreign_or_shared_resources_are_refused(self):
+        from a8learn.lifecycle import cleanup
+        self.w.serving_endpoints.get.side_effect = None
+        index = SimpleNamespace(creator="other@example.com", endpoint_name="a8-smoke-vs")
+        self.w.vector_search_indexes.get_index.side_effect = None
+        self.w.vector_search_indexes.get_index.return_value = index
+        with self.assertRaises(PermissionError):
+            cleanup(self.course, self.w, self.client, "smoke")
+        index.creator = self.course.cfg.user
+        self.w.vector_search_endpoints.get_endpoint.side_effect = None
+        self.w.vector_search_endpoints.get_endpoint.return_value = SimpleNamespace(
+            creator=self.course.cfg.user, num_indexes=3)
+        with self.assertRaises(PermissionError):
+            cleanup(self.course, self.w, self.client, "smoke")
+        self.w.vector_search_indexes.delete_index.assert_not_called()
+        self.w.vector_search_endpoints.delete_endpoint.assert_not_called()
 
     def test_model_alias_versions_then_model_and_experiment(self):
         from a8learn.lifecycle import cleanup
@@ -342,7 +389,7 @@ class NotebookTests(unittest.TestCase):
         self.assertEqual({p.stem for p in paths}, {
             "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
             "06_prescriptive_analytics", "02_governance", "07_genai",
-            "05_predictive_ml", "08a_embeddings", "08b_rag", "99_pause_and_cleanup", "_config",
+            "05_predictive_ml", "08a_embeddings", "08b_rag", "08c_vector_search", "99_pause_and_cleanup", "_config",
         })
         for path in paths:
             source = path.read_text(encoding="utf-8")

@@ -176,7 +176,51 @@ display(spark.sql(drill_down_sql("month")))
 # MAGIC **Pause and explain.** Which of these tables describes a pattern you would act on, and which is too thin?
 # MAGIC Why can you not compare city with format as separate explanations here? A pattern in one cut can disappear
 # MAGIC in another, which is why the next section asks whether the *composition* of each segment explains the gap.
-# MAGIC
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ### Python route: the same drill-down in pandas
+# MAGIC A drill-down is a `groupby`. The one thing to get right is that attendance for a segment is **total attended
+# MAGIC tickets over total known-outcome tickets**, not the average of each event's rate (the same "do not average
+# MAGIC averages" rule as the SQL). The table is small, so `toPandas()` is fine.
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: defines the drill-down in pandas for any of the same dimensions as the SQL.
+# LOOK FOR: no output; drill_down_pandas returns one row per segment, like drill_down_sql.
+def drill_down_pandas(frame, dimension):
+    A8.expect(dimension in DIMENSIONS, f"Choose one of {sorted(DIMENSIONS)}.")
+    done = frame[frame["event_status"] == "completed"].copy()
+    done["segment"] = done["event_date"].astype(str).str[:7] if dimension == "month" else done[dimension]
+    grouped = done.groupby("segment").agg(
+        events=("event_id", "count"), known_outcome_tickets=("known_outcome_tickets", "sum"),
+        attended=("attended_tickets", "sum"), feedback_count=("feedback_count", "sum"),
+        rating_sum=("rating_sum", "sum")).reset_index()
+    grouped["attendance_pct"] = 100.0 * grouped["attended"] / grouped["known_outcome_tickets"].where(
+        grouped["known_outcome_tickets"] > 0)
+    grouped["average_rating"] = grouped["rating_sum"] / grouped["feedback_count"].where(grouped["feedback_count"] > 0)
+    return grouped[["segment", "events", "known_outcome_tickets", "attendance_pct", "feedback_count",
+                    "average_rating"]]
+
+# COMMAND ----------
+# PYTHON ROUTE
+# WHAT: drills down by format in pandas and compares it with the SQL result.
+# LOOK FOR: the same segments and counts, and percentages equal to within rounding.
+numeric = ["capacity", "known_outcome_tickets", "attended_tickets", "feedback_count", "rating_sum"]
+metrics_frame = spark.table(event_metrics).toPandas()
+metrics_frame[numeric] = metrics_frame[numeric].astype(float)
+python_format = drill_down_pandas(metrics_frame, "format")
+sql_format = spark.sql(drill_down_sql("format")).toPandas()
+print(python_format.round(2).to_string(index=False))
+A8.expect(list(python_format["segment"]) == list(sql_format["segment"]), "Both routes find the same segments.")
+for column in ["events", "known_outcome_tickets", "feedback_count"]:
+    A8.expect(bool(np.allclose(python_format[column].astype(float), sql_format[column].astype(float))),
+              f"{column} agrees between pandas and SQL.")
+A8.expect(bool(np.allclose(python_format["attendance_pct"], sql_format["attendance_pct"].astype(float), atol=0.06)),
+          "Attendance percentages agree within the SQL rounding.")
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC ## 3. Mix versus rate: is it the kind of events, or how they behave?
 # MAGIC <details>
 # MAGIC <summary>Optional background: a worked example with two topics</summary>
