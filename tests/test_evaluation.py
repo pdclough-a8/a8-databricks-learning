@@ -88,10 +88,15 @@ class FakeMlflow(ModuleType):
         self.calls.append(("evaluate", run_id, [s.name for s in scorers]))
         return SimpleNamespace(run_id=run_id, metrics={f"{k}/mean": sum(v) / len(v) for k, v in marks.items()})
 
-    def search_traces(self, experiment_ids, max_results):
-        self.calls.append(("search_traces", experiment_ids))
-        return pd.DataFrame({"trace": [SimpleNamespace(data=SimpleNamespace(spans=spans)) for spans in self.traces],
+    def search_traces(self, locations, max_results):
+        self.calls.append(("search_traces", locations))
+        # As in MLflow 3.6, the trace column is text: spans are only reachable through get_trace
+        return pd.DataFrame({"trace_id": [str(i) for i in range(len(self.traces))],
+                             "trace": ["{}"] * len(self.traces),
                              "state": ["OK"] * len(self.traces), "execution_duration": [5] * len(self.traces)})
+
+    def get_trace(self, trace_id):
+        return SimpleNamespace(data=SimpleNamespace(spans=self.traces[int(trace_id)]))
 
 
 class FakeWorkspace:

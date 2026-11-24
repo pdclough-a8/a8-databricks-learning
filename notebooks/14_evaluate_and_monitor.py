@@ -348,11 +348,15 @@ else:
 # LOOK FOR: a support_agent span followed by one tool span, check_availability or search_docs.
 traces = None
 if experiment_id is not None:
-    traces = mlflow.search_traces(experiment_ids=[experiment_id], max_results=50)
+    traces = mlflow.search_traces(locations=[experiment_id], max_results=50)
     print(f"{len(traces)} traces in the experiment")
-    tool_traces = [t for t in traces["trace"] if len(t.data.spans) > 1]
-    print("Spans of one answer:", [(s.name, s.span_type) for s in tool_traces[0].data.spans] if tool_traces
-          else "none with tool spans")
+    spans = []
+    for trace_id in list(traces["trace_id"])[:5]:  # the table holds each trace as text, so fetch one to read its spans
+        found = mlflow.get_trace(trace_id).data.spans
+        if len(found) > 1:
+            spans = found
+            break
+    print("Spans of one answer:", [(s.name, s.span_type) for s in spans] if spans else "none with tool spans")
 else:
     print("Skipped: no evaluation experiment.")
 
@@ -362,7 +366,7 @@ else:
 # LOOK FOR: two pass messages; three runs of five tasks give at least fifteen traces.
 if traces is not None:
     A8.expect(len(traces) >= 3 * len(TASKS), "Every answer from the three runs was traced.")
-    A8.expect(bool(tool_traces), "At least one trace contains a tool call span.")
+    A8.expect(bool(spans), "At least one trace contains a tool call span.")
 else:
     print("Skipped: no traces.")
 
