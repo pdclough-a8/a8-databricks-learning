@@ -20,6 +20,32 @@
 # MAGIC **What this writes:** a features table, an append-only predictions table, a forecast view,
 # MAGIC an MLflow experiment, and a new model version each time you train.
 # MAGIC Batch scoring needs no endpoint. **Serving is opt-in and can bill while it exists. Delete it before leaving.**
+# MAGIC
+# MAGIC ## Predictive analytics in plain English
+# MAGIC Some customers who book a place never turn up. If we could estimate how many will, the organiser could plan
+# MAGIC staffing, catering and how many extra tickets to sell. **Predictive analytics** learns patterns from past
+# MAGIC events where we know the outcome and uses them to give a **probability** for future bookings, such as "this
+# MAGIC booking is 82% likely to attend". It is an estimate, not a promise, and it is only as good as the past is
+# MAGIC a guide to the future.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Feature** | a fact known at booking time that the model may use, such as ticket type or lead time |
+# MAGIC | **Label** | the answer we want to predict: attended (1) or no-show (0) |
+# MAGIC | **Leakage** | information the model would not have at prediction time; it flatters the results |
+# MAGIC | **Train / holdout** | training data the model learns from; holdout data it has never seen, used to test it |
+# MAGIC | **Baseline** | the simplest honest guess, to beat before a model is worth using |
+# MAGIC | **Log loss, AUC** | scores for how good the probabilities are; lower log loss and higher AUC are better |
+# MAGIC | **MLflow run / experiment** | the recorded evidence of one training attempt / a folder of runs |
+# MAGIC | **Model version, alias** | a numbered release in Unity Catalog / a movable label such as `Champion` |
+# MAGIC | **Batch scoring** | predicting for many rows in one go, on your schedule |
+# MAGIC
+# MAGIC **Business question for this lesson:** *how many people booked on scheduled events will likely turn up?*
+# MAGIC
+# MAGIC **Free first:** run this in Free Edition. Optional serving may be unavailable there; that does not affect the
+# MAGIC rest. If a step is blocked, repeat the lesson in your paid workspace after running `00_setup` and
+# MAGIC `01_lakehouse_data` there.
 
 # COMMAND ----------
 # MAGIC %md
@@ -270,6 +296,10 @@ A8.expect(
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC **If it differs:** if the check says the model does not beat the baseline, do not register it; look at the
+# MAGIC features first. A `PermissionError` on the experiment means another course run is using your tag.
+# MAGIC **Undo:** every run is kept as evidence. `99_pause_and_cleanup` removes your model, experiment and tables.
+# MAGIC
 # MAGIC **UI step:** open the experiment, then the run. Find the parameters, the metrics, `evaluation_contract.json`,
 # MAGIC and under the model: its signature and input example.
 # MAGIC Why is AUC alone not enough to forecast how many people will turn up?
@@ -507,6 +537,18 @@ else:
 # MAGIC
 # MAGIC **Next:** `06_prescriptive_analytics` uses these predictions to decide what to do.
 # MAGIC Remove any serving endpoint before you leave.
+
+# COMMAND ----------
+# WHAT: asks why using attendance or feedback as a feature would be leakage.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_5_a = """"""
+A8.reflect("5.a", my_answer_5_a)
+
+# COMMAND ----------
+# WHAT: asks why a model must beat a baseline before it is worth using.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_5_b = """"""
+A8.reflect("5.b", my_answer_5_b)
 
 # COMMAND ----------
 # WHAT: prints your endpoint's name and summarises what you built.

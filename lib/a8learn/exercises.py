@@ -219,6 +219,61 @@ REFLECTIONS = {
         "model": "Future bookings would count as no-shows. Counts and any model trained on them would be wrong, "
                  "because 'we do not know yet' is not the same as 'they did not come'.",
     },
+    "2.a": {
+        "question": "Why is a tag not a permission?",
+        "model": "A tag only describes an object so people can find and understand it. A privilege is what "
+                 "lets or stops someone reading it, so tagging a table protects nothing.",
+    },
+    "2.b": {
+        "question": "Why does masking part of an email address not make a person anonymous?",
+        "model": "The name and other columns can still identify them, and the visible part of the email may too. "
+                 "Masking limits what is shown; it does not remove the link to a person.",
+    },
+    "3.a": {
+        "question": "Why do we build the metrics view before any chart or Genie question?",
+        "model": "So every number has one exact definition. Charts and Genie then read the same agreed metrics "
+                 "instead of each choosing their own way to count bookings or tickets.",
+    },
+    "3.b": {
+        "question": "Why is average rating calculated from a sum and a count, not by averaging each event's average?",
+        "model": "Events have different numbers of responses. Averaging averages gives a two-response event the "
+                 "same weight as a fifty-response event; sum divided by count weights each response equally.",
+    },
+    "4.a": {
+        "question": "What is the difference between a pattern and a cause?",
+        "model": "A pattern is two things moving together in the data. A cause means changing one would change "
+                 "the other, which needs a designed comparison or evidence the data does not hold.",
+    },
+    "4.b": {
+        "question": "How can a gap between segments be mix, and how can it be rate?",
+        "model": "Mix: one segment holds more of a kind of event that behaves differently. Rate: the same kind of "
+                 "event behaves differently in the two segments. A gap can be either or both.",
+    },
+    "5.a": {
+        "question": "Why would using the attendance flag or the feedback rating as a feature be leakage?",
+        "model": "They are only known after the event. A model using them looks excellent in testing but cannot "
+                 "have them when it predicts for a future booking.",
+    },
+    "5.b": {
+        "question": "Why must a model beat a baseline before it is worth using?",
+        "model": "The baseline is the simplest honest guess. A model that cannot do better adds cost and "
+                 "complexity for no gain.",
+    },
+    "6.a": {
+        "question": "Why does a decision need the spread of outcomes, not only the expected attendance?",
+        "model": "Costs are lopsided. Being short by ten people and being over by ten cost different amounts, "
+                 "so we need to know how likely each outcome is, not just the average.",
+    },
+    "6.b": {
+        "question": "Why are the cost figures stated as assumptions?",
+        "model": "The course has no measured costs for empty seats or turned-away guests. The recommendation is "
+                 "only as good as these inputs, so we show how it changes if they are wrong.",
+    },
+    "7.a": {
+        "question": "Why is agreement between a model's sentiment and the star rating not accuracy?",
+        "model": "The rating is another noisy signal, not the truth. Agreement shows they are consistent; "
+                 "accuracy needs comments checked by a person against a reliable label.",
+    },
 }
 
 

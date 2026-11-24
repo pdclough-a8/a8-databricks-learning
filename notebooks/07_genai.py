@@ -14,6 +14,29 @@
 # MAGIC Never substitute personal or customer data. Native notebook identity is used, not an app service principal.
 # MAGIC Module 11 covers that distinction. Nothing here is live validated.
 # MAGIC
+# MAGIC ## Generative AI in plain English
+# MAGIC After each event, attendees leave a rating and a comment. Ratings are easy to count. Comments such as "great
+# MAGIC speakers but the room was freezing" hold the detail, and reading hundreds by hand is slow. A **foundation
+# MAGIC model** (a large language model, or LLM) can read text and label it, for example as positive or negative, or by
+# MAGIC topic. Its answers can be wrong and can change between runs, so people check them.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Foundation model / LLM** | a large pre-trained model that works with text |
+# MAGIC | **Prompt** | the instruction and text you send to the model |
+# MAGIC | **AI Function** | a SQL function such as `ai_analyze_sentiment` that calls a model for one task |
+# MAGIC | **`ai_query`** | a SQL function where you choose the model and write the prompt yourself |
+# MAGIC | **Sentiment / classification** | labelling text as positive or negative / assigning it to topics |
+# MAGIC | **Context vs RAG** | pasting text into a prompt, versus searching a stored index for relevant text first |
+# MAGIC | **Human review** | a person checks answers the model could get wrong |
+# MAGIC
+# MAGIC **Business question for this lesson:** *what are attendees saying, and which comments need a person?*
+# MAGIC
+# MAGIC **Free first:** run this in Free Edition. Models and quotas differ between workspaces. If a request is blocked,
+# MAGIC use the model-free exercises there, and repeat the optional requests in your paid workspace after running
+# MAGIC `00_setup` and `01_lakehouse_data` there. Ask first: model requests can cost money on paid workspaces.
+# MAGIC
 # MAGIC ## 1. Choose the smallest tool
 # MAGIC A task function supplies a task-specific interface; `ai_query` lets you choose a model and prompt.
 # MAGIC These are real AI requests, unlike Module 6's seeded simulation. Output can be wrong and non-deterministic.
@@ -267,11 +290,16 @@ A8.check("7.2", "")
 
 # MAGIC %md
 # MAGIC ## 6. Recap and pause
-# MAGIC Explain why a task function differs from `ai_query`, why context is not RAG, and why rating agreement is not
-# MAGIC accuracy. State which requests you approved, skipped or could not run.
+# MAGIC Write your answers in the two cells below. Also state which requests you approved, skipped or could not run.
 # MAGIC **Completion:** both exercises, H1 with actual model output, and your explanations. A blocked/SQL-only route
 # MAGIC is useful practice but does not complete the AI checkpoint. Playground and `ai_query` remain optional.
 # MAGIC Results are in memory, not a table. The platform may retain notebook output and query history under its
 # MAGIC policies; memory-only is not a zero-retention promise. No new course object needs cleanup.
 # MAGIC **Deferred:** prompt registry/versioning, MLflow tracing, production evaluation, automation and deployment.
 # MAGIC **Next:** Module 8 (RAG) is planned. Pause here; existing optional Module 5 serving still needs scoped cleanup.
+
+# COMMAND ----------
+# WHAT: asks why agreement with the star rating is not the same as accuracy.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_7_a = """"""
+A8.reflect("7.a", my_answer_7_a)

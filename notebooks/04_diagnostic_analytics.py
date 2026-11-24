@@ -17,7 +17,26 @@
 # MAGIC **Free Edition first, no cloud writes:** use Serverless compute. This notebook only reads your existing
 # MAGIC `event_metrics` view and holds results in memory. It creates no table, view, file, dashboard, endpoint or job.
 # MAGIC Reads use compute quota. The optional Genie step asks a partner-powered AI to run SQL; do that only with your
-# MAGIC workspace owner's approval, and an assisting agent must ask separately before any live work.
+# MAGIC workspace owner's approval.
+# MAGIC
+# MAGIC ## Diagnostic analytics in plain English
+# MAGIC Once you know *what* happened (Module 3), the next question is *why*. Suppose online events seem to have
+# MAGIC more no-shows. A manager will ask: is that real, where is it concentrated, and what should we look at before
+# MAGIC changing anything? **Diagnostic analytics** answers those by breaking a number into parts and testing whether
+# MAGIC a gap could be luck. It narrows the explanations; it does not prove one.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Segment** | a group of events compared with another, such as online versus not online |
+# MAGIC | **Drill down** | split one number by a category (city, topic, month) to see where a gap sits |
+# MAGIC | **Mix versus rate** | does a gap come from *what kinds* of events are in a segment, or *how they behave*? |
+# MAGIC | **Permutation test** | shuffle the labels many times to see how often chance alone gives a gap this big |
+# MAGIC | **p-value** | the share of shuffles at least as extreme as your real gap |
+# MAGIC | **Confounder** | something else that differs between segments and could explain the gap |
+# MAGIC
+# MAGIC **Free first:** run this in Free Edition. If something is blocked, repeat the lesson in your paid workspace
+# MAGIC after running `00_setup`, `01_lakehouse_data` and `03_descriptive_analytics` there.
 # MAGIC
 # MAGIC ## 1. The question, and the difference between a pattern and a cause
 # MAGIC Our case study: **completed online events have lower attendance than in-person and hybrid events. Why?**
@@ -433,15 +452,15 @@ display(spark.sql(reference_sql))
 
 # WHAT: Check: compares your per-topic attendance gap with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback; averaging per-event rates is deliberately wrong.
-answer_1c_1 = """"""
-A8.check("4.1", answer_1c_1)
+answer_4_1 = """"""
+A8.check("4.1", answer_4_1)
 
 # COMMAND ----------
 
 # WHAT: Check: compares your rating-gap split with the supplied answer.
 # LOOK FOR: a hint or feedback; the two effects and the total must each match to two decimals.
-answer_1c_2 = """"""
-A8.check("4.2", answer_1c_2)
+answer_4_2 = """"""
+A8.check("4.2", answer_4_2)
 
 # COMMAND ----------
 
@@ -453,11 +472,21 @@ A8.check("4.2", answer_1c_2)
 # MAGIC checking it is yours first. `99_pause_and_cleanup` is unchanged by this module.
 # MAGIC
 # MAGIC ### Recap, explain before you move on
-# MAGIC - What is the difference between a pattern and a cause? What would you need to claim a cause?
-# MAGIC - Why can the gap be mostly rate or mostly mix, and what does each tell you to look at next?
-# MAGIC - Why shuffle whole events rather than tickets? What does a small p-value not tell you?
-# MAGIC - Which Genie answer would you reject, even if its numbers were right?
+# MAGIC Write your answers in the two cells below. Also think about: why shuffle whole events rather than tickets,
+# MAGIC what does a small p-value not tell you, and which Genie answer would you reject even if its numbers were right?
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint G2 (or marked blocked), and your own
 # MAGIC explanations. **Not covered:** adjusting for several confounders at once and Simpson's paradox are deferred.
 # MAGIC **Next:** `05_predictive_ml`, predict what is likely to happen.
+
+# COMMAND ----------
+# WHAT: asks what separates a pattern from a cause.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_4_a = """"""
+A8.reflect("4.a", my_answer_4_a)
+
+# COMMAND ----------
+# WHAT: asks how mix and rate differ in explaining a gap.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_4_b = """"""
+A8.reflect("4.b", my_answer_4_b)

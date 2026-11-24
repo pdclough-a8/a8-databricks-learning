@@ -8,6 +8,34 @@
 # MAGIC then prove their answers with SQL. Descriptive analytics asks **what happened or is booked**, not what will
 # MAGIC happen or why. Event management is the case study; Databricks datasets, dashboards and Genie are the skills.
 # MAGIC
+# MAGIC ## Descriptive analytics in plain English
+# MAGIC The first thing a manager asks is *what is going on?* How many seats have we sold for next month? Which city
+# MAGIC fills fastest? Are completed events rated well? Answering these from recorded facts is **descriptive
+# MAGIC analytics**. It does not forecast or explain; it states, accurately and in a form people can read.
+# MAGIC
+# MAGIC The skill is not drawing charts. It is agreeing **what each number means** before you chart it. Two people can
+# MAGIC both say "bookings" and mean different things (orders or tickets, with or without cancellations). So we first
+# MAGIC write each **metric** down precisely, build it once in a **view**, and only then chart it or let Genie answer
+# MAGIC from it.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Metric** | a number the business tracks, with an exact definition |
+# MAGIC | **Grain** | what one row of a table or view means, here one row per event |
+# MAGIC | **Fill rate** | confirmed tickets divided by capacity: how full an event is |
+# MAGIC | **Attendance rate** | tickets that turned up divided by tickets with a known outcome |
+# MAGIC | **View** | a saved query you can chart or query like a table |
+# MAGIC | **AI/BI dashboard** | a Databricks page of charts built from SQL datasets |
+# MAGIC | **Genie** | a natural-language assistant that writes SQL over tables you choose; always check its SQL |
+# MAGIC | **Checkpoint D / G** | your own record that the **D**ashboard / **G**enie step worked in the UI |
+# MAGIC | **E2, B1–B3** | one example question (E2) and three unseen test questions (B1–B3) for Genie |
+# MAGIC
+# MAGIC **Business question for this lesson:** *how full are our upcoming events, and how did past events perform?*
+# MAGIC
+# MAGIC **Free first:** run this in Free Edition. If the dashboard or Genie steps are unavailable, record them as
+# MAGIC blocked and repeat the lesson in your paid workspace after running `00_setup` and `01_lakehouse_data` there.
+# MAGIC
 # MAGIC **60–75 minutes, an estimate:** orient 5 · metrics/view 15 · dashboard 20 · Genie 20 · transfer/recap 10.
 # MAGIC **Before you start:** finish `00_setup` and `01_lakehouse_data`. Modules 2 and 5 are not prerequisites.
 # MAGIC Use the saved learner tag and schema, normally `workspace.default` on Free Edition.
@@ -28,7 +56,6 @@
 # MAGIC asking Genie invokes partner-powered AI and can run SQL. On paid workspaces these operations may incur charges.
 # MAGIC Obtain your workspace owner's approval before those actions. The SDK reads the generated file's object type;
 # MAGIC it does not create dashboards or Genie spaces through an API. No model endpoint, job or schedule is deployed.
-# MAGIC An assisting agent must ask separately before performing any live cloud work.
 # MAGIC Keep assets in your own user folder, inspect inherited access, and stop if it is not private enough.
 # MAGIC Do not publish, share, embed credentials for dashboard viewers, or alter permissions in this lesson.
 # MAGIC
@@ -531,6 +558,18 @@ A8.check("3.1", answer_3_1)
 # LOOK FOR: a hint or feedback; averaging per-event averages is deliberately incorrect.
 answer_3_2 = """"""
 A8.check("3.2", answer_3_2)
+
+# COMMAND ----------
+# WHAT: asks why the view is built before any chart or Genie question.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_3_a = """"""
+A8.reflect("3.a", my_answer_3_a)
+
+# COMMAND ----------
+# WHAT: asks why average rating is calculated from a sum and a count.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_3_b = """"""
+A8.reflect("3.b", my_answer_3_b)
 
 # COMMAND ----------
 # MAGIC %md

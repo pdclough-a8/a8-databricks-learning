@@ -15,6 +15,27 @@
 # MAGIC It creates no groups and grants nothing. The demo policy applies to everyone, including you, so that you can
 # MAGIC see it working on your own; it does not prove separation between different users.
 # MAGIC
+# MAGIC **Free first:** run this in your Free Edition workspace. If a step is blocked, repeat the lesson in your paid
+# MAGIC workspace after running `00_setup` and `01_lakehouse_data` there.
+# MAGIC
+# MAGIC ## Why governance matters to an events business
+# MAGIC The `bookings` table holds **personal data**: customer names and email addresses. Marketing needs some of it,
+# MAGIC an analyst building a dashboard needs almost none of it, and a customer who asks "who can see my details?"
+# MAGIC deserves a clear answer. **Governance** means deciding who may see what, enforcing that decision in one
+# MAGIC place, and keeping evidence. The data here is invented, so you can practise safely.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Privilege** | permission to do one thing to one object, such as `SELECT` on a table |
+# MAGIC | **Owner** | the user or group with full control of an object; owners are not blocked by grants |
+# MAGIC | **Group** | a named set of users; grant to groups, not to individuals |
+# MAGIC | **Row filter** | a function that decides which rows a reader sees |
+# MAGIC | **Column mask** | a function that decides what value of a column a reader sees |
+# MAGIC | **Tag** | a label that describes an object; it does not restrict access |
+# MAGIC | **Lineage** | a record of which tables fed which; **audit** records who did what |
+# MAGIC | **Personal data** | anything that identifies a person, including a name or email |
+# MAGIC
 # MAGIC ## 1. Three different questions
 # MAGIC | Question | Databricks feature | Example |
 # MAGIC |---|---|---|
@@ -198,6 +219,12 @@ A8.links(("Governed copy: inspect mask and row filter", "table", "bookings_gover
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC **I expect:** the copy shows masked emails and only Leeds and Online rows, even to you.
+# MAGIC **If it differs:** if you still see full emails, the mask was not attached: rerun the `ALTER TABLE` cells in
+# MAGIC order. If a policy error appears, check that the functions were created first.
+# MAGIC **Undo:** `99_pause_and_cleanup` drops the copy first and then the two functions, so nothing is left pointing
+# MAGIC at a missing function. The source `bookings` table is never changed.
+# MAGIC
 # MAGIC **UI step:** on the governed copy, find the mask indicator beside `customer_email` and the row filter on
 # MAGIC **Overview**. Open the `mask_email` function. Query the table in the SQL editor by its full name: the policy
 # MAGIC still applies.
@@ -285,14 +312,24 @@ else:
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC **Recap: explain before moving on**
-# MAGIC - Why is a tag not a permission?
-# MAGIC - Why does the policy affect you, the owner?
-# MAGIC - What would you need to show that two different users see different rows?
-# MAGIC - Which grants on the source would you remove for an analyst?
+# MAGIC **Recap: explain before moving on.** Write your answers in the two cells below.
+# MAGIC Also think about: what would you need to show that two different users see different rows, and which
+# MAGIC grants on the source would you remove for an analyst?
 # MAGIC
 # MAGIC The policies stay attached for your next visit. Cleanup drops the copy before its functions, so nothing is left
 # MAGIC pointing at a missing function.
+
+# COMMAND ----------
+# WHAT: asks why a tag is not a permission.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_2_a = """"""
+A8.reflect("2.a", my_answer_2_a)
+
+# COMMAND ----------
+# WHAT: asks why masking part of an email does not make a person anonymous.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_2_b = """"""
+A8.reflect("2.b", my_answer_2_b)
 
 # COMMAND ----------
 
@@ -300,4 +337,4 @@ else:
 # LOOK FOR: the outcomes you can explain and your next lesson.
 A8.next_step(["A documented/tagged policy sandbox", "Two UC SQL functions",
               "Observed email masking and city filtering", "A distinction between lineage, audit and access grants"],
-             "05_predictive_ml", "Predict turnout, track and register a model")
+             "03_descriptive_analytics", "Describe the business with AI/BI and Genie")

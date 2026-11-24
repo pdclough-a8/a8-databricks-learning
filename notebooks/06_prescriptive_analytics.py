@@ -18,6 +18,29 @@
 # MAGIC objects and holds results in memory. It creates no table, view, file, dashboard, endpoint or job, makes no
 # MAGIC model request and needs no new library. Reads use compute quota. `99_pause_and_cleanup` is unchanged.
 # MAGIC
+# MAGIC ## Prescriptive analytics in plain English
+# MAGIC Knowing that about 85 of 100 booked people will probably turn up is useful, but someone still has to decide:
+# MAGIC sell 100 tickets or 110? Order 85 meals or 95? **Prescriptive analytics** recommends an action by comparing
+# MAGIC the cost of each possible mistake. It needs honest assumptions (what an empty seat or a turned-away guest
+# MAGIC costs) and it should show how the answer changes if those assumptions are wrong.
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Overbooking** | selling more tickets than there are seats, expecting some people not to come |
+# MAGIC | **Simulation** | drawing many random but plausible turnouts from the predicted probabilities |
+# MAGIC | **Expected cost** | the average cost of a choice across all simulated turnouts |
+# MAGIC | **Assumption** | a stated cost or rule we use but have not measured; here, teaching values |
+# MAGIC | **Sensitivity** | how much the best choice moves when an assumption changes |
+# MAGIC | **Seed** | a fixed starting number so the random draws, and your results, are repeatable |
+# MAGIC
+# MAGIC **Business question for this lesson:** *how many tickets should we sell, and how many meals should we order,
+# MAGIC for one upcoming event?*
+# MAGIC
+# MAGIC **Free first:** run this in Free Edition. If a step is blocked, repeat the lesson in your paid workspace after
+# MAGIC running `00_setup`, `01_lakehouse_data` and `05_predictive_ml` there (Module 6 needs Module 5's tables in the
+# MAGIC same workspace).
+# MAGIC
 # MAGIC ## 1. Two decisions, one source of uncertainty
 # MAGIC Module 5 gives each confirmed booking a probability that it attends. A probability is not an answer: the
 # MAGIC kitchen needs a number of meals and the box office needs a ticket limit. Both decisions have two ways to be
@@ -312,15 +335,15 @@ display(pd.DataFrame(rows))
 
 # WHAT: Check: compares your simple overbooking limit with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback; truncate to a whole number of tickets.
-answer_1d_1 = """"""
-A8.check("6.1", answer_1d_1)
+answer_6_1 = """"""
+A8.check("6.1", answer_6_1)
 
 # COMMAND ----------
 
 # WHAT: Check: compares your turnout variance with the supplied answer.
 # LOOK FOR: a hint or feedback; using every score instead of the latest one per booking is deliberately wrong.
-answer_1d_2 = """"""
-A8.check("6.2", answer_1d_2)
+answer_6_2 = """"""
+A8.check("6.2", answer_6_2)
 
 # COMMAND ----------
 
@@ -330,12 +353,22 @@ A8.check("6.2", answer_1d_2)
 # MAGIC rules. `99_pause_and_cleanup` is unchanged by this module.
 # MAGIC
 # MAGIC ### Recap, explain before you move on
-# MAGIC - Why does a good decision need the spread of outcomes and not only the expected attendance?
-# MAGIC - What does the cost ratio decide, and why are the costs here assumed rather than measured?
-# MAGIC - Which two checks agreed with the simulation, and why do independent routes matter?
-# MAGIC - Which assumption would most change your recommendation if it were wrong?
+# MAGIC Write your answers in the two cells below. Also think about: which two checks agreed with the simulation and
+# MAGIC why independent routes matter, and which assumption would most change your recommendation if it were wrong.
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, checkpoint H1 and your own explanations.
 # MAGIC **Not covered:** reinforcement learning, solver libraries, live pricing, scheduled automation (Modules 9 and 12)
 # MAGIC and any claim about real revenue or cost.
-# MAGIC **Next:** Module 7 (`07_genai`) reads feedback text with a foundation model; each AI module names its level.
+# MAGIC **Next:** `07_genai` (optional) reads feedback text with a foundation model, then `99_pause_and_cleanup`.
+
+# COMMAND ----------
+# WHAT: asks why a decision needs the spread of outcomes, not only the expected attendance.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_6_a = """"""
+A8.reflect("6.a", my_answer_6_a)
+
+# COMMAND ----------
+# WHAT: asks why the cost figures must be stated as assumptions.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_6_b = """"""
+A8.reflect("6.b", my_answer_6_b)

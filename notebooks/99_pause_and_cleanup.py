@@ -6,6 +6,11 @@
 # MAGIC **Outcome:** know what remains, remove an optional billable endpoint, or explicitly delete your course data.
 # MAGIC Settings and source notebooks are never deleted here. No wildcards, schema drops or shared-resource changes.
 # MAGIC
+# MAGIC ## Which workspace are you cleaning?
+# MAGIC Run this notebook in **each** workspace where you ran the course (Free Edition and paid). Tables, models,
+# MAGIC endpoints and saved settings are per workspace, so cleaning one does not clean the other. Paid workspaces
+# MAGIC are the ones that can keep billing, so check any serving endpoint there first.
+# MAGIC
 # MAGIC ## Pause is not the same as delete
 # MAGIC - **Notebook/serverless compute:** idles automatically; classic clusters/warehouses follow their own auto-stop
 # MAGIC   settings.
