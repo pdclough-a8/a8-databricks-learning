@@ -27,8 +27,8 @@
 # MAGIC The scoring rules run in your notebook and make no model request. The optional judge makes **five** chat-model
 # MAGIC requests (one per task) against your workspace's pay-per-token model, which uses quota on Free or money on a
 # MAGIC paid workspace. The optional endpoint test sends five requests to an endpoint you already created in Module 12;
-# MAGIC this lesson never creates or starts one. `99_pause_and_cleanup` removes the experiment. This lesson is supplied
-# MAGIC and offline checked; it has **not** yet been run live end to end.
+# MAGIC this lesson never creates or starts one. `99_pause_and_cleanup` removes the experiment. This lesson was
+# MAGIC validated live on Free Edition on 24 November 2026, except the endpoint test, which was not run.
 # MAGIC
 # MAGIC ## Evaluation in plain English
 # MAGIC Testing ordinary code is easy because the same input gives the same output. An agent's answers vary with its

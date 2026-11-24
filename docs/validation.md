@@ -337,14 +337,21 @@ city from format for online events.
 
 ## Module 14: Evaluate and monitor
 
-**Supplied and offline checked. The module has not been run live.** Separately, a throwaway probe on `a8-free` on
-24 November 2026 (one serverless run, MLflow 3.6.0, everything deleted afterwards) proved the platform calls it relies
-on: `mlflow.genai.evaluate()` with two custom `@scorer` functions on two rows returned the expected means; `@mlflow.trace`
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026, except the endpoint test.** Live
+result (second run; the first failed at the trace cell, because MLflow 3.6 returns the `trace` column of
+`search_traces` as text, and the notebook now reads spans with `mlflow.get_trace`): the baseline was grounded on 4 of 5
+tasks and finished all five; the stale candidate was blocked on `grounded` while still finishing every task; the
+refreshed candidate was released; fifteen traces were found, one showing a `support_agent` span with a `search_docs`
+tool span; the summary reported no failures; the judge cell ran and its in-notebook check passed; cleanup deleted the
+evaluation experiment and left nothing behind. The judge's printed mark and the run means were cut from the exported
+output, so their values are not recorded here. Earlier, a throwaway probe on `a8-free` (one serverless run, MLflow
+3.6.0, everything deleted afterwards) had proved the platform calls it relies on: `mlflow.genai.evaluate()` with two custom `@scorer` functions on two rows returned the expected means; `@mlflow.trace`
 produced traces that `mlflow.search_traces` returned; and a `Guidelines` judge with
 `model="databricks:/databricks-meta-llama-3-3-70b-instruct"` returned a mark (one paid model request). Not probed:
 tagging a run after `evaluate()` has finished, `search_traces` on an experiment with several runs, the nested tool spans
 under `@mlflow.trace`, calling the Module 12 endpoint as the predict function, the `Correctness` and `Safety` judges, and
-Unity Catalog evaluation datasets (the module uses none).
+Unity Catalog evaluation datasets (the module uses none). The probe's untested items marked above, except the endpoint
+and the other judges, were exercised by the live run.
 
 | Check | Evidence |
 |---|---|
@@ -357,6 +364,6 @@ Unity Catalog evaluation datasets (the module uses none).
 | Cleanup | `99_pause_and_cleanup` deletes the evaluation experiment after a course-tag check, before any other delete; a foreign experiment stops the cleanup |
 | Exercise 14.1 | The solution equals an independent result computed from the CSV files; blank and naive answers fail |
 
-Not live validated: everything above beyond the probe, paid-workspace behaviour, and the gap between the notebook's
-"traces" assertion (fifteen after three runs) and how MLflow actually stores them. Production trace ingestion into Unity
-Catalog and scheduled monitors are described in the notebook and not exercised.
+Not live validated: the endpoint test (no endpoint existed in the run, so it was skipped), the `Correctness` and
+`Safety` judges, paid-workspace behaviour, and production trace ingestion into Unity Catalog and scheduled monitors,
+which the notebook describes and does not run.

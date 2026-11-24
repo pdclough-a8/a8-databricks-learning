@@ -67,7 +67,8 @@ Module **14** (evaluate and monitor) turns the hand scoring of the agent into ML
 answers with facts read from your data, every answer is traced, and a release gate blocks a candidate (a model with
 out-of-date seat figures) that scores worse than the baseline. An optional judge makes five model requests and an
 optional test sends five requests to your Module 12 endpoint; writing the runs, the judge and the endpoint test are
-default-no switches, and `99_pause_and_cleanup` deletes the experiment. Offline checked only; not yet validated live.
+default-no switches, and `99_pause_and_cleanup` deletes the experiment. Offline checked and validated live on Free
+Edition, except the endpoint test.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft
