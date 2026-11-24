@@ -65,7 +65,7 @@ def build_tasks(remote, tag, wait_minutes, skip_vector=False, only=None):
          {"create_app": "yes", "grant_app_access": "yes", "deploy_app": "yes", "delete_app": "yes"}, 2400),
         ("evaluate", "14_evaluate_and_monitor",
          {"run_evaluation": "yes", "run_judge": "yes", "evaluate_endpoint": "no"}, 2400),
-        # Needs a Champion from the deploy task. The canary stays off: the deploy task deletes the endpoint it would split.
+        # Needs a Champion from the deploy task. The canary stays off: that task deletes the endpoint it would split.
         ("release", "15_release_and_rollback",
          {"log_candidates": "yes", "release_candidate": "yes", "roll_back": "yes", "canary_endpoint": "no"}, 2400),
     ]
