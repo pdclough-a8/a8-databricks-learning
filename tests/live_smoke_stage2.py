@@ -40,7 +40,7 @@ def upload(w, remote):
                                language=Language.PYTHON if notebook else None, overwrite=False)
 
 
-def build_tasks(remote, tag, wait_minutes):
+def build_tasks(remote, tag, wait_minutes, skip_vector=False):
     common = {"config_profile": PROFILE, "answers": "solutions"}
     plan = [
         ("setup", "00_setup",
@@ -58,13 +58,15 @@ def build_tasks(remote, tag, wait_minutes):
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:
+        if skip_vector and key == "vector":
+            continue
         tasks.append(SubmitTask(
             task_key=key,
             notebook_task=NotebookTask(notebook_path=f"{remote}/notebooks/{notebook}",
                                        base_parameters={**common, **extra}),
             depends_on=[TaskDependency(task_key=tasks[-1].task_key)] if tasks else None,
             run_if=RunIf.ALL_DONE if tasks and key != "data" else None, timeout_seconds=timeout))
-    for key, previous in [("cleanup", "agents"), ("cleanup_again", "cleanup")]:
+    for key, previous in [("cleanup", tasks[-1].task_key), ("cleanup_again", "cleanup")]:
         tasks.append(SubmitTask(
             task_key=key,
             notebook_task=NotebookTask(
@@ -105,13 +107,14 @@ def main():
     parser.add_argument("--approve-cloud-writes", action="store_true", required=True)
     parser.add_argument("--tag", default="val8")
     parser.add_argument("--wait-minutes", type=int, default=25)
+    parser.add_argument("--skip-vector", action="store_true", help="do not create the billable Vector Search endpoint")
     args = parser.parse_args()
     w = WorkspaceClient(profile="a8-free")
     user = w.current_user.me().user_name
     remote = f"/Users/{user}/a8learn_stage2_validation_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     upload(w, remote)
     run_id = w.jobs.submit(run_name="A8 Stage 2 notebook validation",
-                           tasks=build_tasks(remote, args.tag, args.wait_minutes)).run_id
+                           tasks=build_tasks(remote, args.tag, args.wait_minutes, args.skip_vector)).run_id
     print(json.dumps({"run_id": run_id, "folder": remote, "tag": args.tag}), flush=True)
     while True:
         run = w.jobs.get_run(run_id)

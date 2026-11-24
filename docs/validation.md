@@ -88,7 +88,7 @@ Not yet validated:
 
 ## Module 3: descriptive AI/BI dashboard and Genie
 
-**Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
+**Notebook live run (24 November 2026, `a8-free`, serverless, solution answers):** it ran end to end, and the pandas route agreed with the SQL view on every metric. **Dashboard import and Genie remain not live validated.** Earlier text below describes the offline checks.
 
 | Check | Evidence |
 |---|---|
@@ -139,7 +139,7 @@ Dependency versions are direct pins, not a fully locked runtime image.
 
 ## Module 9: Agents
 
-**Supplied, offline checked, not live validated.**
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the tools, guardrails and loop ran as designed. The rule-based agent scored tool choice 5/5 and grounded 4/5 (it ranks the wrong section first for "take over my seat"). The JSON model decider scored 5/5 and 5/5 in 9 of 12 requests, and refused the weather question. **Native tool-calling works on Free** with `databricks-meta-llama-3-3-70b-instruct`: tool choice 5/5, grounded 4/5 in 9 of 12 requests; the miss is the same retrieval miss, not a tool-calling failure. Nothing was created.
 
 | Check | Evidence |
 |---|---|
@@ -239,6 +239,8 @@ the strict build passes, not by eye in a browser). Probabilities from Module 5 a
 bookings is an assumption; costs are assumed teaching parameters with no payment ledger behind them.
 
 ## Module 4: diagnostic analytics
+
+**Notebook live run (24 November 2026, `a8-free`, serverless, solution answers):** it ran end to end after a Decimal fix, including the pandas drill-down check and the permutation test. **Genie remains not live validated.**
 
 **Readability pilot (23 November 2026), offline only:** one setup cell, an "Under the hood" helper table, three optional
 `<details>` background blocks (event terms, mix versus rate, p-value) and three computed "Reading" cells that state the

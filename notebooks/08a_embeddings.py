@@ -276,6 +276,8 @@ else:
 # MAGIC would embed text inside a pandas or scikit-learn workflow. It sends the same 30 texts again behind its own
 # MAGIC default-no switch, so it doubles the quota used: skip it if you only need one route. If you did run the SQL step
 # MAGIC above, the cell also checks that both routes return (almost) the same vectors.
+# MAGIC **On Free Edition this route timed out in our live tests**, so expect the fallback message there and use the
+# MAGIC SQL route; it may work in a paid workspace.
 
 # COMMAND ----------
 # PYTHON ROUTE

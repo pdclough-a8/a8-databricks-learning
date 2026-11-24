@@ -19,7 +19,8 @@ All data is synthetic. Never substitute customer data.
 
 **Stage 1 implements Modules 0–2 and the analytics ladder in Modules 3–6.** The notebooks follow the order of
 analytical complexity: descriptive (3), diagnostic (4), predictive (5), then prescriptive (6).
-Modules 3, 4 and 6 are supplied and offline checked, **not live validated**.
+Modules 3, 4 and 5 ran end to end on Free Edition in a maintainer test (the dashboard and Genie parts of 3 and 4 were not
+tested). Module 6 is supplied and offline checked, **not live validated**.
 
 Module **7** (GenAI) interprets five synthetic feedback comments. It is supplied and offline checked, **not live
 validated**. Each model request needs separate approval and may use quota or incur charges; the SQL-only exercises
