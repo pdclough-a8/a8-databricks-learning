@@ -34,6 +34,7 @@ OBJECTS = {
     "attendance_model": ("model", "05_predictive_ml"),
     "attendance_predictions": ("table", "05_predictive_ml"),
     "event_forecast": ("view", "05_predictive_ml"),
+    "doc_chunks": ("table", "08b_rag"),
 }
 
 

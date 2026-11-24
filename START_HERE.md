@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai` and `08a_embeddings` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings` and `08b_rag` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -28,6 +28,11 @@ need none. Nothing is written.
 Module **8a** (embeddings) turns the 27 distinct feedback comments into vectors, first by hand and then with a
 Foundation Model embedding endpoint, and compares keyword and similarity search. It is supplied and offline checked,
 **not live validated**. The embedding request needs your approval and writes nothing. RAG over documents follows in 8b.
+
+Module **8b** (RAG) answers customer questions from a fictional nine-document A8 Events knowledge base: it chunks the
+documents, retrieves by word overlap and by embeddings, builds a grounded, cited prompt and scores retrieval. It is
+supplied and offline checked, **not live validated**. It writes nine files and one table; the embedding and chat
+requests each need your approval. A managed Vector Search index follows in 8c.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

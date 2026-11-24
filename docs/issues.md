@@ -219,3 +219,4 @@ Fairness to turned-away attendees needs human judgement (checkpoint H1). The pre
 cannot be separated, and only 48 completed events (15 online) support the comparison. Confounder adjustment and
 Simpson's paradox are deferred. The failure modes listed for Genie are expected risks, not observed results.
 | S28 | Implemented, not live validated | Module 8a embeddings: `ai_query` against an embedding endpoint is unconfirmed live; Free Edition quota and endpoint names to be checked in the first live run |
+| S29 | Implemented, not live validated | Module 8b RAG: embedding and chat `ai_query` calls, `failOnError`, volume subfolder creation and refusal behaviour unconfirmed live; Unity Gateway may require `system.ai.` endpoint names |

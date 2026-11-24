@@ -137,6 +137,22 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 8b: RAG
+
+**Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_rag.py` | The notebook's Python cells run against the shipped documents and synthetic tables, with stand-ins for `ai_query` |
+| Gates | The default run makes zero model statements; an approved embedding run sends every chunk and question once, an approved chat run sends exactly two prompts, text always as parameters |
+| Chunks | Nine documents give the expected chunks, each within the length limit with unique ids; the chunk table has one row per chunk, change data feed on and ownership labels set |
+| Retrieval | Word-overlap hit at k is computed offline; the evaluation set and its expected documents are checked against the documents |
+| Exercises 8b.1, 8b.2 | Solutions equal independent Python; blank and naive answers fail |
+
+Not validated: `ai_query` against an embedding endpoint and a chat endpoint on Free or paid workspaces, `failOnError`
+and `modelParameters` behaviour, endpoint names, answer and citation quality, refusal behaviour, creating a directory in
+a volume, and notebook rendering. The documents are short and tidy, so retrieval looks easier than on real documents.
+
 ## Module 8a: embeddings
 
 **Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.

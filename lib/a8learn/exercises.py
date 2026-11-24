@@ -211,6 +211,26 @@ GROUP BY e.event_id ORDER BY e.event_id""",
                    "so events with no stream or audio comment do not appear.",
         "ordered": True,
     },
+    "8b.1": {
+        "task": "Return doc_name and chunks (the number of chunks) for each document in the chunk table, ordered by "
+                "chunks from highest to lowest, then doc_name.",
+        "hint": "GROUP BY doc_name and count(*). Read from IDENTIFIER(a8_doc_chunks).",
+        "solution": """SELECT doc_name, count(*) AS chunks FROM IDENTIFIER(a8_doc_chunks)
+GROUP BY doc_name ORDER BY chunks DESC, doc_name""",
+        "explain": "The grain of the chunk table is one row per section, so counting rows per document shows how the "
+                   "documents were split. A document with many chunks has many headings.",
+        "ordered": True,
+    },
+    "8b.2": {
+        "task": "Return doc_name and section for every chunk whose content mentions 'refund' in any capitalisation, "
+                "ordered by doc_name, then section.",
+        "hint": "Use lower(content) LIKE '%refund%'. Read from IDENTIFIER(a8_doc_chunks).",
+        "solution": """SELECT doc_name, section FROM IDENTIFIER(a8_doc_chunks)
+WHERE lower(content) LIKE '%refund%' ORDER BY doc_name, section""",
+        "explain": "A keyword query finds chunks containing the exact word. A customer asking how to get their money "
+                   "back uses different words, which is why retrieval by meaning (embeddings) matters.",
+        "ordered": True,
+    },
 }
 
 
@@ -311,6 +331,17 @@ REFLECTIONS = {
         "model": "Embeddings mostly capture topic. 'The stream kept buffering' and 'Stream quality was excellent' are "
                  "both about the stream, so they can sit close together. Similarity is not agreement, so check "
                  "sentiment separately.",
+    },
+    "8b.a": {
+        "question": "Why give the model retrieved passages instead of just asking it the question?",
+        "model": "The model has never seen A8's policies and may guess. Retrieval puts the relevant passages in the "
+                 "prompt, so the answer comes from our documents, can cite them, and updates when the documents do.",
+    },
+    "8b.b": {
+        "question": "Give two reasons retrieval could miss a passage that does contain the answer.",
+        "model": "The chunk may be too large or too small, so its meaning is blurred or its context is lost. The "
+                 "question may use different words from the document and the search may rank another chunk higher. "
+                 "The document may also be missing or out of date.",
     },
 }
 

@@ -59,7 +59,7 @@ def cleanup(course, workspace, client, confirmation, tables=False):
                 client.delete_model_version(model.name, version.version)
             client.delete_registered_model(model.name)
         # Reverse creation order: views and governed table before its UDF dependencies.
-        order = ["event_forecast", "attendance_predictions", "booking_features",
+        order = ["doc_chunks", "event_forecast", "attendance_predictions", "booking_features",
                  "bookings_governed", "city_filter", "mask_email", "event_metrics", "event_availability",
                  "feedback", "bookings", "events", "raw"]
         for key in order:

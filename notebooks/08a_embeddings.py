@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # A8 | 8a. Embeddings: find comments by meaning
 # MAGIC **Where this sits:** supports descriptive analytics (what are attendees saying?) and is the foundation for
-# MAGIC retrieval-augmented generation (RAG) in Module 8b. An embedding does not predict anything or explain why.
+# MAGIC retrieval-augmented generation (RAG) in `08b_rag`. An embedding does not predict anything or explain why.
 # MAGIC
 # MAGIC **Outcome:** turn event feedback comments into **vectors** (lists of numbers), measure how close two comments
 # MAGIC are, and search for comments by meaning instead of by exact words. You first build vectors **by hand** so you
@@ -357,14 +357,14 @@ A8.check("8a.2", answer_8a_2)
 # MAGIC ## 8. Recap, explain before you move on
 # MAGIC Write your answers in the two cells below. Also think about: why did we embed 27 comments instead of 395, and
 # MAGIC what would change if the corpus were 100,000 comments? (You would store the vectors in an index so a search does
-# MAGIC not compare against every vector. That is **Vector Search**, the subject of Module 8b.)
+# MAGIC not compare against every vector. That is **Vector Search**, planned for Module 8c.)
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, your explanations and, if you approved it, the real
 # MAGIC embedding step. Skipping or being blocked on that step is fine: record it, and do not count the real-embedding
 # MAGIC outcome as complete.
 # MAGIC
 # MAGIC **Pause:** nothing was written, so there is nothing to clean up. `99_pause_and_cleanup` is unchanged.
-# MAGIC **Next:** Module 8b (RAG over a document set, with Vector Search) is planned. Pause here, or revisit `07_genai`.
+# MAGIC **Next:** `08b_rag` builds retrieval-augmented generation over a document set, using this search.
 
 # COMMAND ----------
 # WHAT: asks why word counting misses comments that mean the same thing.
