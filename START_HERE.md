@@ -45,8 +45,13 @@ MCP, an app using your learner tables, deployment and governance). They support 
 ones, and each will say which level it serves. Automation is planned in Modules 9 and 12.
 These later modules are planned, not supplied yet. The earlier fixture-based app has been removed.
 
-Free Edition defaults to `workspace.default`. Azure paid defaults to `users.pclough`,
-without creating schemas. Use a unique learner tag and existing authorised schema.
+**Start in Free Edition, fall back to paid.** Clone the course into each workspace you have. Work through it in
+Free Edition first. If a step is blocked by a missing feature, a quota or a permission, repeat that lesson in your
+paid workspace: run `00_setup`, then `01_lakehouse_data`, then the lesson that was blocked. Tables, models and saved
+settings are per workspace and do not carry over.
+
+Free Edition defaults to `workspace.default`. On a paid workspace, enter a catalog and schema you have been given
+permission to write to; the course never creates schemas. Use a unique learner tag.
 Settings are saved once in your workspace user folder and reloaded by each notebook.
 Compute/storage and optional serving can cost money. Free Edition has usage quotas.
 Serving and Module 3's reporting-view write are opt-in; dashboard/Genie UI writes and AI requests are learner-triggered.

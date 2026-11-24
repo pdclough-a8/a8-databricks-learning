@@ -13,6 +13,22 @@
 # MAGIC
 # MAGIC **Before you start:** run `00_setup`. This lesson writes only objects with your tag, in your saved schema.
 # MAGIC Compute and storage may cost a little. No endpoint, pipeline or app is started.
+# MAGIC **Free first:** run this in your Free Edition workspace. If a step is blocked, repeat the lesson in your paid
+# MAGIC workspace after running `00_setup` there (see `00_setup`, "Which workspace?").
+# MAGIC
+# MAGIC ## Terms in this lesson
+# MAGIC | Term | Meaning |
+# MAGIC |---|---|
+# MAGIC | **Volume** | a governed folder for files such as CSVs |
+# MAGIC | **Delta table** | a table with a schema and a log of every change |
+# MAGIC | **Schema contract** | stating each column's type instead of letting Databricks guess |
+# MAGIC | **View** | a saved query; it shows current data each time it is read |
+# MAGIC | **Grain** | what one row means, for example one booking. Know it before you count or join |
+# MAGIC | **Time travel** | reading an earlier version of a table |
+# MAGIC | **Lineage** | a record of which tables a table or view was built from |
+# MAGIC
+# MAGIC **Business question for this lesson:** *which upcoming events still have seats to fill?* To answer it you
+# MAGIC need a clean booking count per event, which is why the data must be loaded carefully first.
 # MAGIC
 # MAGIC ## 1. A lakehouse separates storage, governance and compute
 # MAGIC - A **volume** holds files: CSVs, PDFs, images. Think of it as a governed folder.
@@ -88,6 +104,10 @@ print("Source files:", [p.name for p in (ROOT / "data" / "raw").glob("*.csv")])
 # MAGIC cell to inspect your upload. Never upload real customer data.
 
 # COMMAND ----------
+# MAGIC %md
+# MAGIC **I expect:** one new volume appears under your schema, holding no files yet.
+
+# COMMAND ----------
 
 # WHAT: creates your governed volume if needed.
 # LOOK FOR: a successful CREATE VOLUME; an existing owned volume is kept.
@@ -102,6 +122,12 @@ A8.guard("raw")
 for filename in ["events.csv", "bookings.csv", "feedback.csv"]:
     # Volumes expose a filesystem path, so ordinary file copying works.
     shutil.copyfile(ROOT / "data" / "raw" / filename, Path(volume_path) / filename)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC **If it differs:** a permission error means you cannot create volumes in this schema. Stop and ask your
+# MAGIC administrator for CREATE VOLUME, or use another schema you own (change it in `00_setup`).
+# MAGIC **Undo:** `99_pause_and_cleanup` removes this volume. Nothing else is touched.
 
 # COMMAND ----------
 # WHAT: shows the files now governed by Unity Catalog.
@@ -179,6 +205,12 @@ TBLPROPERTIES ('a8learn.course' = '{COURSE_ID}', 'a8learn.tag' = '{A8.cfg.tag}')
 AS SELECT * FROM a8_source_{key}"""
     print(statement)
     spark.sql(statement)
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC **If it differs:** a `FAILFAST` error names a row that does not fit the schema: the CSV in your volume has
+# MAGIC been edited. Re-run the copy cell above to restore the original file.
+# MAGIC **Undo:** rerunning the load resets the tables to the original data; `99_pause_and_cleanup` drops them.
 
 # COMMAND ----------
 # WHAT: removes the session-only source views after ingestion.
@@ -270,6 +302,9 @@ display(by_city)
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC **If it differs:** an empty availability list means the view was created before the bookings loaded; rerun the
+# MAGIC load cells, then this one. **Undo:** `99_pause_and_cleanup` drops the view; the tables are not affected.
+# MAGIC
 # MAGIC ### Your turn: change, then transfer
 # MAGIC 1. In the PySpark cell, change `completed` to `scheduled`. **Predict** how the result changes, then run it.
 # MAGIC 2. Exercise 1.1: write the SQL version of the completed-events-by-city query.
@@ -365,13 +400,23 @@ A8.links(("Events: schema, sample and history", "table", "events"),
 # MAGIC    do not carry over to the SQL editor, so the printed statement uses your real names.
 # MAGIC 4. On the PySpark city result, click **+** → **Visualization** → bar chart, city on X, events on Y.
 # MAGIC
-# MAGIC **Recap: explain in your own words**
-# MAGIC - Why can you stop compute without losing tables?
-# MAGIC - Why does a view show new bookings without being recreated?
-# MAGIC - What would go wrong if `attended IS NULL` were treated as `false` when training a model?
+# MAGIC **Recap: explain in your own words.** Write your answers in the two cells below.
+# MAGIC Also think about: why does a view show new bookings without being recreated?
 # MAGIC
 # MAGIC **Next:** `02_governance`, enforce who can see what. The analytics ladder then starts at
 # MAGIC `03_descriptive_analytics`.
+
+# COMMAND ----------
+# WHAT: asks why stopping compute does not lose your tables.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_1_a = """"""
+A8.reflect("1.a", my_answer_1_a)
+
+# COMMAND ----------
+# WHAT: asks what goes wrong if an unknown attendance is treated as a no-show.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_1_b = """"""
+A8.reflect("1.b", my_answer_1_b)
 
 # COMMAND ----------
 
@@ -384,4 +429,4 @@ print(f"SELECT * FROM {event_availability} ORDER BY available DESC")
 # LOOK FOR: the outcomes you can explain and your next lesson.
 A8.next_step(["Governed CSV volume", "Three typed Delta tables", "Availability view",
               "SQL/PySpark queries, a time-travel read and UI lineage inspection"],
-             "03_descriptive_analytics", "Describe the business with AI/BI and Genie")
+             "02_governance", "Control who can see what")

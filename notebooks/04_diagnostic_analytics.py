@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # A8 | 4. Diagnose a difference: why did it happen?
 # MAGIC **Where this sits:** diagnostic analytics, why a difference exists. It builds on the descriptive view from
-# MAGIC Module 3; prediction is Module 5 and prescriptive analytics is planned separately.
+# MAGIC Module 3; prediction is Module 5 and prescriptive analytics is Module 6.
 # MAGIC
 # MAGIC **Outcome:** explain why turnout or ratings differ between segments of events, say what is a pattern and
 # MAGIC what would be a cause, and test whether a gap is bigger than chance. **Nothing in this notebook proves

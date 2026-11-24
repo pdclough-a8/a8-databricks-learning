@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # A8 | 3. Predict attendance, track it and put it to work
+# MAGIC # A8 | 5. Predict attendance, track it and put it to work
 # MAGIC **Where this sits:** predictive analytics, what is likely to happen. Module 3 describes the snapshot;
 # MAGIC choosing the best action under constraints (prescriptive analytics) is taught next, in Module 6.
 # MAGIC
@@ -498,14 +498,15 @@ else:
 # MAGIC **UI alternative:** Serving → Create endpoint → choose this model and version → Small → scale to zero.
 # MAGIC Use exactly the name printed below, and add the two course tags (`a8learn_course`, `a8learn_tag`).
 # MAGIC Query it with the model's input example, look at its permissions and logs, then **delete** it.
-# MAGIC Stopping compute is not enough. Serving this scikit-learn model is not a GenAI call; Module 7 adds those.
+# MAGIC Stopping compute is not enough. Serving this scikit-learn model is not a GenAI call; `07_genai` adds those.
 # MAGIC
 # MAGIC ## Recap
 # MAGIC Name the unit of prediction, the time-based split, the baseline, the run, the model version, the alias and
 # MAGIC the batch output. **Which of these are fixed evidence, and which can move?**
 # MAGIC (The run, version and appended batch are fixed; the alias and forecast view change when you retrain.)
 # MAGIC
-# MAGIC **Stop here for Stage 1.** Modules 7–12 are planned, not yet supplied. Remove any serving endpoint now.
+# MAGIC **Next:** `06_prescriptive_analytics` uses these predictions to decide what to do.
+# MAGIC Remove any serving endpoint before you leave.
 
 # COMMAND ----------
 # WHAT: prints your endpoint's name and summarises what you built.

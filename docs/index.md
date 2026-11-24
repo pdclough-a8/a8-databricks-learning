@@ -112,7 +112,8 @@ Two model-free SQL exercises work with every gate closed. RAG, agents and tracin
 ## Workspace boundaries
 
 - **Free Edition:** existing `workspace.default`, serverless compute, quotas and feature restrictions apply.
-- **Azure paid:** existing `users.pclough`; no schema creation. Your administrator controls availability and grants.
+- **Paid (AWS, Azure or Google Cloud):** a catalog and schema you have been given; no schema creation. Your administrator controls availability and grants.
+- **Order of use:** start in Free Edition. If a step is blocked, repeat that lesson in the paid workspace (run `00_setup` and `01_lakehouse_data` there first). Each workspace has its own tables, models and settings.
 - Namespace all artefacts with your learner tag. Never use shared tables for experimentation.
 - Data, MLflow and model versions persist. Optional serving endpoints can bill after closing a notebook; delete them.
 - A model alias is not approval. A mask is not anonymisation. A completed notebook is not production validation.

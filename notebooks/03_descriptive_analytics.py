@@ -523,14 +523,14 @@ for question, query in genie_benchmarks.items():
 
 # WHAT: Check: compares your scheduled-tickets-by-city SQL with the supplied answer.
 # LOOK FOR: a hint for a blank answer, otherwise feedback about your result.
-answer_1b_1 = """"""
-A8.check("3.1", answer_1b_1)
+answer_3_1 = """"""
+A8.check("3.1", answer_3_1)
 
 # COMMAND ----------
 # WHAT: Check: compares your feedback-weighted topic ratings with the supplied answer.
 # LOOK FOR: a hint or feedback; averaging per-event averages is deliberately incorrect.
-answer_1b_2 = """"""
-A8.check("3.2", answer_1b_2)
+answer_3_2 = """"""
+A8.check("3.2", answer_3_2)
 
 # COMMAND ----------
 # MAGIC %md
@@ -568,7 +568,7 @@ A8.check("3.2", answer_1b_2)
 # MAGIC
 # MAGIC **Completion requires:** SQL reconciliation and both exercises, observed dashboard checkpoint D, and
 # MAGIC observed Genie checkpoint G, plus your explanations. Nothing automatically marks those UI checkpoints passed.
-# MAGIC If blocked, keep the checkpoint and continue to Module 2 without claiming full completion.
+# MAGIC If blocked, keep the checkpoint and continue to Module 4 without claiming full completion.
 # MAGIC **Next:** `04_diagnostic_analytics`, explain why a difference exists.
 # MAGIC
 # MAGIC ### Official references, checked 20 November 2026, not workspace acceptance

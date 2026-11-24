@@ -95,6 +95,14 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "Expected 12 scheduled events"):
             self.course.expect(False, "Expected 12 scheduled events.")
 
+    def test_reflect_needs_an_answer_and_every_reflection_is_used(self):
+        self.assertFalse(self.course.reflect("0.1", "  "))
+        self.assertTrue(self.course.reflect("0.1", "An event is one occasion."))
+        source = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "notebooks").glob("*.py"))
+        from a8learn.exercises import REFLECTIONS
+        for key in REFLECTIONS:
+            self.assertIn(f'A8.reflect("{key}"', source)
+
     def test_gate_defaults_to_no_and_preview_is_non_destructive(self):
         self.course.dbutils = Mock()
         self.course.dbutils.widgets.get.side_effect = RuntimeError("No widget")

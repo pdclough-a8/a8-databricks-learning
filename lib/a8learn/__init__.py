@@ -38,7 +38,7 @@ OBJECTS = {
 
 
 def derive_tag(email: str) -> str:
-    """Suggest a learner tag from an email address, e.g. pdclough1974@... -> pdclough1974."""
+    """Suggest a learner tag from an email address, e.g. jsmith1974@... -> jsmith1974."""
     local = re.sub(r"[^a-z0-9]", "", (email or "").split("@")[0].lower())
     if not local or not local[0].isalpha():
         local = "learner" + local
@@ -340,10 +340,12 @@ class Course:
 
     def card(self, title: str, body_html: str, tone: str = "info"):
         accent = {"info": "#1d2225", "ok": "#1b7f3b", "warn": "#a93614", "bad": "#b00020"}[tone]
+        # A8 text branding: ink panel, orange rule on top, tone colour on the left. Palette is provisional.
         self.html(
-            f'<div style="border-left:6px solid {accent};background:#f7f7f7;padding:12px 16px;'
-            f'margin:6px 0;font-family:Arial,Helvetica,sans-serif;color:#1d2225;line-height:1.5">'
-            f'<div style="font-weight:700;font-size:15px;margin-bottom:4px">{html.escape(title)}</div>'
+            f'<div style="border-top:3px solid #ff5b35;border-left:6px solid {accent};background:#f7f7f7;'
+            f'padding:12px 16px;margin:6px 0;font-family:Arial,Helvetica,sans-serif;color:#1d2225;line-height:1.5">'
+            f'<div style="font-weight:700;font-size:15px;margin-bottom:4px">'
+            f'<span style="color:#a93614">A8</span> | {html.escape(title)}</div>'
             f"{body_html}</div>"
         )
 
@@ -415,6 +417,21 @@ class Course:
             columns = list(answer.columns)
             return columns, [tuple(r) for r in answer.collect()]
         return ["value"], [(answer,)]
+
+    def reflect(self, reflection_id: str, answer: str = ""):
+        """Ask for an answer in the learner's own words, then show a model answer to compare with."""
+        item = exercises.get_reflection(reflection_id)
+        if not (answer or "").strip():
+            self.card(f"{reflection_id}: in your own words",
+                      f"<p>{html.escape(item['question'])}</p>"
+                      "<p>Write one or two sentences between the quotes above, then run this cell again.</p>",
+                      tone="warn")
+            return False
+        self.card(f"{reflection_id}: compare",
+                  f"<p><b>Your answer:</b> {html.escape(answer.strip())}</p>"
+                  f"<p><b>One good answer:</b> {html.escape(item['model'])}</p>"
+                  "<p>Different wording is fine. Check that you have the same idea.</p>", tone="ok")
+        return True
 
     def solution(self, exercise_id: str):
         ex = exercises.get(exercise_id)

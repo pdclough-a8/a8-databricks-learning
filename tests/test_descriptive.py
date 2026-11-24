@@ -164,7 +164,7 @@ class DescriptiveTests(unittest.TestCase):
         self.assertEqual(sum(row["event_status"] == "scheduled" for row in actual.rows), 12)
         # The entire Python source, including real A8.check in instructor mode, executed.
         self.assertTrue(self.course.test_with_solutions)
-        self.assertIn("answer_1b_2", self.namespace)
+        self.assertIn("answer_3_2", self.namespace)
 
     def test_default_no_skips_write_and_stops_at_require(self):
         with self.assertRaisesRegex(RuntimeError, "Missing prerequisites: a8_offline8_event_metrics"):

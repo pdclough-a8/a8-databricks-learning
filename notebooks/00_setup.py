@@ -7,24 +7,82 @@
 # MAGIC - a notebook running on serverless compute
 # MAGIC - a schema you know you can write to
 # MAGIC - saved settings that every later lesson reloads automatically
+# MAGIC - a plain-English picture of the business and the four kinds of analytics the course teaches
 # MAGIC
-# MAGIC Allow 30–45 minutes. Later lessons take about an hour each. You do not need Python installed on your laptop.
+# MAGIC Allow 45–60 minutes. Later lessons take about an hour each. You do not need Python installed on your laptop,
+# MAGIC and you do not need to know the events or analytics vocabulary: this notebook explains it.
+# MAGIC
+# MAGIC ## Which workspace? Start on Free, fall back to paid
+# MAGIC This course is built to run in **both** a **Databricks Free Edition** workspace and a **paid** workspace
+# MAGIC (AWS, Azure or Google Cloud). Clone this repository into each one you have.
+# MAGIC 1. **Start in Free Edition.** It costs nothing, and the lessons are written for it first.
+# MAGIC 2. **If a step is blocked** (a feature is missing, a quota is reached or a permission is refused), do not
+# MAGIC    work around it. Note the lesson and cell, then repeat that lesson in your **paid** workspace.
+# MAGIC 3. **Each workspace is separate.** Tables, models and saved settings do not move between them. In the paid
+# MAGIC    workspace, run `00_setup`, then `01_lakehouse_data`, then any earlier lesson the one you need relies on
+# MAGIC    (each notebook says what it needs), then the lesson that was blocked. The data is synthetic and ships in
+# MAGIC    this repository, so there is nothing to export.
+# MAGIC 4. **Paid workspaces may cost money and are usually managed by an administrator.** Ask before you create
+# MAGIC    anything, use only a schema you have been given, and read each lesson's cost notes first.
+# MAGIC 5. Never copy credentials, tokens or real customer data between workspaces.
+# MAGIC
+# MAGIC ## The business in plain English
+# MAGIC **A8 Events** is a fictional company that runs training events: workshops, briefings and forums on AI, data
+# MAGIC engineering, analytics and leadership. Events are held in person (Leeds, Manchester, London, Bristol), online
+# MAGIC or both. All of the data is invented and frozen at **20 November 2026**, so every learner sees the same numbers.
+# MAGIC
+# MAGIC Three tables describe the business. Each row is one thing:
+# MAGIC
+# MAGIC | Table | One row is… | Examples of columns |
+# MAGIC |---|---|---|
+# MAGIC | `events` | one event we run | city, date, **capacity** (seats), price, status |
+# MAGIC | `bookings` | one customer order for an event | tickets, ticket type, status, whether they attended |
+# MAGIC | `feedback` | one comment left after an event | rating from 1 to 5, comment text |
+# MAGIC
+# MAGIC Words you will meet, and what they mean here:
+# MAGIC - **Capacity:** the number of seats at an event. Selling more tickets than capacity is **overbooking**.
+# MAGIC - **Booking and ticket:** a booking is one order. It can hold several **tickets**, and each ticket is a seat.
+# MAGIC   To count seats taken, count tickets, not bookings.
+# MAGIC - **Confirmed and cancelled:** a cancelled booking gives its seats back, so do not count it as taking one.
+# MAGIC - **Completed and scheduled:** a completed event has happened; a scheduled event is still to come.
+# MAGIC - **Attended and no-show:** after a completed event we know who turned up. A **no-show** booked but did not
+# MAGIC   come. For a scheduled event this is **unknown**, which is not the same as no-show.
+# MAGIC - **Lead time:** how many days before the event the booking was made.
+# MAGIC
+# MAGIC ## The four questions analytics answers
+# MAGIC Analytics is using data to support a decision. It helps to know which question you are asking.
+# MAGIC
+# MAGIC | Kind | Question | A8 Events example | Lesson |
+# MAGIC |---|---|---|---|
+# MAGIC | **Descriptive** | What happened, or what is booked? | How many seats are sold for next month's events? | 3 |
+# MAGIC | **Diagnostic** | Why did it happen? | Why do some cities have more no-shows? | 4 |
+# MAGIC | **Predictive** | What is likely to happen? | How many of the people booked will turn up? | 5 |
+# MAGIC | **Prescriptive** | What should we do? | How many extra tickets can we safely sell? | 6 |
+# MAGIC
+# MAGIC Each question builds on the one before. Lessons 1 and 2 prepare the data and control access. Lesson 7 adds
+# MAGIC generative AI to read feedback comments. Databricks is the subject of the course: the business case gives the
+# MAGIC features something real to work on, and each lesson explains the analytics idea before using it.
 # MAGIC
 # MAGIC ## The journey
-# MAGIC You run **A8 Events**. Across the course you will:
-# MAGIC 1. load event, booking and feedback data into governed Delta tables (Module 1)
-# MAGIC 2. describe the business with an AI/BI dashboard and check Genie answers (Module 3)
-# MAGIC 3. protect customer contact details (Module 2)
-# MAGIC 4. predict who will turn up (Module 5)
-# MAGIC 5. add GenAI functions, retrieval, tools and an app (Modules 7–12, planned; not needed yet)
+# MAGIC 1. `01_lakehouse_data`: load events, bookings and feedback into governed Delta tables
+# MAGIC 2. `02_governance`: protect customer contact details
+# MAGIC 3. `03_descriptive_analytics`: describe the business with an AI/BI dashboard and Genie
+# MAGIC 4. `04_diagnostic_analytics`: find out why a difference exists
+# MAGIC 5. `05_predictive_ml`: predict who will turn up, and track the model
+# MAGIC 6. `06_prescriptive_analytics`: decide how many tickets to sell and meals to order
+# MAGIC 7. `07_genai` (optional): read feedback comments with a foundation model
+# MAGIC 8. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.
 # MAGIC - Every code cell starts with two comments: **WHAT** it does, and what to **LOOK FOR** in its output.
 # MAGIC - **Predict** prompts ask you to guess a result before running. A wrong guess is useful: it shows what to look
 # MAGIC   at.
+# MAGIC - **If it differs / Undo** notes sit under cells that write something, so you know what to do if the result is
+# MAGIC   not what is described, and how to reverse it.
+# MAGIC - **In your own words** cells ask for one or two sentences, then show a model answer to compare with.
 # MAGIC - Lines starting `A8.` call small course helpers that handle names and safety checks, so the Databricks
-# MAGIC   code stays in view. Module 1 explains them.
+# MAGIC   code stays in view. Lesson 1 explains them.
 # MAGIC - Run one cell at a time with **Shift+Enter**. Avoid **Run all** until you have read a lesson's cost notes.
 # MAGIC
 # MAGIC ## Your Git folder, and getting updates
@@ -46,8 +104,11 @@
 # MAGIC 3. Run the following setup cells, one at a time, until the seven widgets appear.
 # MAGIC
 # MAGIC Which catalog and schema to use:
-# MAGIC - **Free Edition:** `workspace.default`, or another schema you can write to.
-# MAGIC - **Azure paid workspace:** `users.pclough`. Do not create schemas there.
+# MAGIC - **Free Edition:** `workspace` and `default` are filled in for you. Keep them, or use another schema you can
+# MAGIC   write to.
+# MAGIC - **Paid workspace:** replace both widgets with a catalog and schema **you have been given permission to write
+# MAGIC   to**, for example your own user schema. Ask your administrator if you are not sure. Do not create catalogs or
+# MAGIC   schemas unless they have asked you to.
 # MAGIC
 # MAGIC Using a classic cluster instead? Choose Databricks Runtime 16.4 LTS or later with Unity Catalog.
 # MAGIC If serverless or a permission is missing, ask your admin. Never borrow someone else's credentials.
@@ -96,16 +157,16 @@ derive_tag = course_library.derive_tag
 
 # COMMAND ----------
 # WHAT: reads your identity and workspace for suitable widget defaults.
-# LOOK FOR: no output; Azure and Free Edition use different suggested namespaces.
+# LOOK FOR: no output; the widgets below suggest your tag from your sign-in name.
 user = spark.sql("SELECT current_user()").first()[0]
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
-is_azure = "azuredatabricks.net" in host
 
 # COMMAND ----------
 # WHAT: creates the seven saved-settings input boxes.
 # LOOK FOR: widgets above the notebook; edit them before validating your choices.
-dbutils.widgets.text("catalog", "users" if is_azure else "workspace", "1 Catalog")
-dbutils.widgets.text("schema", "pclough" if is_azure else "default", "2 Existing schema")
+# These are the Free Edition names. On a paid workspace, replace both with a schema you may write to.
+dbutils.widgets.text("catalog", "workspace", "1 Catalog")
+dbutils.widgets.text("schema", "default", "2 Existing schema")
 dbutils.widgets.text("tag", derive_tag(user), "3 Your unique learner tag")
 dbutils.widgets.text("config_profile", "default", "4 Saved settings profile")
 dbutils.widgets.text("chat_model", "databricks-meta-llama-3-3-70b-instruct", "5 Chat endpoint (later)")
@@ -117,7 +178,7 @@ print("Widgets are above the notebook. Edit them, then run the validation cells 
 # MAGIC %md
 # MAGIC ## 2. Choose your namespace (10 minutes)
 # MAGIC **Unity Catalog** is Databricks' governance layer. It names every table, view, file volume and model with
-# MAGIC three parts: **catalog.schema.object**, for example `workspace.default.a8_pdclough_events`.
+# MAGIC three parts: **catalog.schema.object**, for example `workspace.default.a8_jsmith_events`.
 # MAGIC - A **catalog** is the top level, often one per environment or team.
 # MAGIC - A **schema** groups related objects and is where permissions are usually granted.
 # MAGIC - Your **learner tag** goes into every object name, so your `events` table never collides with anyone else's.
@@ -213,6 +274,23 @@ else:
 if run_write_probe:
     A8.expect(probe_count == 0, "The newly created probe must be readable and contain no rows.")
     print("CREATE TABLE and SELECT worked.")
+
+# COMMAND ----------
+# MAGIC %md
+# MAGIC ### In your own words
+# MAGIC Answer these two questions from the business primer above, then run each cell to compare.
+
+# COMMAND ----------
+# WHAT: asks you to explain event, booking and ticket in your own words.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_0_1 = """"""
+A8.reflect("0.1", my_answer_0_1)
+
+# COMMAND ----------
+# WHAT: asks you to match a business question to a kind of analytics.
+# LOOK FOR: a prompt while blank; after you write, your answer beside a model answer.
+my_answer_0_2 = """"""
+A8.reflect("0.2", my_answer_0_2)
 
 # COMMAND ----------
 # MAGIC %md

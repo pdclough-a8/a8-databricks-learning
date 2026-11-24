@@ -82,7 +82,7 @@ Not yet validated:
 | Scenario | Status |
 |---|---|
 | Rendered notebook UI and UI-route steps | Blocked: browser pane signed into a different Databricks account |
-| Azure paid (`users.pclough`) | Not tested: profile needs user OAuth reauthentication |
+| Paid workspace (Azure) | Not tested: profile needs user OAuth reauthentication |
 | A learner editing exercise answers interactively | Not tested; checker verified with supplied solutions and offline wrong-answer cases |
 | Ownership conflict with a second real user | Not tested; offline fakes only |
 

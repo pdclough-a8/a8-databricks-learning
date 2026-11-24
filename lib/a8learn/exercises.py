@@ -193,3 +193,37 @@ def get(exercise_id):
         return EXERCISES[exercise_id]
     except KeyError:
         raise KeyError(f"Unknown exercise {exercise_id!r}; choose from {', '.join(EXERCISES)}") from None
+
+
+# Short "in your own words" prompts. The learner writes first; the model answer is shown afterwards.
+REFLECTIONS = {
+    "0.1": {
+        "question": "What is the difference between an event, a booking and a ticket?",
+        "model": "An event is one occasion we run. A booking is one customer order for an event. "
+                 "A booking can hold several tickets, so tickets, not bookings, measure seats taken.",
+    },
+    "0.2": {
+        "question": "Which of descriptive, diagnostic, predictive and prescriptive analytics answers "
+                    "'how many people should we expect to turn up next week?'",
+        "model": "Predictive. Descriptive says what has happened, diagnostic says why, "
+                 "predictive says what is likely to happen, and prescriptive says what to do about it.",
+    },
+    "1.a": {
+        "question": "Why can you stop the compute without losing your tables?",
+        "model": "Tables and files live in Unity Catalog storage. Compute only reads and writes them, "
+                 "so stopping it removes nothing.",
+    },
+    "1.b": {
+        "question": "What would go wrong if an empty attended value (not yet known) were treated as false "
+                    "(did not attend)?",
+        "model": "Future bookings would count as no-shows. Counts and any model trained on them would be wrong, "
+                 "because 'we do not know yet' is not the same as 'they did not come'.",
+    },
+}
+
+
+def get_reflection(reflection_id):
+    try:
+        return REFLECTIONS[reflection_id]
+    except KeyError:
+        raise KeyError(f"Unknown reflection {reflection_id!r}; choose from {', '.join(REFLECTIONS)}") from None
