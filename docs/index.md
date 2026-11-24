@@ -45,7 +45,7 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 8a. Embeddings | Vectors by hand (bag of words, cosine similarity), keyword versus similarity search, real embeddings from a Foundation Model endpoint behind a default-no switch; nothing written | Supplied; offline checked, no live validation |
 | 8b. RAG by hand | A fictional nine-document knowledge base copied to your volume, chunked by section, stored in a Delta table, retrieved by word overlap and by embeddings, a grounded and cited prompt, a refusal case and a hit-at-k retrieval evaluation; the embedding and chat requests sit behind default-no switches | Supplied; offline checked, no live validation |
 | 8c. Vector Search | A Vector Search endpoint and Delta Sync index with managed embeddings over the chunk table, text queries, hit-at-k against the word-overlap baseline, a grounded answer from the managed retriever, and a switch that deletes the billable endpoint; each create and delete step is default-no | Supplied; offline checked, no live validation |
-| 9. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
+| 9. Agents | Two read-only tools (document search, seats left) with allow-list and input checks, an agent loop with a step cap and a trace, a rule-based decider as baseline, then a language model as decider (12-request budget, default-no switch) scored on five tasks | Supplied; offline checked, no live validation |
 | 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
 | 11. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
 | 12. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dashboard deployment and programmatic Genie creation, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
@@ -57,7 +57,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.

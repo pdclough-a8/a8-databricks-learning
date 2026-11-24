@@ -243,6 +243,28 @@ WHERE doc_name LIKE 'venue-%' GROUP BY doc_name ORDER BY doc_name""",
                    "and each venue document has the same number of sections here.",
         "ordered": True,
     },
+    "9.1": {
+        "task": "Return event_name, city and available for scheduled events in London or Manchester, ordered by "
+                "available from highest to lowest, then event_name, then city.",
+        "hint": "Filter status = 'scheduled' and city IN ('London', 'Manchester'). Read from "
+                "IDENTIFIER(a8_event_availability).",
+        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND city IN ('London', 'Manchester')
+ORDER BY available DESC, event_name, city""",
+        "explain": "This is the kind of query a seat tool runs. The view already joins bookings to capacity, so the "
+                   "tool only filters and sorts. Keeping it a read of one view is part of what makes it safe.",
+        "ordered": True,
+    },
+    "9.2": {
+        "task": "Return city and open_events (the number of scheduled events with available greater than 0) for "
+                "each city that has at least one, ordered by open_events from highest to lowest, then city.",
+        "hint": "Filter status = 'scheduled' AND available > 0, then GROUP BY city and count(*).",
+        "solution": """SELECT city, count(*) AS open_events FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND available > 0 GROUP BY city ORDER BY open_events DESC, city""",
+        "explain": "Filtering before grouping counts only events with seats left. An agent asked which city has the "
+                   "most open events would need exactly this query, and you can check its answer yourself.",
+        "ordered": True,
+    },
 }
 
 
@@ -365,6 +387,18 @@ REFLECTIONS = {
         "question": "Why must you delete the endpoint even though the chunk table and documents are kept?",
         "model": "The endpoint is the compute that hosts the index and it bills for as long as it exists, whether or "
                  "not anyone queries it. The table is only stored data, and the index can be rebuilt from it.",
+    },
+    "9.a": {
+        "question": "Why does the agent call tools through run_tool instead of calling the functions directly?",
+        "model": "The decider's choice is untrusted: a model can name a tool that does not exist or send odd inputs. "
+                 "run_tool enforces the allow-list and input checks and turns failures into messages, so a wrong "
+                 "choice cannot do more than the tools permit.",
+    },
+    "9.b": {
+        "question": "What can an agent do that the RAG answer in 8b cannot, and what extra risk does that bring?",
+        "model": "An agent can choose among sources and act on live data, such as checking seat numbers, and combine "
+                 "several steps. Because it acts, a wrong choice has consequences, so it needs limits, read-only or "
+                 "approved tools, and a trace to review.",
     },
 }
 

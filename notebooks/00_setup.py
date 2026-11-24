@@ -74,7 +74,8 @@
 # MAGIC 8. `08a_embeddings` (optional): find comments by meaning with embeddings
 # MAGIC 9. `08b_rag` (optional): answer customer questions from our own documents with retrieval
 # MAGIC 10. `08c_vector_search` (optional): a managed Vector Search index; the endpoint bills until deleted
-# MAGIC 11. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 11. `09_agents` (optional): an agent that chooses between two read-only tools, with a step cap and a trace
+# MAGIC 12. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

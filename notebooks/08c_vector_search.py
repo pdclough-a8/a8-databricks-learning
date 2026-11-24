@@ -465,4 +465,4 @@ A8.reflect("8c.b", my_answer_8c_b)
 A8.next_step(["A Vector Search endpoint and Delta Sync index over your chunk table",
               "Text queries, scored with hit at k against word overlap",
               "A grounded answer using the managed retriever", "A cleanup that removes the billable endpoint"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "09_agents", "Build an agent that chooses its own tools")

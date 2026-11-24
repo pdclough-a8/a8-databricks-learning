@@ -137,6 +137,22 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 9: Agents
+
+**Supplied, offline checked, not live validated.**
+
+| Check | Evidence |
+|---|---|
+| `tests/test_agents.py` | The notebook runs against SQLite copies of the shipped events, bookings and documents, with `ai_query` replaced by a scripted stand-in |
+| Gates | The default run makes no model request and executes no write; the one model step is a default-no switch with a fixed 12-request budget |
+| Guardrails | Unknown tools, wrong inputs, extra inputs and failing tools become error messages; a decider that never finishes is stopped at four tool calls |
+| Model replies | Treated as untrusted text: only valid JSON of the expected shape is acted on; errors and chatter stop the task without a crash |
+| Tool input | Travels as a SQL parameter; a hostile string returns no rows and never appears in the statement |
+| Exercises 9.1, 9.2 | The solutions equal independent Python results; blank and naive answers fail |
+
+Not validated offline: whether a real model follows the JSON format, picks the right tool or refuses the weather
+question; quota; notebook rendering.
+
 ## Module 8c: Vector Search
 
 **Supplied, offline checked, not live validated** until the live record below is added.

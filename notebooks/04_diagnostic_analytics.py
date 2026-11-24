@@ -311,8 +311,9 @@ overall_gap = spark.sql(f"""SELECT round(100.0 * (
   - 1.0 * sum(CASE WHEN format <> 'online' THEN attended_tickets END)
     / sum(CASE WHEN format <> 'online' THEN known_outcome_tickets END)), 1) AS gap_pp
 FROM {event_metrics} WHERE event_status = 'completed'""").first()[0]
+overall_gap = float(overall_gap)  # Spark returns a Decimal
 split = spark.sql(attendance_total_sql).first()
-A8.expect(abs(split["total_gap"] - overall_gap) < 0.05,
+A8.expect(abs(float(split["total_gap"]) - overall_gap) < 0.05,
           "The mix and rate effects must add up to the overall attendance gap.")
 A8.expect(abs(split["mix_effect"] + split["rate_effect"] - split["total_gap"]) < 0.15,
           "Rounded mix and rate effects must match the total gap to rounding.")

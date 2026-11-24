@@ -289,9 +289,12 @@ print("Approved." if embed_python_approved else "Not approved yet: set the widge
 # LOOK FOR: no output if approved; otherwise a note that the step was skipped. Do not retry errors in a loop.
 python_vectors = None
 if embed_python_approved:
-    response = WorkspaceClient().serving_endpoints.query(name=EMBEDDING_ENDPOINT, input=texts)
-    ordered = sorted(response.data, key=lambda item: item.index)
-    python_vectors = {text: np.array(item.embedding, dtype=float) for text, item in zip(texts, ordered, strict=True)}
+    try:
+        response = WorkspaceClient().serving_endpoints.query(name=EMBEDDING_ENDPOINT, input=texts)
+        ordered = sorted(response.data, key=lambda item: item.index)
+        python_vectors = {t: np.array(i.embedding, dtype=float) for t, i in zip(texts, ordered, strict=True)}
+    except Exception as error:  # the SQL route above is the reference; this route is optional
+        print(f"The SDK route did not complete ({type(error).__name__}). The SQL route above gives the same result.")
 else:
     print("Python route skipped. The SQL route above gives the same result.")
 

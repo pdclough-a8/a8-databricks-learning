@@ -1,7 +1,7 @@
-"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-8c and the Python routes. Not a unit test.
+"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-9 and the Python routes. Not a unit test.
 
 Run with Python and the Databricks SDK installed, using the browser OAuth profile a8-free. Uploads the course to a
-unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b and 08c as serverless notebook tasks under its
+unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b, 08c and 09 as serverless notebook tasks under its
 own learner tag and saved-settings profile, then always runs scoped cleanup, deletes the uploaded folder and its
 settings file, and writes the notebook outputs to .local-validation/stage2-validation.txt (git-ignored).
 
@@ -26,7 +26,7 @@ PROFILE = "val8cfg"
 
 def upload(w, remote):
     w.workspace.mkdirs(remote)
-    for folder in ["lib", "data/raw", "data/docs", "notebooks"]:
+    for folder in ["lib", "data/raw", "data/docs", "dashboards", "notebooks"]:
         for source in (ROOT / folder).rglob("*"):
             if not source.is_file() or "__pycache__" in source.parts:
                 continue
@@ -54,6 +54,7 @@ def build_tasks(remote, tag, wait_minutes):
         ("vector", "08c_vector_search", {"create_vs_endpoint": "yes", "create_vs_index": "yes", "ask_model_vs": "yes",
                                          "delete_vector_search": "yes", "wait_minutes": str(wait_minutes)},
          wait_minutes * 60 * 2 + 1800),
+        ("agents", "09_agents", {"ask_agent": "yes"}, 1800),
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:
@@ -63,7 +64,7 @@ def build_tasks(remote, tag, wait_minutes):
                                        base_parameters={**common, **extra}),
             depends_on=[TaskDependency(task_key=tasks[-1].task_key)] if tasks else None,
             run_if=RunIf.ALL_DONE if tasks and key != "data" else None, timeout_seconds=timeout))
-    for key, previous in [("cleanup", "vector"), ("cleanup_again", "cleanup")]:
+    for key, previous in [("cleanup", "agents"), ("cleanup_again", "cleanup")]:
         tasks.append(SubmitTask(
             task_key=key,
             notebook_task=NotebookTask(
