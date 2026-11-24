@@ -20,7 +20,8 @@
 # MAGIC default-no switch; if they are blocked, repeat that step in your paid workspace.
 # MAGIC
 # MAGIC **Cost boundary:** no table, endpoint or file is created. The tools only **read**. The model step sends at
-# MAGIC most **12** short chat requests (a fixed budget in the code). Inference uses quota on Free and can cost money
+# MAGIC most **12** short chat requests (a fixed budget in the code), plus an optional second set of at most 12
+# MAGIC for native tool-calling. Inference uses quota on Free and can cost money
 # MAGIC on a paid workspace.
 # MAGIC
 # MAGIC ## Agents in plain English
@@ -66,6 +67,7 @@ from collections import Counter
 
 import numpy as np
 from a8learn import sql_string
+from databricks.sdk import WorkspaceClient
 
 # COMMAND ----------
 
@@ -454,15 +456,116 @@ else:
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ## 7. Optional: the model's own tool-calling
+# MAGIC Our decider asks for JSON in the prompt and parses it. Many chat models also have **native tool-calling**:
+# MAGIC you send the tools as structured definitions and the model replies with a structured tool request, so no JSON
+# MAGIC parsing from free text. This is the route production agents use. Not every endpoint supports it, and we have
+# MAGIC **not confirmed it on Free Edition**, so this step is optional and reports plainly if it fails.
+# MAGIC
+# MAGIC The loop, tools, guardrails and scoring do not change; only the decider does. The call uses the endpoint's
+# MAGIC OpenAI-compatible REST interface through the Databricks SDK (`api_client`), which needs no extra package. It
+# MAGIC has its own budget of **12** requests and its own default-no switch.
+# MAGIC
+# MAGIC **If it differs:** an error about unknown fields or tools means this endpoint does not support tool-calling;
+# MAGIC try another chat endpoint from your Serving page, or skip the step. **Undo:** nothing is created.
+
+# COMMAND ----------
+
+# WHAT: defines the tool descriptions in the standard function format, the conversation builder and the reply reader.
+# LOOK FOR: no output; parse_native turns a structured reply into the same decision shape the loop already uses.
+NATIVE_MAX_CALLS = 12
+native_calls = {"used": 0, "errors": []}
+TOOL_SPECS = [{"type": "function", "function": {
+    "name": name, "description": tool["description"],
+    "parameters": {"type": "object", "properties": {tool["input"]: {"type": "string"}},
+                   "required": [tool["input"]]}}} for name, tool in TOOLS.items()]
+
+
+def native_messages(task, trace):
+    messages = [{"role": "system", "content": "You are an assistant for A8 Events customers. Use ONLY the tools and "
+                 f"what they return; never guess. Cite document names. If no tool can answer, reply: {REFUSAL}"},
+                {"role": "user", "content": task}]
+    for i, step in enumerate(trace):
+        messages.append({"role": "assistant", "content": None, "tool_calls": [{
+            "id": f"call_{i}", "type": "function",
+            "function": {"name": step["tool"], "arguments": json.dumps(step["args"])}}]})
+        messages.append({"role": "tool", "tool_call_id": f"call_{i}",
+                         "content": json.dumps(step.get("result", step.get("error")))[:1500]})
+    return messages
+
+
+def parse_native(reply):
+    try:
+        message = reply["choices"][0]["message"]
+    except (KeyError, IndexError, TypeError):
+        return {"error": "the reply had no message"}
+    calls = message.get("tool_calls") or []
+    if calls:
+        try:
+            return {"tool": calls[0]["function"]["name"], "args": json.loads(calls[0]["function"]["arguments"])}
+        except (KeyError, TypeError, json.JSONDecodeError):
+            return {"error": "the tool request was malformed"}
+    return {"final": message.get("content") or ""}
+
+
+def native_decide(task, trace):
+    if native_calls["used"] >= NATIVE_MAX_CALLS:
+        return {"error": "the native request budget is used up"}
+    native_calls["used"] += 1
+    body = {"messages": native_messages(task, trace), "tools": TOOL_SPECS, "max_tokens": 300, "temperature": 0.0}
+    try:
+        reply = WorkspaceClient().api_client.do("POST", f"/serving-endpoints/{CHAT_ENDPOINT}/invocations", body=body)
+    except Exception as error:  # unsupported endpoint, quota or permissions: report it, do not crash
+        native_calls["errors"].append(f"{type(error).__name__}: {str(error)[:200]}")
+        return {"error": "the native request failed"}
+    return parse_native(reply)
+
+# COMMAND ----------
+
+# WHAT: Check: the reply reader accepts a tool request and a final answer, and rejects a broken reply.
+# LOOK FOR: three pass messages; no model request is sent.
+A8.expect(parse_native({"choices": [{"message": {"tool_calls": [{"function": {
+    "name": "search_docs", "arguments": '{"query": "refund"}'}}]}}]}) == {"tool": "search_docs",
+                                                                       "args": {"query": "refund"}},
+          "A structured tool request becomes a tool decision.")
+A8.expect(parse_native({"choices": [{"message": {"content": "done"}}]}) == {"final": "done"},
+          "A plain message becomes a final answer.")
+A8.expect("error" in parse_native({"detail": "no"}), "A reply without a message is rejected.")
+
+# COMMAND ----------
+
+# WHAT: asks for your approval before any native tool-calling request.
+# LOOK FOR: a native_tools widget above the notebook, defaulting to no. Set it to yes, then rerun this cell.
+native_approved = A8.gate("native_tools", "Send up to 12 tool-calling requests (cost/quota)?")
+print("Approved." if native_approved else "Not approved yet: set the widget to yes and rerun this cell.")
+
+# COMMAND ----------
+
+# WHAT: runs the same five tasks with native tool-calling and scores them against the other deciders.
+# LOOK FOR: one line per task and the scores, or a plain note that this endpoint did not support it.
+native_results = None
+if native_approved:
+    native_results = evaluate(native_decide)
+    report("Native", native_results)
+    print(f"Requests used: {native_calls['used']} of {NATIVE_MAX_CALLS}")
+    if native_calls["errors"]:
+        print("First error:", native_calls["errors"][0])
+        print("Native tool-calling did not work on this endpoint; the JSON decider above is the fallback.")
+else:
+    print("Native tool-calling skipped. Nothing else depends on it.")
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC Read the misses before trusting the scores. When the model gets a task wrong, find which part failed: the
 # MAGIC **decision** (wrong tool or inputs), the **tool** (right call, poor result, as when word overlap ranks
 # MAGIC the wrong section first for "take over my seat") or the **answer** (a good result written up badly). Each has
 # MAGIC a different fix: a better description, a better tool, or a stricter prompt. The trace is how you find out.
 # MAGIC
 # MAGIC **What this is not yet:** this agent runs in your notebook. Putting an agent behind an endpoint, with
-# MAGIC versions, access control and monitoring, is Module 12. The same tools and loop carry over.
+# MAGIC versions, access control and monitoring, is Module 12. The same tools and loop carry over, and so does the
+# MAGIC native tool-calling you may have tried above.
 # MAGIC
-# MAGIC ## 7. Your turn
+# MAGIC ## 8. Your turn
 # MAGIC The seat tool runs one query. These two exercises are queries a tool like it could run, in SQL on the
 # MAGIC availability view, and need **no model**.
 # MAGIC 1. Exercise 9.1: scheduled events in London or Manchester with their seats left, fullest first.
@@ -487,12 +590,12 @@ A8.check("9.2", answer_9_2)
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 8. Recap, explain before you move on
+# MAGIC ## 9. Recap, explain before you move on
 # MAGIC Write your answers in the two cells below. Also think about: which of the four guardrails would matter most
 # MAGIC if you added a tool that could **cancel a booking**, and what extra control would you want first?
 # MAGIC
 # MAGIC **Completion requires:** both exercises, the checks above, your explanations and, if you approved it, the
-# MAGIC model step. Skipping or being blocked on the model step is fine: record it, and do not count that outcome as
+# MAGIC model steps. Skipping or being blocked on a model step is fine: record it, and do not count that outcome as
 # MAGIC complete.
 # MAGIC
 # MAGIC **Pause:** this lesson created nothing, so there is nothing extra to clean up.

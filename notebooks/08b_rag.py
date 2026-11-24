@@ -26,7 +26,8 @@
 # MAGIC endpoint or
 # MAGIC index is created. Two model steps sit behind default-no switches: embedding about 40 short texts, then **two**
 # MAGIC chat prompts. Inference uses quota on Free and can cost money on a paid workspace, so ask before you approve
-# MAGIC it there. Nothing here has been live validated yet.
+# MAGIC it there. This lesson was
+# MAGIC validated live on Free Edition on 24 November 2026 (embeddings, one cited answer, one refusal).
 # MAGIC
 # MAGIC ## RAG in plain English
 # MAGIC A customer asks: *can I give my ticket to a colleague?* A language model has never seen A8's policies. Asked

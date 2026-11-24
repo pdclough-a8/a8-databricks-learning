@@ -54,7 +54,7 @@ def build_tasks(remote, tag, wait_minutes):
         ("vector", "08c_vector_search", {"create_vs_endpoint": "yes", "create_vs_index": "yes", "ask_model_vs": "yes",
                                          "delete_vector_search": "yes", "wait_minutes": str(wait_minutes)},
          wait_minutes * 60 * 2 + 1800),
-        ("agents", "09_agents", {"ask_agent": "yes"}, 1800),
+        ("agents", "09_agents", {"ask_agent": "yes", "native_tools": "yes"}, 1800),
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:

@@ -223,7 +223,7 @@ class RagTests(unittest.TestCase):
         for forbidden in forbidden_text:
             self.assertNotIn(forbidden, SOURCE)
         text = SOURCE.replace("# MAGIC ", "")
-        phrases = ("**Where this sits:**", "Free first", "Terms in this lesson", "live validated yet", "If it differs")
+        phrases = ("**Where this sits:**", "Free first", "Terms in this lesson", "validated live", "If it differs")
         for phrase in phrases:
             self.assertIn(phrase, text)
         self.assertEqual(len(re.findall(r'A8\.gate\("', SOURCE)), 2)

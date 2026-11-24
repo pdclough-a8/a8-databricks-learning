@@ -26,12 +26,12 @@ validated**. Each model request needs separate approval and may use quota or inc
 need none. Nothing is written.
 
 Module **8a** (embeddings) turns the 27 distinct feedback comments into vectors, first by hand and then with a
-Foundation Model embedding endpoint, and compares keyword and similarity search. It is supplied and offline checked,
-**not live validated**. The embedding request needs your approval and writes nothing. RAG over documents follows in 8b.
+Foundation Model embedding endpoint, and compares keyword and similarity search. It is offline checked and its SQL
+route was validated live on Free Edition (the Python route was not). The embedding request needs your approval and writes nothing. RAG over documents follows in 8b.
 
 Module **8b** (RAG) answers customer questions from a fictional nine-document A8 Events knowledge base: it chunks the
 documents, retrieves by word overlap and by embeddings, builds a grounded, cited prompt and scores retrieval. It is
-supplied and offline checked, **not live validated**. It writes nine files and one table; the embedding and chat
+offline checked and validated live on Free Edition. It writes nine files and one table; the embedding and chat
 requests each need your approval. A managed Vector Search index follows in 8c.
 
 **Choose your route.** Every lesson works in SQL. Where the analysis could be done in Python, a `PYTHON ROUTE` cell
@@ -39,12 +39,12 @@ requests each need your approval. A managed Vector Search index follows in 8c.
 from those cells and answer exercises with a DataFrame; analysts can follow the SQL. See `00_setup`, "Choose your route".
 
 Module **8c** (Vector Search) creates a Vector Search endpoint and a managed Delta Sync index over the 8b chunk table,
-queries it, compares it with the hand-built search and ends by deleting both. It is supplied and offline checked, **not
-live validated**. The endpoint **bills while it exists** and can take 15 to 20 minutes to become usable, so each create
+queries it, compares it with the hand-built search and ends by deleting both. It is offline checked and validated live
+on Free Edition. The endpoint **bills while it exists** and can take 15 to 20 minutes to become usable, so each create
 and delete step needs your approval and `99_pause_and_cleanup` also removes them.
 
 Module **9** (agents) builds a small agent that chooses between two read-only tools, with a step cap and a trace. It
-needs the 8b chunk table, creates nothing, and its model step is one default-no switch. Supplied and offline checked,
+needs the 8b chunk table, creates nothing, and its two model steps (a JSON decider and an optional native tool-calling one) are default-no switches. Supplied and offline checked,
 **not live validated**.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.

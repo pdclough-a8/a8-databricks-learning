@@ -172,7 +172,7 @@ class EmbeddingTests(unittest.TestCase):
         for forbidden in ("saveAsTable", ".write", "A8.guard", "A8.run", "A8.sql", "mlflow", "CREATE ", "INSERT "):
             self.assertNotIn(forbidden, SOURCE)
         text = SOURCE.replace("# MAGIC ", "")
-        for phrase in ("**Where this sits:**", "Free first", "Terms in this lesson", "live validated yet"):
+        for phrase in ("**Where this sits:**", "Free first", "Terms in this lesson", "validated live"):
             self.assertIn(phrase, text)
         self.assertIn('A8.gate("embed_comments"', SOURCE)
 

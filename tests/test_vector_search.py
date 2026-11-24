@@ -236,7 +236,7 @@ class VectorSearchTests(unittest.TestCase):
         self.assertFalse([m for m in imported if m.startswith("pyspark")])
         self.assertEqual(len(re.findall(r'A8\.gate\("', SOURCE)), 4)
         text = SOURCE.replace("# MAGIC ", "")
-        phrases = ("**Where this sits:**", "Free first", "Terms in this lesson", "live validated yet", "If it differs",
+        phrases = ("**Where this sits:**", "Free first", "Terms in this lesson", "validated live", "If it differs",
                    "bills for as long as it exists")
         for phrase in phrases:
             self.assertIn(phrase, text)

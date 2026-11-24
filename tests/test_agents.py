@@ -12,6 +12,7 @@ import re
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,7 +93,7 @@ class AgentTests(unittest.TestCase):
         self.course = Course(Config("workspace", "default", "offline9", "synthetic@example.com", "https://example.com"),
                              answers="solutions")
 
-    def run_lesson(self, approve=False, reply=good_reply):
+    def run_lesson(self, approve=False, reply=good_reply, native=False, native_reply=None):
         self.spark = StandInSpark(self.course, reply)
         self.addCleanup(self.spark.db.close)
         self.course.spark = self.spark
@@ -102,8 +103,17 @@ class AgentTests(unittest.TestCase):
 
         namespace = {"A8": self.course, "spark": self.spark, "dbutils": Dbutils, "ROOT": ROOT,
                      "display": lambda *_: None}
+        self.native_requests = []
+
+        def do(method, path, body=None):
+            self.native_requests.append((method, path, body))
+            return native_reply(body)
+
+        fake_client = SimpleNamespace(api_client=SimpleNamespace(do=do))
+        approvals = {"ask_agent": approve, "native_tools": native}
         with patch.object(self.course, "require"), patch.object(self.course, "guard"), \
-             patch.object(self.course, "gate", lambda name, label: approve and name == "ask_agent"), \
+             patch("databricks.sdk.WorkspaceClient", return_value=fake_client), \
+             patch.object(self.course, "gate", lambda name, label: approvals[name]), \
              contextlib.redirect_stdout(io.StringIO()) as out:
             exec(compile(SOURCE, str(NOTEBOOK), "exec"), namespace)
         self.output = out.getvalue()
@@ -112,7 +122,9 @@ class AgentTests(unittest.TestCase):
     def test_default_run_calls_no_model_and_writes_nothing(self):
         namespace = self.run_lesson()
         self.assertEqual(self.spark.chat_calls, [])
+        self.assertEqual(self.native_requests, [])
         self.assertIsNone(namespace["model_results"])
+        self.assertIsNone(namespace["native_results"])
         self.assertEqual([q for q in self.spark.statements if q.lstrip().upper().startswith(WRITES)], [])
 
     def test_rule_agent_scores_as_the_lesson_describes(self):
@@ -183,6 +195,57 @@ class AgentTests(unittest.TestCase):
         self.assertIn("Model: tool choice 5/5", self.output)
         self.assertTrue(all(prompt.count("Task:") == 1 for prompt in self.spark.chat_calls))
 
+    @staticmethod
+    def native_model(body):
+        """A well-behaved tool-calling endpoint: one tool request, then a final answer from the tool result."""
+        messages = body["messages"]
+        task = messages[1]["content"]
+        if messages[-1]["role"] == "tool":
+            return {"choices": [{"message": {"content": "From the tool: " + messages[-1]["content"][:200]}}]}
+        if "weather" in task.lower():
+            return {"choices": [{"message": {"content": "I can't find that in the A8 Events documents."}}]}
+        if "Breakfast" in task or "Pipelines" in task:
+            name = "Analytics Breakfast" if "Breakfast" in task else "Pipelines in Practice"
+            call = ("check_availability", {"event_name": name})
+        else:
+            call = ("search_docs", {"query": task})
+        return {"choices": [{"message": {"content": None, "tool_calls": [
+            {"id": "x", "type": "function", "function": {"name": call[0], "arguments": json.dumps(call[1])}}]}}]}
+
+    def test_native_tool_calling_sends_structured_tools_and_is_scored(self):
+        namespace = self.run_lesson(native=True, native_reply=self.native_model)
+        self.assertEqual(self.spark.chat_calls, [])
+        self.assertLessEqual(len(self.native_requests), 12)
+        self.assertEqual(namespace["native_calls"]["used"], len(self.native_requests))
+        method, path, body = self.native_requests[0]
+        self.assertEqual((method, path),
+                         ("POST", "/serving-endpoints/databricks-meta-llama-3-3-70b-instruct/invocations"))
+        self.assertEqual([t["function"]["name"] for t in body["tools"]], ["search_docs", "check_availability"])
+        self.assertEqual(body["tools"][0]["function"]["parameters"]["required"], ["query"])
+        later = [b for _, _, b in self.native_requests if b["messages"][-1]["role"] == "tool"]
+        self.assertTrue(later)  # the tool result goes back to the model as a tool message
+        self.assertIn("tool_call_id", later[0]["messages"][-1])
+        results = namespace["native_results"]
+        self.assertEqual([r[1]["status"] for r in results], ["answered"] * 5)
+        self.assertEqual([r[2] for r in results], [True] * 5)
+        self.assertIn("Native: tool choice 5/5", self.output)
+
+    def test_native_failures_are_reported_not_raised(self):
+        def unsupported(body):
+            raise RuntimeError("Unrecognized request argument supplied: tools")
+
+        namespace = self.run_lesson(native=True, native_reply=unsupported)
+        statuses = [r[1]["status"] for r in namespace["native_results"]]
+        self.assertTrue(all(s == "stopped: the native request failed" for s in statuses))
+        self.assertIn("did not work on this endpoint", self.output)
+
+        def endless(body):
+            return {"choices": [{"message": {"tool_calls": [{"function": {
+                "name": "search_docs", "arguments": '{"query": "refund"}'}}]}}]}
+
+        self.run_lesson(native=True, native_reply=endless)
+        self.assertEqual(len(self.native_requests), 12)
+
     def test_budget_stops_a_model_that_never_finishes(self):
         def endless(prompt):
             return {"result": '{"tool": "search_docs", "args": {"query": "refund"}}', "errorMessage": None}
@@ -242,7 +305,7 @@ class AgentTests(unittest.TestCase):
         text = SOURCE.replace("# MAGIC ", "")
         for phrase in ("**Where this sits:**", "Free first", "Terms in this lesson", "If it differs", "Cost boundary"):
             self.assertIn(phrase, text)
-        self.assertEqual(len(re.findall(r'A8\.gate\("', SOURCE)), 1)
+        self.assertEqual(len(re.findall(r'A8\.gate\("', SOURCE)), 2)
         self.assertEqual({"9.a", "9.b"} - set(REFLECTIONS), set())
         for path in ("docs/index.md", "START_HERE.md", "notebooks/00_setup.py", "notebooks/08c_vector_search.py"):
             self.assertIn("09_agents", (ROOT / path).read_text(encoding="utf-8"), path)

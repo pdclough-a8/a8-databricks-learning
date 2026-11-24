@@ -24,7 +24,7 @@
 # MAGIC uses quota on Free. This lesson creates one endpoint and one index, each behind a default-no switch, and ends
 # MAGIC with a switch that deletes both. Embedding the chunks and the questions are model requests made by Databricks
 # MAGIC for you. Ask before creating anything on a paid workspace. **Do the cleanup section before you leave.**
-# MAGIC Nothing here has been live validated yet.
+# MAGIC This lesson was validated live on Free Edition on 24 November 2026.
 # MAGIC
 # MAGIC ## Vector Search in plain English
 # MAGIC In 8b we compared a question with all 32 chunk vectors one by one. That is fine for 32 chunks and hopeless for

@@ -19,7 +19,8 @@
 # MAGIC
 # MAGIC **Cost boundary:** the real-embedding step sends **30 short synthetic texts** to one embedding endpoint,
 # MAGIC behind a default-no switch. It writes nothing. Inference uses quota on Free and can cost money on a paid
-# MAGIC workspace, so ask before you approve it there. Nothing here has been live validated yet.
+# MAGIC workspace, so ask before you approve it there. The SQL embedding route was
+# MAGIC validated live on Free Edition on 24 November 2026; the Python route was not.
 # MAGIC
 # MAGIC ## Embeddings in plain English
 # MAGIC After each event, attendees leave comments. The events manager asks: *show me everything people said about the

@@ -155,7 +155,7 @@ question; quota; notebook rendering.
 
 ## Module 8c: Vector Search
 
-**Supplied, offline checked, not live validated** until the live record below is added.
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026** (run `tests/live_smoke_stage2.py`).
 
 | Check | Evidence |
 |---|---|
@@ -165,12 +165,13 @@ question; quota; notebook rendering.
 | Cleanup | The index is deleted before the endpoint; resources not created by you, or an endpoint hosting other indexes, are refused; `99_pause_and_cleanup` uses the same code |
 | Exercise 8c.1 | A PySpark-style result equals the SQL solution; blank and wrong answers fail |
 
-Not validated offline: endpoint and index creation, build time, quota, query results, the embedding and chat endpoints
-and notebook rendering.
+Live result (Free Edition, serverless): the endpoint was online at once and the index became ready; all 32 chunks were indexed. On the eight evaluation questions the index scored hit@1 1.00 and hit@3 1.00 against 0.50 and 0.88 for word overlap. The grounded answer cited the right document and the weather question was refused. The in-notebook deletion and `99_pause_and_cleanup` removed the index and endpoint; no endpoint, table or volume was left.
+
+Not validated: paid-workspace behaviour and any quota other than that of this one run.
 
 ## Module 8b: RAG
 
-**Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: nine documents copied to the volume, 32 chunks, the chunk table created, 41 texts embedded (1,024 numbers each), embedding retrieval hit@1 1.00 and hit@3 1.00 against 0.50 and 0.88 for word overlap, one cited answer and one refusal.
 
 | Check | Evidence |
 |---|---|
@@ -186,7 +187,7 @@ a volume, and notebook rendering. The documents are short and tidy, so retrieval
 
 ## Module 8a: embeddings
 
-**Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.
+**Supplied and offline checked. The SQL embedding route was live validated on `a8-free` on 24 November 2026** (1,024-number vectors). **The Python (SDK) route timed out after five minutes in that run** and now falls back to the SQL route with a message; it is not validated.
 
 | Check | Evidence |
 |---|---|
