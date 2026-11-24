@@ -80,7 +80,9 @@
 # MAGIC    fresh; the pipeline and job use quota
 # MAGIC 14. `11_interactive_app` (optional): a Streamlit app on Databricks Apps with its own service principal; it keeps
 # MAGIC    compute running until deleted
-# MAGIC 15. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 15. `14_evaluate_and_monitor` (optional): MLflow evaluation and traces as a release gate for the agent; writes
+# MAGIC    evaluation runs, and an optional judge uses model requests
+# MAGIC 16. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

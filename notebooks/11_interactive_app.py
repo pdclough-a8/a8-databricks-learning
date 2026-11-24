@@ -338,4 +338,4 @@ A8.next_step(["A read-only Streamlit app over the seats-left view",
               "A Databricks App with a warehouse resource and its own service principal",
               "Least-privilege grants for that principal, and a clear view of app versus viewer identity",
               "A scoped removal of the app, its grants and its source folder"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "14_evaluate_and_monitor", "Prove a change to the agent is safe to release")

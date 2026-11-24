@@ -295,6 +295,19 @@ WHERE status = 'scheduled' AND available < 30""",
         "explain": "The app runs a query like this one as its service principal, so the principal needs SELECT on "
                    "this view. Without the status filter the count would include cancelled and past events.",
     },
+    "14.1": {
+        "task": "Return event_name, city and available for the scheduled events called 'Pipelines in Practice' and "
+                "'Analytics Breakfast', ordered by event_name then city. These are the true seat counts an "
+                "evaluation compares the agent's answers with.",
+        "hint": "Filter status = 'scheduled' AND event_name IN (...), and read from IDENTIFIER(a8_event_availability). "
+                "The numbers must come from the view, not from the agent.",
+        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND event_name IN ('Pipelines in Practice', 'Analytics Breakfast')
+ORDER BY event_name, city""",
+        "explain": "An evaluation is only as honest as its expected values. Reading them straight from the data means "
+                   "the agent cannot mark its own work, and when seats change the expected values change with them.",
+        "ordered": True,
+    },
     "13.1": {
         "task": "Return event_id and new_tickets (the sum of tickets) for confirmed rows in the cleaned bookings, "
                 "ordered by new_tickets from highest to lowest, then event_id.",
@@ -476,6 +489,19 @@ REFLECTIONS = {
         "model": "They see the seats-left view, because the app reads it as its own principal. Anything the app "
                  "can read is available to anyone allowed to open it, so grant it only the view it needs and "
                  "decide deliberately who can use the app.",
+    },
+    "14.a": {
+        "question": "The new release passes the old five questions but its seat figures are a week old. Which "
+                    "scorer catches it, and why would a judge that only reads the answer's wording miss it?",
+        "model": "The grounded scorer, because it compares the number in the answer with the true seat count read "
+                 "from the data. A wording judge sees a fluent, confident sentence and has nothing to check the "
+                 "number against, so it would pass it.",
+    },
+    "14.b": {
+        "question": "Why compare a candidate with a baseline run instead of setting a fixed pass mark?",
+        "model": "A fixed mark hides regressions while the score stays above it, and fails a release for questions "
+                 "that were already hard. Comparing with the baseline asks the useful question: did this change make "
+                 "anything worse than what is running now?",
     },
     "13.a": {
         "question": "Why are bad rows kept in bronze but dropped from silver?",

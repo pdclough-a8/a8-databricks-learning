@@ -21,6 +21,8 @@
 # MAGIC - **Custom model serving and Vector Search endpoints:** can keep billing even when your notebook is closed.
 # MAGIC   Delete them when not needed. Module 8c creates a Vector Search endpoint and index; Module 12 creates an agent
 # MAGIC   endpoint. This notebook removes them.
+# MAGIC - **Evaluation runs:** Module 14 writes one MLflow experiment with its runs and traces. It costs nothing to
+# MAGIC   keep; this notebook deletes it with your other MLflow work.
 # MAGIC - **Apps:** a Databricks App keeps compute running while it exists. Module 11 creates one; this notebook revokes
 # MAGIC   its grants and deletes it and its source folder. Later app modules will be taught with their own lifecycle.
 # MAGIC

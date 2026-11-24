@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern`, `13_pipelines_and_jobs` and `11_interactive_app` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern`, `13_pipelines_and_jobs`, `11_interactive_app` and `14_evaluate_and_monitor` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -62,6 +62,12 @@ Module **11** (interactive app) deploys a small read-only Streamlit app on Datab
 principal `SELECT` on one view, and shows the app's identity beside the viewer's. Creating, granting and deploying are
 default-no switches, the app keeps compute running while it exists, and `99_pause_and_cleanup` removes it. Offline
 checked and run live on Free Edition; the page content itself was not seen rendered in that run.
+
+Module **14** (evaluate and monitor) turns the hand scoring of the agent into MLflow evaluation. Scoring rules compare
+answers with facts read from your data, every answer is traced, and a release gate blocks a candidate (a model with
+out-of-date seat figures) that scores worse than the baseline. An optional judge makes five model requests and an
+optional test sends five requests to your Module 12 endpoint; writing the runs, the judge and the endpoint test are
+default-no switches, and `99_pause_and_cleanup` deletes the experiment. Offline checked only; not yet validated live.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

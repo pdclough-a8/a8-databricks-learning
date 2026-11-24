@@ -122,6 +122,9 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     if experiment and (experiment.tags.get("a8learn_course") != COURSE_ID or
                        experiment.tags.get("a8learn_tag") != course.cfg.tag):
         raise PermissionError("Experiment has no matching course tags. Nothing deleted.")
+    eval_experiment = client.get_experiment_by_name(course.evaluation_experiment_path) if tables else None
+    if eval_experiment and not course._is_course_run(eval_experiment.tags):
+        raise PermissionError("Evaluation experiment has no matching course tags. Nothing deleted.")
     if endpoint:
         endpoint_for_cleanup(course, workspace)
         workspace.serving_endpoints.delete(course.endpoint_name)
@@ -163,8 +166,11 @@ def cleanup(course, workspace, client, confirmation, tables=False):
                 course.run(f"DROP {kind} {course.t(key)}")
         if experiment and experiment.lifecycle_stage != "deleted":
             client.delete_experiment(experiment.experiment_id)
+        if eval_experiment and eval_experiment.lifecycle_stage != "deleted":
+            client.delete_experiment(eval_experiment.experiment_id)
     return {"endpoint_deleted": bool(endpoint), "data_objects_deleted": len(present),
-            "model_deleted": bool(model), "agent_endpoint_deleted": bool(agent_endpoint),
+            "model_deleted": bool(model), "evaluation_experiment_deleted": bool(eval_experiment),
+            "agent_endpoint_deleted": bool(agent_endpoint),
             "agent_model_deleted": bool(agent_model), "pipeline_deleted": bool(pipeline),
             "job_deleted": bool(job), "app_deleted": bool(app), "vector_index_deleted": index is not None,
             "vector_endpoint_deleted": vector_endpoint is not None}

@@ -334,3 +334,29 @@ SQLite checks relational logic only. Not validated: Spark SQL execution (notably
 `toPandas()` on serverless, the dashboard filter walk-through, Genie availability and answers (checkpoint G2), UI labels.
 The test explains chance only for one segment pair; it does not adjust for confounders, and the data cannot separate
 city from format for online events.
+
+## Module 14: Evaluate and monitor
+
+**Supplied and offline checked. The module has not been run live.** Separately, a throwaway probe on `a8-free` on
+24 November 2026 (one serverless run, MLflow 3.6.0, everything deleted afterwards) proved the platform calls it relies
+on: `mlflow.genai.evaluate()` with two custom `@scorer` functions on two rows returned the expected means; `@mlflow.trace`
+produced traces that `mlflow.search_traces` returned; and a `Guidelines` judge with
+`model="databricks:/databricks-meta-llama-3-3-70b-instruct"` returned a mark (one paid model request). Not probed:
+tagging a run after `evaluate()` has finished, `search_traces` on an experiment with several runs, the nested tool spans
+under `@mlflow.trace`, calling the Module 12 endpoint as the predict function, the `Correctness` and `Safety` judges, and
+Unity Catalog evaluation datasets (the module uses none).
+
+| Check | Evidence |
+|---|---|
+| `tests/test_evaluation.py` | The notebook runs against a stand-in MLflow that really calls the predict function and the scorers, so the marks and the gate decisions are the notebook's own; it does not show how MLflow behaves |
+| Rules | Right tool, grounded and finished are plain functions; the seat rule needs the whole number followed by "seats left", so `15 seats left` does not satisfy a fact of `5` |
+| Gate | Blocks any scorer that falls below the baseline (a tolerance can be set), requires `finished` to be 1.0, and treats a missing metric as a failure |
+| Candidate | A copy of the snapshot with every seat count out by seven: it still finishes every task and is blocked on `grounded` alone |
+| Gates (switches) | The default run writes nothing; run_evaluation, run_judge and evaluate_endpoint are separate default-no switches; the endpoint test never creates or deletes an endpoint |
+| Names | Evaluation runs go to their own experiment (`a8learn_<tag>_agent_eval`), claimed with the same ownership check as Module 12's, and carry the course tags |
+| Cleanup | `99_pause_and_cleanup` deletes the evaluation experiment after a course-tag check, before any other delete; a foreign experiment stops the cleanup |
+| Exercise 14.1 | The solution equals an independent result computed from the CSV files; blank and naive answers fail |
+
+Not live validated: everything above beyond the probe, paid-workspace behaviour, and the gap between the notebook's
+"traces" assertion (fifteen after three runs) and how MLflow actually stores them. Production trace ingestion into Unity
+Catalog and scheduled monitors are described in the notebook and not exercised.

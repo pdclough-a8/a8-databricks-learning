@@ -158,6 +158,11 @@ class Course:
         return f"/Users/{self.cfg.user}/a8learn_{self.cfg.tag}_attendance"
 
     @property
+    def evaluation_experiment_path(self) -> str:
+        """Experiment holding Module 14's evaluation runs and traces, apart from the attendance model's."""
+        return f"/Users/{self.cfg.user}/a8learn_{self.cfg.tag}_agent_eval"
+
+    @property
     def dashboard_path(self) -> Path:
         """Module 3's generated dashboard file, beside the learner's saved settings."""
         return config_path(self.cfg.user).parent / f"A8 {self.cfg.tag} event snapshot.lvdash.json"
@@ -319,18 +324,19 @@ class Course:
     def _is_course_run(self, tags) -> bool:
         return all((tags or {}).get(k) == v for k, v in self.course_tags.items())
 
-    def claim_experiment(self, client):
+    def claim_experiment(self, client, path=None):
         """Refuse a foreign experiment at our path; restore ours if cleanup soft-deleted it.
 
         Must run before mlflow.set_experiment, which cannot select a deleted experiment
         and would otherwise silently adopt somebody else's.
         """
-        experiment = client.get_experiment_by_name(self.experiment_path)
+        path = path or self.experiment_path
+        experiment = client.get_experiment_by_name(path)
         if experiment is None:
             return
         if not self._is_course_run(experiment.tags):
             raise PermissionError(
-                f"{self.experiment_path} exists but is not marked as this course run. "
+                f"{path} exists but is not marked as this course run. "
                 "Nothing was changed. Choose another learner tag in 00_setup.")
         if experiment.lifecycle_stage == "deleted":
             client.restore_experiment(experiment.experiment_id)

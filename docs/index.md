@@ -50,6 +50,7 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 11. Interactive app | A read-only Streamlit app on Databricks Apps over the seats-left view: the app's service principal and a SQL warehouse resource, least-privilege grants, app identity versus the viewer's email header, deploy from a `/Workspace` path, scoped removal. Genie, Lakebase and acting as the viewer are deferred | Supplied; offline checked; notebook live validated on Free (the rendered page not seen) |
 | 12. Deploy and govern | Package the Module 9 agent as code with a data snapshot, test it, log it with MLflow, register it in Unity Catalog with a `Champion` alias, serve it on a scale-to-zero endpoint, query it, read its permissions and delete it; the endpoint and model are in scoped cleanup. Asset Bundles, jobs and release pipelines are deferred | Supplied; offline checked; live validated on Free |
 | 13. Pipelines and jobs | New booking files land in a volume; a Lakeflow declarative pipeline (bronze, silver, gold) with data-quality rules builds live seats left, checked against an independent calculation; a second batch is read incrementally; a scheduled job (created paused) runs it and its history is read from system tables; the job, pipeline and tables are in scoped cleanup | Supplied; offline checked; live validated on Free |
+| 14. Evaluate and monitor | Scoring rules (right tool, grounded in the true seat count or document, finished) run with `mlflow.genai.evaluate()` over the five agent tasks; traces with a span per tool call; a baseline run, a stale-snapshot candidate blocked by a release gate and a refreshed one released; a monitoring summary of the traces; an optional `Guidelines` judge (five model requests) and an optional test of the Module 12 endpoint. Scheduled monitoring of production traces, judge alignment and prompt optimisation are explained or deferred | Supplied; offline checked; a probe on Free proved evaluation, tracing and one judge call, the module itself not yet live validated |
 | 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
 ## Start and stop
@@ -58,7 +59,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `12_deploy_and_govern` (optional) → `13_pipelines_and_jobs` (optional) → `11_interactive_app` (optional) → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `12_deploy_and_govern` (optional) → `13_pipelines_and_jobs` (optional) → `11_interactive_app` (optional) → `14_evaluate_and_monitor` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.
