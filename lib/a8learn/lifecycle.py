@@ -3,6 +3,7 @@
 import time
 
 from . import COURSE_ID, OBJECTS
+from .app_deploy import app_for_cleanup, delete_app
 
 
 def endpoint_for_cleanup(course, workspace, name=None):
@@ -109,6 +110,7 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     index, vector_endpoint = vector_search_for_cleanup(course, workspace)
     pipeline = pipeline_for_cleanup(course, workspace)
     job = job_for_cleanup(course, workspace)
+    app = app_for_cleanup(course, workspace)
     keys = [k for k in reversed(OBJECTS) if OBJECTS[k][0] != "model"] if tables else []
     present = [k for k in keys if course.exists(k)]
     # Preflight every intended target before the first delete.
@@ -123,6 +125,8 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     if endpoint:
         endpoint_for_cleanup(course, workspace)
         workspace.serving_endpoints.delete(course.endpoint_name)
+    if app:
+        delete_app(course, workspace)
     if job:  # the job runs the pipeline, so it goes first
         job_for_cleanup(course, workspace)
         workspace.jobs.delete(job.job_id)
@@ -162,5 +166,5 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     return {"endpoint_deleted": bool(endpoint), "data_objects_deleted": len(present),
             "model_deleted": bool(model), "agent_endpoint_deleted": bool(agent_endpoint),
             "agent_model_deleted": bool(agent_model), "pipeline_deleted": bool(pipeline),
-            "job_deleted": bool(job), "vector_index_deleted": index is not None,
+            "job_deleted": bool(job), "app_deleted": bool(app), "vector_index_deleted": index is not None,
             "vector_endpoint_deleted": vector_endpoint is not None}

@@ -78,7 +78,9 @@
 # MAGIC 12. `12_deploy_and_govern` (optional): log, register, serve and govern the agent; the endpoint can bill
 # MAGIC 13. `13_pipelines_and_jobs` (optional): a pipeline with quality rules and a scheduled job that keep seats left
 # MAGIC    fresh; the pipeline and job use quota
-# MAGIC 14. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 14. `11_interactive_app` (optional): a Streamlit app on Databricks Apps with its own service principal; it keeps
+# MAGIC    compute running until deleted
+# MAGIC 15. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

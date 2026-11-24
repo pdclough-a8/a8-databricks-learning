@@ -400,6 +400,7 @@ class PipelineCleanupTests(unittest.TestCase):
         self.NotFound = NotFound
         self.w.vector_search_indexes.get_index.side_effect = NotFound("none")
         self.w.vector_search_endpoints.get_endpoint.side_effect = NotFound("none")
+        self.w.apps.get.side_effect = NotFound("none")
         self.w.serving_endpoints.get.side_effect = NotFound("none")
         self.mine = self.course.cfg.user
         self.pipeline = SimpleNamespace(name="a8-smoke-bookings", pipeline_id="p1")

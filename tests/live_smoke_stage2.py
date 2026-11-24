@@ -61,6 +61,8 @@ def build_tasks(remote, tag, wait_minutes, skip_vector=False, only=None):
          {"register_agent": "yes", "deploy_agent": "yes", "delete_agent_endpoint": "yes"}, 3000),
         ("pipelines", "13_pipelines_and_jobs",
          {"create_pipeline": "yes", "run_pipeline": "yes", "run_job": "yes", "delete_pipeline_objects": "yes"}, 3600),
+        ("app", "11_interactive_app",
+         {"create_app": "yes", "grant_app_access": "yes", "deploy_app": "yes", "delete_app": "yes"}, 2400),
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:

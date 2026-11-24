@@ -21,7 +21,8 @@
 # MAGIC - **Custom model serving and Vector Search endpoints:** can keep billing even when your notebook is closed.
 # MAGIC   Delete them when not needed. Module 8c creates a Vector Search endpoint and index; Module 12 creates an agent
 # MAGIC   endpoint. This notebook removes them.
-# MAGIC - **Later app modules:** not created by this release; their lifecycle will be taught with them.
+# MAGIC - **Apps:** a Databricks App keeps compute running while it exists. Module 11 creates one; this notebook revokes
+# MAGIC   its grants and deletes it and its source folder. Later app modules will be taught with their own lifecycle.
 # MAGIC
 # MAGIC To resume, reopen the next lesson and run its configuration cell. Saved settings reload from your workspace user
 # MAGIC folder.

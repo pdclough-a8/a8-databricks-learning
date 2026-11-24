@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern` and `13_pipelines_and_jobs` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern`, `13_pipelines_and_jobs` and `11_interactive_app` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -57,6 +57,11 @@ Module **13** (pipelines and jobs) lands new booking files in a volume and build
 data-quality rules, so seats left stay current. A scheduled job, created paused, runs it. Creating and running the
 pipeline and job are default-no switches that use compute, and `99_pause_and_cleanup` removes them. Offline checked and
 validated live on Free Edition.
+
+Module **11** (interactive app) deploys a small read-only Streamlit app on Databricks Apps, gives its service
+principal `SELECT` on one view, and shows the app's identity beside the viewer's. Creating, granting and deploying are
+default-no switches, the app keeps compute running while it exists, and `99_pause_and_cleanup` removes it. Offline
+checked only; not yet validated live.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

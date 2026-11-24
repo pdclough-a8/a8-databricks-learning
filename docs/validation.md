@@ -161,6 +161,28 @@ the notebook says it can lag.
 
 Not live validated: paid-workspace behaviour, and the system-table read-out of the run (it lagged).
 
+## Module 11: Interactive app
+
+**Supplied and offline checked. The module has not been run live.** Separately, a throwaway probe on `a8-free` on
+24 November 2026 proved the platform steps it relies on: creating an app, deploying from a source path that begins
+`/Workspace` (without that prefix the deploy is rejected), the app reaching RUNNING with ACTIVE compute, a signed-in
+request returning 200 with the viewer's email in `X-Forwarded-Email`, and deleting the app (which finishes a few seconds
+after the call). Not probed: Streamlit itself, the warehouse resource and `valueFrom`, the service principal's grants,
+and the statement-execution query inside the app.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_app.py` | The notebook runs against recording stand-ins for the SDK and Spark; the app source is only parsed, never run |
+| Gates | The default run calls nothing; create, grant, deploy and delete are separate default-no switches |
+| App | Created with your warehouse as a `CAN_USE` resource and a course marker in its description; reused only if it is yours |
+| Grants | Exactly `USE CATALOG`, `USE SCHEMA` and `SELECT` on one view, to the app's service principal |
+| Deploy | The source path is `/Workspace` plus the folder |
+| Cleanup | Grants revoked, then the app deleted after exact-name, creator and marker checks, then the folder; `99_pause_and_cleanup` uses the same code |
+| App source | Read-only, no credentials in the source, takes its warehouse and view from the environment |
+| Exercise 11.1 | The solution equals an independent result; blank and naive answers fail |
+
+Not live validated: everything above beyond the probe, and paid-workspace behaviour.
+
 ## Module 12: Deploy and govern
 
 **Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the packaged agent

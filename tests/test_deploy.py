@@ -348,6 +348,7 @@ class AgentCleanupTests(unittest.TestCase):
         self.NotFound = NotFound
         self.w.vector_search_indexes.get_index.side_effect = NotFound("none")
         self.w.vector_search_endpoints.get_endpoint.side_effect = NotFound("none")
+        self.w.apps.get.side_effect = NotFound("none")
         self.w.pipelines.list_pipelines.return_value = []
         self.w.jobs.list.return_value = []
         self.mine = SimpleNamespace(creator=self.course.cfg.user, tags=[

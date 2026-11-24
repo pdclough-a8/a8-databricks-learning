@@ -285,6 +285,16 @@ WHERE status = 'scheduled' GROUP BY city ORDER BY seats_left DESC, city""",
                    "a new version of the model, would be needed, which is why releases are numbered.",
         "ordered": True,
     },
+    "11.1": {
+        "task": "Return one number, low_events: how many scheduled events have fewer than 30 seats left in the "
+                "availability view. This is the number the app's second metric shows when the threshold is 30.",
+        "hint": "Filter status = 'scheduled' AND available < 30, then count(*). Read from "
+                "IDENTIFIER(a8_event_availability).",
+        "solution": """SELECT count(*) AS low_events FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND available < 30""",
+        "explain": "The app runs a query like this one as its service principal, so the principal needs SELECT on "
+                   "this view. Without the status filter the count would include cancelled and past events.",
+    },
     "13.1": {
         "task": "Return event_id and new_tickets (the sum of tickets) for confirmed rows in the cleaned bookings, "
                 "ordered by new_tickets from highest to lowest, then event_id.",
@@ -452,6 +462,20 @@ REFLECTIONS = {
         "model": "The seat numbers and documents are frozen at the time of logging, so answers drift from reality. "
                  "Either log and release a new version on a schedule, or have the served agent read live data "
                  "through a governed connection, which needs its own authentication and access review.",
+    },
+    "11.a": {
+        "question": "The app shows you as the viewer, yet its query runs as the app's service principal. Why does "
+                    "the service principal, not you, need the grants?",
+        "model": "The app code runs under its own identity and sends the query itself; the viewer's identity is "
+                 "only passed along as a header for display. So the data access is whatever the service principal "
+                 "holds, and everyone who opens the app sees what it can read, however limited their own access is.",
+    },
+    "11.b": {
+        "question": "You share the app with a colleague who cannot read the bookings table. What do they see, and "
+                    "why is that a design decision?",
+        "model": "They see the seats-left view, because the app reads it as its own principal. Anything the app "
+                 "can read is available to anyone allowed to open it, so grant it only the view it needs and "
+                 "decide deliberately who can use the app.",
     },
     "13.a": {
         "question": "Why are bad rows kept in bronze but dropped from silver?",

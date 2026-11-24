@@ -187,6 +187,16 @@ class Course:
         return f"a8-{self.cfg.tag}-refresh"
 
     @property
+    def app_name(self) -> str:
+        """This learner's seats-left app (Module 11). Runs compute while it exists."""
+        return f"a8-{self.cfg.tag}-events"
+
+    @property
+    def app_folder(self) -> str:
+        """Workspace folder holding the generated app source (Module 11); deploy it as /Workspace + this."""
+        return f"/Users/{self.cfg.user}/a8learn_{self.cfg.tag}_app"
+
+    @property
     def incoming_path(self) -> str:
         """Volume folder where new booking files land (Module 13)."""
         return f"{self.volume_path}/incoming"
@@ -412,6 +422,7 @@ class Course:
             "serving": f"{h}/ml/endpoints",
             "vector_search": f"{h}/compute/vector-search",
             "apps": f"{h}/apps",
+            "app": f"{h}/apps/{name}",
             "jobs": f"{h}/jobs",
             "job": f"{h}/jobs/{name}",
             "pipeline": f"{h}/pipelines/{name}",

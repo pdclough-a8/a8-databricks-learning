@@ -525,7 +525,7 @@ else:
 # MAGIC
 # MAGIC **Pause:** this lesson created a pipeline, a job, three tables and three small files. Delete them above;
 # MAGIC `99_pause_and_cleanup` removes all of them.
-# MAGIC **Next:** `99_pause_and_cleanup`.
+# MAGIC **Next:** `11_interactive_app` (optional), then `99_pause_and_cleanup`.
 
 # COMMAND ----------
 # WHAT: asks why bad rows are kept in bronze but dropped from silver.
@@ -547,4 +547,4 @@ A8.next_step(["New booking files landed in a volume, with deliberate bad rows",
               "A three-layer pipeline with data-quality rules, checked against an independent calculation",
               "A second batch processed incrementally, and a scheduled job with a run history",
               "A scoped removal of the job, the pipeline and its tables"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "11_interactive_app", "Share seats left with colleagues through an app")
