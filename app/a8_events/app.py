@@ -4,6 +4,7 @@ The app queries as its own service principal, so that principal needs access to 
 is shown from the header Databricks Apps adds; this app does not act on their behalf.
 """
 import os
+import time
 
 import pandas as pd
 import streamlit as st
@@ -23,6 +24,14 @@ def seats_left() -> pd.DataFrame:
         warehouse_id=os.environ["A8_WAREHOUSE_ID"], wait_timeout="30s",
         statement=f"SELECT event_name, city, event_date, capacity, booked, available "
                   f"FROM {os.environ['A8_VIEW']} WHERE status = 'scheduled' ORDER BY available")
+    for _ in range(150):  # a cold warehouse can outlast execute_statement's synchronous wait
+        if result.status.state.value not in {"PENDING", "RUNNING"}:
+            break
+        time.sleep(2)
+        result = client().statement_execution.get_statement(result.statement_id)
+    if result.status.state.value in {"PENDING", "RUNNING"}:
+        client().statement_execution.cancel_execution(result.statement_id)
+        raise TimeoutError("The warehouse did not finish within five minutes. Check its status and try again.")
     if result.status.state.value != "SUCCEEDED":
         raise RuntimeError(f"Query {result.status.state.value}: {result.status.error}")
     columns = [c.name for c in result.manifest.schema.columns]

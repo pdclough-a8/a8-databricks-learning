@@ -167,9 +167,13 @@ class NotebookTests(unittest.TestCase):
         self.course = Course(Config("workspace", "default", "offline15", "synthetic@example.com",
                                     "https://example.com"), answers="solutions")
 
-    def run_lesson(self, champion_stale=False, no_champion=False, endpoint=None, fail_on_request=None, **approvals):
-        self.spark = StandInSpark(self.course, lambda prompt: None)
-        self.addCleanup(self.spark.db.close)
+    def run_lesson(self, champion_stale=False, no_champion=False, endpoint=None, fail_on_request=None,
+                   source_spark=None, **approvals):
+        if source_spark is None:
+            self.spark = StandInSpark(self.course, lambda prompt: None)
+            self.addCleanup(self.spark.db.close)
+        else:
+            self.spark, self.course = source_spark, source_spark.course
         self.course.spark = self.spark
         truth = {**snapshot_from(self.spark), "taken_on": "now"}
         self.truth = truth

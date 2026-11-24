@@ -324,7 +324,12 @@ def hit_rate(search_function, k):
 # LOOK FOR: hit at 1 and hit at 3 for each; the index sends eight query requests and should not trail the baseline.
 print(f"Word overlap: hit@1 {hit_rate(word_search, 1):.2f}, hit@3 {hit_rate(word_search, 3):.2f}")
 if index_usable:
-    print(f"Index:        hit@1 {hit_rate(index_search, 1):.2f}, hit@3 {hit_rate(index_search, 3):.2f}")
+    index_results = {q: index_search(q, 3) for q, _ in EVAL}
+
+    def cached_search(q, k):
+        return index_results[q][:k]
+
+    print(f"Index:        hit@1 {hit_rate(cached_search, 1):.2f}, hit@3 {hit_rate(cached_search, 3):.2f}")
 else:
     print("Index:        skipped (no ready index)")
 
@@ -371,7 +376,9 @@ if ask_approved and found:
     answers = spark.sql(f"""SELECT question, ai_query({sql_string(CHAT_ENDPOINT)}, prompt, failOnError => false,
 modelParameters => named_struct('max_tokens', 300, 'temperature', CAST(0.0 AS DOUBLE))) AS reply
 FROM VALUES {values} AS input(question, prompt)""", args=args).collect()
-    for row, (_, passages) in zip(answers, ask, strict=True):
+    passages_by_question = dict(ask)
+    for row in answers:
+        passages = passages_by_question[row["question"]]
         reply = row["reply"]  # a struct with the fields result and errorMessage
         if reply["errorMessage"]:
             print(row["question"], "->", "ERROR:", reply["errorMessage"])
@@ -444,7 +451,8 @@ else:
 # MAGIC
 # MAGIC **Pause:** run the cleanup section, or `99_pause_and_cleanup`, before leaving. Both remove the index and
 # MAGIC endpoint.
-# MAGIC **Next:** Module 9 (an agent that uses this retrieval as one of its tools) is planned.
+# MAGIC **Next:** `09_agents` chooses between document search and a live seat query. Its baseline uses word overlap,
+# MAGIC not this managed index, so it still works after you delete the Vector Search endpoint.
 
 # COMMAND ----------
 # WHAT: asks when a managed index becomes worthwhile compared with the hand-built search.

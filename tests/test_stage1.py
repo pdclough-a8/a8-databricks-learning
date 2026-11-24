@@ -6,6 +6,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -113,6 +114,13 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(compare((["a", "b"], [(1, 2)]), (["b"], [(1,)]))[0])
         self.assertTrue(compare((["a"], [(2,), (1,)]), (["b"], [(1,), (2,)]))[0])
         self.assertFalse(compare((["a"], [(2,), (1,)]), (["b"], [(1,), (2,)]), True)[0])
+
+    def test_numeric_comparison_preserves_precision_across_spark_and_pandas(self):
+        self.assertTrue(compare((["x"], [(4.17,), (2,)]),
+                                (["x"], [(Decimal("2.000"),), (Decimal("4.170"),)]))[0])
+        self.assertTrue(compare((["p"], [(0.1 + 0.2,)]), (["p"], [(Decimal("0.3"),)]))[0])
+        self.assertFalse(compare((["p"], [(0.721,)]), (["p"], [(0.723,)]))[0])
+        self.assertFalse(compare((["p"], [(Decimal("0.721"),)]), (["p"], [(0.723,)]))[0])
 
 
 class DataTests(unittest.TestCase):

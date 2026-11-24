@@ -142,6 +142,9 @@ class RuleTests(unittest.TestCase):
         self.assertFalse(ev.grounded({"answer": "London, 2026-12-01: 15 seats left"}, expected))
         self.assertFalse(ev.grounded({"answer": "London, 2026-05-01: 7 seats left"}, expected))
         self.assertTrue(ev.grounded({"answer": "London, 2026-12-01: 5 seats left"}, expected))
+        for answer in ("-5 seats left", "1.5 seats left", "5 seats left then 15 seats left", "5 seats leftover"):
+            self.assertFalse(ev.grounded({"answer": answer}, expected), answer)
+        self.assertTrue(ev.grounded({"answer": "-5 seats left"}, ev.make_expectations("check_availability", "-5")))
 
     def test_wrong_tool_and_a_guess_instead_of_a_refusal_fail(self):
         docs = ev.make_expectations("search_docs", "x.md")
@@ -200,9 +203,12 @@ class NotebookTests(unittest.TestCase):
         self.course = Course(Config("workspace", "default", "offline14", "synthetic@example.com",
                                     "https://example.com"), answers="solutions")
 
-    def run_lesson(self, endpoint=False, endpoint_stale=False, **approvals):
-        self.spark = StandInSpark(self.course, lambda prompt: None)
-        self.addCleanup(self.spark.db.close)
+    def run_lesson(self, endpoint=False, endpoint_stale=False, source_spark=None, **approvals):
+        if source_spark is None:
+            self.spark = StandInSpark(self.course, lambda prompt: None)
+            self.addCleanup(self.spark.db.close)
+        else:
+            self.spark, self.course = source_spark, source_spark.course
         self.course.spark = self.spark
         self.mlflow = FakeMlflow()
         self.w = FakeWorkspace(self.course.cfg.user)
@@ -259,6 +265,15 @@ class NotebookTests(unittest.TestCase):
         self.assertTrue(namespace["refreshed_verdict"]["passed"])
         self.assertIn("Gate: BLOCKED", self.output)
         self.assertIn("Gate: RELEASE", self.output)
+
+    def test_snapshot_refresh_reads_the_tables_again(self):
+        namespace = self.run_lesson()
+        before = namespace["snapshot"]
+        self.spark.db.execute("UPDATE bookings SET tickets = tickets + 1 WHERE event_id IN "
+                              "(SELECT event_id FROM events WHERE status = 'scheduled')")
+        after = namespace["take_snapshot"]()
+        self.assertNotEqual(after["seats"], before["seats"])
+        self.assertIsNot(after["chunks"], before["chunks"])
 
     def test_runs_are_named_and_carry_the_course_tags(self):
         self.run_lesson(run_evaluation=True)

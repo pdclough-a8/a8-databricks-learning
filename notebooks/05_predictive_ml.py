@@ -600,4 +600,4 @@ A8.reflect("5.b", my_answer_5_b)
 print("Optional endpoint name:", A8.endpoint_name)
 A8.next_step(["Booking-time feature table and temporal holdout", "MLflow run with baseline and metrics",
               "UC model version and Champion alias", "Spark batch inference history and latest-score forecast"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "06_prescriptive_analytics", "Choose ticket limits and meal orders from uncertain predictions")

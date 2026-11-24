@@ -289,8 +289,8 @@ WHERE status = 'scheduled' GROUP BY city ORDER BY seats_left DESC, city""",
         "task": "Return one number, low_events: how many scheduled events have fewer than 30 seats left in the "
                 "availability view. This is the number the app's second metric shows when the threshold is 30.",
         "hint": "Filter status = 'scheduled' AND available < 30, then count(*). Read from "
-                "IDENTIFIER(a8_event_availability).",
-        "solution": """SELECT count(*) AS low_events FROM IDENTIFIER(a8_event_availability)
+                "IDENTIFIER(a8_current_availability), declared by Module 11 setup.",
+        "solution": """SELECT count(*) AS low_events FROM IDENTIFIER(a8_current_availability)
 WHERE status = 'scheduled' AND available < 30""",
         "explain": "The app runs a query like this one as its service principal, so the principal needs SELECT on "
                    "this view. Without the status filter the count would include cancelled and past events.",
@@ -299,9 +299,9 @@ WHERE status = 'scheduled' AND available < 30""",
         "task": "Return event_name, city and available for the scheduled events called 'Pipelines in Practice' and "
                 "'Analytics Breakfast', ordered by event_name then city. These are the true seat counts an "
                 "evaluation compares the agent's answers with.",
-        "hint": "Filter status = 'scheduled' AND event_name IN (...), and read from IDENTIFIER(a8_event_availability). "
+        "hint": "Filter status = 'scheduled' AND event_name IN (...). Read from IDENTIFIER(a8_current_availability). "
                 "The numbers must come from the view, not from the agent.",
-        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_event_availability)
+        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_current_availability)
 WHERE status = 'scheduled' AND event_name IN ('Pipelines in Practice', 'Analytics Breakfast')
 ORDER BY event_name, city""",
         "explain": "An evaluation is only as honest as its expected values. Reading them straight from the data means "
@@ -312,10 +312,10 @@ ORDER BY event_name, city""",
         "task": "Return event_name, city, available and stale_available (available plus 7) for the scheduled events "
                 "called 'Pipelines in Practice' and 'Analytics Breakfast', ordered by event_name then city. These "
                 "are the true seat counts and the ones a week-old release would report.",
-        "hint": "Filter status = 'scheduled' AND event_name IN (...), read from IDENTIFIER(a8_event_availability) "
+        "hint": "Filter status = 'scheduled' AND event_name IN (...), read from IDENTIFIER(a8_current_availability) "
                 "and add a column available + 7 AS stale_available.",
         "solution": """SELECT event_name, city, available, available + 7 AS stale_available
-FROM IDENTIFIER(a8_event_availability)
+FROM IDENTIFIER(a8_current_availability)
 WHERE status = 'scheduled' AND event_name IN ('Pipelines in Practice', 'Analytics Breakfast')
 ORDER BY event_name, city""",
         "explain": "The stale column is what customers would be told if the bad version were released. The gate "

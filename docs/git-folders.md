@@ -55,8 +55,13 @@ half-resolved files onto the shared course.
 ## Experiment without causing conflicts
 
 Exercise answers and small experiments are fine in the Git folder if you discard them before the next pull.
-For anything you want to keep, make your own copy: in the notebook choose **File → Clone**, and save the copy
-**outside** the Git folder, for example directly in your user folder. Your copy is never touched by a pull.
+For anything you want to keep running, clone the **whole repository into a second Git folder with a different
+folder name** and keep your experiments there; do not pull updates into that copy until you have saved your answers.
+Keep `notebooks`, `lib` and `data` together. Use the same saved settings to continue with the same course objects,
+or a new learner tag and settings profile for a separate set.
+
+**File → Clone** of one notebook outside the Git folder is only a saved record, not a runnable course copy:
+the relative `%run ./_config` and repository files will be missing. You can also save just your answer text.
 
 ## When something goes wrong
 

@@ -67,6 +67,7 @@ from collections import Counter
 
 import numpy as np
 from a8learn import sql_string
+from a8learn import evaluation as ev
 from databricks.sdk import WorkspaceClient
 
 # COMMAND ----------
@@ -172,11 +173,12 @@ TOOLS = {
 
 
 def run_tool(name, arguments):
-    if name not in TOOLS:
+    if not isinstance(name, str) or name not in TOOLS:
         return {"error": f"Unknown tool {name!r}. Allowed: {sorted(TOOLS)}"}
     field = TOOLS[name]["input"]
     value = arguments.get(field) if isinstance(arguments, dict) else None
-    if set(arguments) != {field} or not isinstance(value, str) or not 2 <= len(value.strip()) <= 80:
+    if (not isinstance(arguments, dict) or set(arguments) != {field}
+            or not isinstance(value, str) or not 2 <= len(value.strip()) <= 80):
         return {"error": f"{name} takes one text input called {field!r}, 2 to 80 characters."}
     try:
         return {"result": TOOLS[name]["function"](value)}
@@ -309,11 +311,7 @@ TASKS = [
 def score(outcome, task):
     steps = outcome["trace"]
     right_tool = task["tool"] is None or (steps[0]["tool"] if steps else None) == task["tool"]
-    if task["tool"] is None:  # nothing can answer it: the answer must be a refusal, not a guess
-        grounded = bool(outcome["answer"]) and bool(re.search(r"can't|cannot|not find|don't|no information",
-                                                              outcome["answer"].lower()))
-    else:  # the answer must carry the real number, or name the right document
-        grounded = bool(outcome["answer"]) and task["fact"] in outcome["answer"]
+    grounded = ev.grounded(outcome, ev.make_expectations(task["tool"], task["fact"]))
     return right_tool, grounded
 
 # COMMAND ----------
@@ -381,16 +379,16 @@ def build_agent_prompt(task, trace):
 
 
 def parse_decision(text):
-    match = re.search(r"\{.*\}", text or "", re.S)
+    match = re.search(r"\{.*\}", text, re.S) if isinstance(text, str) else None
     try:
         decision = json.loads(match.group(0)) if match else None
     except json.JSONDecodeError:
         decision = None
     if not isinstance(decision, dict):
         return {"error": "the reply was not valid JSON"}
-    if "final" in decision:
+    if isinstance(decision.get("final"), str):
         return {"final": decision["final"]}
-    if "tool" in decision and isinstance(decision.get("args"), dict):
+    if isinstance(decision.get("tool"), str) and isinstance(decision.get("args"), dict):
         return {"tool": decision["tool"], "args": decision["args"]}
     return {"error": "the reply had neither a final answer nor a tool request"}
 
@@ -499,13 +497,16 @@ def parse_native(reply):
         message = reply["choices"][0]["message"]
     except (KeyError, IndexError, TypeError):
         return {"error": "the reply had no message"}
+    if not isinstance(message, dict):
+        return {"error": "the reply had no message"}
     calls = message.get("tool_calls") or []
     if calls:
         try:
-            return {"tool": calls[0]["function"]["name"], "args": json.loads(calls[0]["function"]["arguments"])}
-        except (KeyError, TypeError, json.JSONDecodeError):
+            decision = {"tool": calls[0]["function"]["name"], "args": json.loads(calls[0]["function"]["arguments"])}
+            return parse_decision(json.dumps(decision))
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError):
             return {"error": "the tool request was malformed"}
-    return {"final": message.get("content") or ""}
+    return parse_decision(json.dumps({"final": message.get("content")}))
 
 
 def native_decide(task, trace):

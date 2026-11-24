@@ -1,4 +1,49 @@
-# Stage 1 validation
+# Validation evidence
+
+## Audit remediation, 24 November 2026
+
+**Current changes are offline checked only; Databricks retesting is for the learner.** The earlier live runs below
+are historical evidence and do not certify the revised code. No cloud operations or model requests were made in
+this remediation pass.
+
+Corrections cover endpoint-only cleanup scope, retained-batch reruns/rebuilds, explicit gold-versus-historical
+source selection in Modules 11/14/15, a real snapshot reread, malformed tool replies, consistent numerical exercise
+comparison, whole signed seat-count scoring, SQL statement polling/cancellation and question-keyed RAG citations.
+Vector Search now retrieves each evaluation question once at k=3 and reuses it for hit@1 and hit@3 (eight queries).
+Guidance now distinguishes alias loads from pinned endpoint deployments, runnable repository copies from saved
+notebook copies, and delivered modules from planned MCP work.
+
+Regression evidence includes the same in-memory tables passed from Module 13 to 14 and 15. With three batches,
+the expected counts become **11 and 22**, rather than the historical **27 and 44**; the old endpoint snapshot is
+blocked and the fresh candidate passes. App tests cover PENDING -> RUNNING -> SUCCEEDED and timeout cancellation,
+not a rendered Streamlit session. SQL/SDK/MLflow stand-ins still do not prove platform behaviour.
+
+Final checks on Python **3.12.13**: **240 tests passed**, including Ruff, in **18.991 seconds**;
+`python -m mkdocs build --strict` passed. Generated logs are kept locally in ignored `.local-validation/`.
+
+### Learner Databricks retest
+
+1. Open the updated full repository and reset the notebook environment so imports use the changed library.
+   Continue with your existing tag/settings; do not reset Module 1 unless you intend to reset its source fixtures.
+2. In Module 13, run with the existing batch folder. Repeat the completed lesson, then its approved cleanup/rebuild:
+   no files should be overwritten and checks should accept every retained batch. On the final run, keep its gold
+   tables (`delete_pipeline_objects = no`) for the next lessons.
+3. In Module 11, check setup names `seats_live`, approve creation/reuse, grants and deployment, then open the actual
+   page. Confirm the table/threshold and identity panel, including warehouse startup. The deployment step refreshes
+   the course app's source/settings; deletion revokes access to both possible course data sources.
+4. In Module 14, check setup names `seats_live`, run the evaluation and optionally test an existing Module 12 endpoint
+   that still carries the pre-pipeline snapshot. It should be blocked on the seat figures. The refreshed candidate
+   really rereads the selected tables. Module 15 should also use gold for its facts, gate and exercise.
+5. Retest Module 9's optional model routes and Modules 8b/8c's displayed citations only if you approve their model
+   requests. The model-free guardrail/citation regression tests do not establish actual model quality.
+6. Preview Module 99. `endpoint_only` must leave the app, job, pipeline and their data in place; it is not an
+   all-compute-stop switch. Remove apps/jobs/pipelines in their own lessons or choose `all_course_objects`, checking
+   its expanded preview first. Full cleanup remains destructive and requires your exact learner tag.
+
+Modules 6/7 and the complete Module 15 notebook still need their first live notebook validation. Dashboard/Genie UI
+behaviour, rendered app results and paid-workspace behaviour remain outside this offline evidence.
+
+## Historical validation ledger
 
 **Release candidate 0.2.0. Free Edition live acceptance passed, 19 November 2026.**
 The earlier pilot's 30-test claim does not certify this replacement.
@@ -108,11 +153,12 @@ The widget-display fix is covered by offline cell-order checks but has not been 
 `live_smoke.py` does not run Module 3, and its acceptance notebook now checks only the
 original five exercises, so it makes no claim about this module.
 
-The overview now maps analytics levels to modules and labels diagnostic/prescriptive content as planned.
+At that earlier stage the overview mapped analytics levels to modules and labelled diagnostic/prescriptive content as planned.
 Notebook headers identify their place in that map. This framing is documentation, not evidence of new capability.
-Dashboard API deployment and programmatic Genie creation are deferred to Module 12; Module 11 is conversation-only.
+Dashboard API deployment and programmatic Genie creation were deferred. Neither is supplied by the current Module 12.
 
-No GenAI, RAG, MCP or app validation is claimed: these are Stage 2 modules, not supplied in this release.
+At that release point no GenAI, RAG, MCP or app validation was claimed. Later evidence is recorded by module below;
+only MCP remains unsupplied.
 
 ## Reproduce as a maintainer
 
@@ -177,10 +223,10 @@ app once in a browser to confirm. Revokes were run but not read back.
 
 | Check | Evidence |
 |---|---|
-| `tests/test_app.py` | The notebook runs against recording stand-ins for the SDK and Spark; the app source is only parsed, never run |
+| `tests/test_app.py` | The notebook runs against recording stand-ins for the SDK and Spark; audit regressions also execute the app query function with fake statement states, without running Streamlit |
 | Gates | The default run calls nothing; create, grant, deploy and delete are separate default-no switches |
 | App | Created with your warehouse as a `CAN_USE` resource and a course marker in its description; reused only if it is yours |
-| Grants | Exactly `USE CATALOG`, `USE SCHEMA` and `SELECT` on one view, to the app's service principal |
+| Grants | `USE CATALOG`, `USE SCHEMA` and `SELECT` on the selected aggregate view/table; deletion revokes access to both possible course sources |
 | Deploy | The source path is `/Workspace` plus the folder |
 | Cleanup | Grants revoked, then the app deleted after exact-name, creator and marker checks, then the folder; `99_pause_and_cleanup` uses the same code |
 | App source | Read-only, no credentials in the source, takes its warehouse and view from the environment |
@@ -232,7 +278,7 @@ question; quota; notebook rendering.
 | Check | Evidence |
 |---|---|
 | `tests/test_vector_search.py` | The notebook runs against an in-memory stand-in for the Databricks SDK's Vector Search endpoints and indexes |
-| Gates | The default run makes no create, query, chat or delete call; each billable step is its own default-no switch |
+| Gates | With no existing index, the default run makes no create, query, chat or delete call; a retained ready index is queried by the demonstration/evaluation cells. Create, chat and delete are default-no |
 | Index definition | Built from the SDK's typed classes: your chunk table as source, `chunk_id` as key, `content` embedded with the saved embedding endpoint, triggered sync, columns listed |
 | Cleanup | The index is deleted before the endpoint; resources not created by you, or an endpoint hosting other indexes, are refused; `99_pause_and_cleanup` uses the same code |
 | Exercise 8c.1 | A PySpark-style result equals the SQL solution; blank and wrong answers fail |
@@ -253,9 +299,9 @@ Not validated: paid-workspace behaviour and any quota other than that of this on
 | Retrieval | Word-overlap hit at k is computed offline; the evaluation set and its expected documents are checked against the documents |
 | Exercises 8b.1, 8b.2 | Solutions equal independent Python; blank and naive answers fail |
 
-Not validated: `ai_query` against an embedding endpoint and a chat endpoint on Free or paid workspaces, `failOnError`
-and `modelParameters` behaviour, endpoint names, answer and citation quality, refusal behaviour, creating a directory in
-a volume, and notebook rendering. The documents are short and tidy, so retrieval looks easier than on real documents.
+Remaining limits: paid-workspace behaviour, general answer/citation quality beyond the recorded examples, and the
+revised citation-row association (offline only). The documents are short and tidy, so retrieval looks easier than
+on real documents.
 
 ## Module 8a: embeddings
 
@@ -268,8 +314,8 @@ a volume, and notebook rendering. The documents are short and tidy, so retrieval
 | Vectors by hand | Bag-of-words and cosine results match the lesson text: the top match for the stream complaint is the stream praise, and the audio complaint scores 0 |
 | Exercises 8a.1, 8a.2 | Solutions equal independent Python; blank and naive answers fail |
 
-Not validated: whether `ai_query` accepts an embedding endpoint and returns `ARRAY<FLOAT>` on Free or paid workspaces,
-endpoint names and quota, the quality of real embeddings on these comments, and notebook rendering. The comments repeat
+Remaining limits: the Python SDK route, paid-workspace endpoint names/quota, general embedding quality and notebook
+rendering. The recorded Free SQL run returned vectors successfully. The comments repeat
 27 templates, so results look cleaner than real feedback. The lesson states the expected ranking only as a prediction.
 
 ## Module 7: GenAI
@@ -319,19 +365,19 @@ bookings is an assumption; costs are assumed teaching parameters with no payment
 real values with their limits. `tests/test_diagnostic.py` checks the single setup cell and the reading variables.
 Not validated: Databricks rendering of `<details>` in Markdown cells, and whether learners find it clearer (no learner testing).
 
-**Supplied, offline checked, not live validated.** No Databricks workspace was contacted for this module.
+**Earlier offline-only evidence:** the following Module 4 checks predate the live run recorded above.
 
 | Check | Evidence |
 |---|---|
 | `tests/test_diagnostic.py` | 11 tests: the notebook's Python cells execute against an `event_metrics` table built from the shipped CSVs by independent Python, not by Module 3's SQL |
 | Drill-downs | City, topic, format and month results match an independent aggregation (events, tickets, attendance %, responses, rating) |
 | Mix versus rate | Attendance and rating splits match an independent two-segment calculation; effects add to the overall gap. On the shipped data: attendance gap -17.7 points = mix +1.1 and rate -18.9; rating gap -0.11 = mix -0.01 and rate -0.10 |
-| Permutation test | Observed gap equals the SQL gap; seeded, repeatable; p agrees with a separate stdlib shuffle (different RNG, 20,000 runs) within 0.01; a six-event case matches exact enumeration of all 20 labelings within 0.02. Shipped data: p = 0.0003 with 10,000 shuffles, the floor for that count |
+| Permutation test | Observed gap equals the SQL gap; seeded, repeatable; p agrees with a separate stdlib shuffle (different RNG, 20,000 runs) within 0.01; a six-event case matches exact enumeration of all 20 labelings within 0.02. Shipped data: p = 0.0003 with 10,000 shuffles; the corrected estimator's minimum possible value is 1/10,001, about 0.0001 |
 | Exercises 4.1, 4.2 | Solutions pass; unweighted averages of event-level rates/ratings and blank answers are rejected |
 | Safety | No CREATE/DROP/INSERT/UPDATE/DELETE, no gate, no file write; imports only numpy; missing `event_metrics` stops before any query; unknown drill-down dimensions are rejected |
 
-SQLite checks relational logic only. Not validated: Spark SQL execution (notably `substr` on a DATE column for the month cut),
-`toPandas()` on serverless, the dashboard filter walk-through, Genie availability and answers (checkpoint G2), UI labels.
+SQLite checks relational logic only. The later live Module 4 run exercised Spark SQL and serverless pandas.
+Remaining gaps: the dashboard filter walk-through, Genie availability/answers (checkpoint G2), and UI labels.
 The test explains chance only for one segment pair; it does not adjust for confounders, and the data cannot separate
 city from format for online events.
 

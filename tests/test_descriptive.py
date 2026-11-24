@@ -71,9 +71,20 @@ class OfflineSpark:
         self.db.row_factory = sqlite3.Row
         self.course = course
         self.statements = []
+        self.variables = {"a8_current_availability": "event_availability"}
+        from types import SimpleNamespace
+        self.catalog = SimpleNamespace(tableExists=lambda name: self.db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name = ?", (name.split(".")[-1].removeprefix(course.prefix),)
+        ).fetchone() is not None)
 
     def sql(self, statement):
         self.statements.append(statement)
+        declaration = re.fullmatch(r"DECLARE OR REPLACE VARIABLE (\w+) STRING DEFAULT '([^']+)'", statement)
+        if declaration:
+            self.variables[declaration[1]] = declaration[2]
+            return Result(self.db.execute("SELECT 1 WHERE 0"))
+        for name, value in self.variables.items():
+            statement = statement.replace(f"IDENTIFIER({name})", value)
         for key in OBJECTS:
             statement = statement.replace(f"IDENTIFIER(a8_{key})", key).replace(self.course.t(key), key)
         match = re.fullmatch(r"CREATE OR REPLACE VIEW (\w+)\s+COMMENT '[^']*'\s+AS (.+)", statement, re.S)

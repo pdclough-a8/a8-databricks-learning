@@ -6,12 +6,12 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 |---|---|---|
 | S01 | Fixed, live verified | Notebook widget values did not persist across `%run`; use saved configuration |
 | S02 | Implemented | Lesson material belongs inside notebooks; old guides and fixture-only app removed |
-| S03 | Open | Official logo/font/colour assets not supplied; provisional text branding retained |
+| S03 | Partly superseded by S25 | Owner supplied a logo; master approval and exact font/colour tokens remain unconfirmed |
 | S04 | Blocked for Azure | a8-paid profile needs user OAuth reauthentication |
 | S05 | UI validation blocked | Embedded browser is not signed into Databricks |
 | S06 | Intentional | Solo learner policy affects everyone; no invented group or privilege escalation |
 | S07 | Resolved | An overly broad offline test matched a setup filename inside an error message |
-| S08 | Planned Stage 2 | GenAI, RAG, agent, MCP, learner-data app and deployment/governance modules |
+| S08 | Delivered except MCP | Modules 7–9 and 11–15 are supplied; Module 10 MCP remains planned. See validation for per-feature live limits |
 | S09 | Fixed, live verified | MLflow import used old runtime-loaded typing_extensions after dependency installation |
 | S10 | Fixed, live verified | Rerun ownership check used a non-existent `routine_comment` column |
 | S11 | Fixed, live verified | Unity Catalog model tag keys reject `.`; course MLflow/model tags now `a8learn_course`, `a8learn_tag` |
@@ -25,12 +25,13 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S19 | Open | Genie Spaces are renamed Genie Agents in current documentation; workspace labels, Free Edition availability and Verified answer behaviour are unconfirmed |
 | S21 | Fixed, not live verified | Module 3's opt-in widget was not visible to the learner: the cell created it then raised an error; now a separate gate cell, as in Modules 0, 2 and 5 |
 | S20 | Intentional | Cleanup notebook drops the reporting view but cannot delete dashboard drafts, Genie spaces or conversations; learners delete those manually by exact URL/ID |
-| S23 | Implemented, not live validated | Module 4 diagnostic analytics: drill-downs, mix versus rate, permutation test and a Genie "why" check; offline only |
+| S23 | SQL/Pandas live validated | Module 4 drill-downs, mix versus rate and permutation test ran live on 24 November; Genie and learner usability remain unverified |
 | S26 | Implemented | Notebook order did not match the analytics levels: 1b, 1c and 1d suffixes were out of sequence. Renumbered to 03 descriptive, 04 diagnostic, 05 predictive, 06 prescriptive; later modules are 7 to 12. Exercise IDs follow (3.x, 4.x, 5.1, 6.x); learner object keys and tables are unchanged |
 | S24 | Implemented, not live validated | Module 6 prescriptive analytics: seeded Monte Carlo and expected-cost search for overbooking and catering over Module 5 predictions; read-only, offline only |
 | S27 | Implemented, not live validated | Module 7 GenAI: bounded sentiment/classification and one optional `ai_query`, gated, in memory; offline only |
 | S25 | Open | Analytics8 logo supplied by the course owner and added to the docs site, README and START_HERE; the file is not confirmed as the approved master, and notebooks keep text branding because Git-folder image rendering is unverified |
 | S22 | Implemented, not live validated | Module 3 now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
+| S34 | Fixed locally, Databricks retest pending | Audit remediation: cleanup scope, pipeline reruns and data freshness, tool validation, seat scoring, numeric exercises, app polling, RAG citations and conflicting guidance |
 
 ## S01: persistent settings
 
@@ -211,16 +212,48 @@ Fairness to turned-away attendees needs human judgement (checkpoint H1). The pre
 
 ## S23: diagnostic analytics module
 
-**Readability pilot:** learner feedback said modules were hard to follow (hidden helpers, assumed event/statistics knowledge, no result interpretation, scattered setup cells). Module 4 now has a single setup cell, a helper "Under the hood" table, optional background blocks and computed readings; `docs/code-standard.md` allows one setup cell. Not yet applied to Modules 0-3 and 5-7; not live validated, not learner tested.
+**Readability pilot:** learner feedback said modules were hard to follow (hidden helpers, assumed event/statistics knowledge, no result interpretation, scattered setup cells). Module 4 now has a single setup cell, a helper "Under the hood" table, optional background blocks and computed readings; `docs/code-standard.md` allows one setup cell. The notebook ran live on 24 November. This pilot has not been applied to Modules 0–3 and 5–7; rendering of the optional details blocks and learner usability remain unverified.
 
 **Scope:** Module 4 reads `event_metrics` only. It writes nothing and makes no AI call. The optional Genie "why" question is learner-triggered.
-**Checks:** `tests/test_diagnostic.py`, offline only; Spark/serverless execution and Genie behaviour are not live validated.
+**Checks:** `tests/test_diagnostic.py` offline and the 24 November serverless notebook run; Genie remains unvalidated.
 **Limits:** the online gap is a pattern, not a proven cause. In this data online is both a city and a format, so they
 cannot be separated, and only 48 completed events (15 online) support the comparison. Confounder adjustment and
 Simpson's paradox are deferred. The failure modes listed for Genie are expected risks, not observed results.
-| S28 | Implemented, not live validated | Module 8a embeddings: `ai_query` against an embedding endpoint is unconfirmed live; Free Edition quota and endpoint names to be checked in the first live run |
-| S29 | Implemented, not live validated | Module 8b RAG: embedding and chat `ai_query` calls, `failOnError`, volume subfolder creation and refusal behaviour unconfirmed live; Unity Gateway may require `system.ai.` endpoint names |
-| S30 | Implemented, not live validated | Module 8c Vector Search: endpoint and index creation, 15-20 minute build and Free Edition quota unconfirmed until a live run; the endpoint bills while it exists, so cleanup is gated and also in 99_pause_and_cleanup |
+
+## Later module status
+
+The live results below precede S34; the revised code still needs its Databricks retest.
+
+| ID | Status | Issue or decision |
+|---|---|---|
+| S28 | SQL live validated; SDK gap | Module 8a SQL embedding returned 1,024-number vectors on Free on 24 November; the Python SDK route timed out and remains unvalidated |
+| S29 | Live validated before S34 | Module 8b volume/chunking, embeddings, chat and refusal ran on Free on 24 November; revised citation-row mapping is offline checked only |
+| S30 | Live validated before S34 | Module 8c endpoint/index creation, retrieval, chat and cleanup ran on Free on 24 November; revised citation mapping and eight-query evaluation reuse are offline checked only |
 | S31 | Live validated, one gap | Module 11 app: the notebook ran live on a8-free (create, grants, deploy, 200 response, delete, clean list). Not seen: the rendered page, so the in-app warehouse query and `valueFrom` are unconfirmed; open the app once in a browser. Streamlit started without a requirements.txt. The app is read-only: the booking-request form named in the first plan was left out so the service principal needs no write access |
 | S32 | Live validated, one gap | Module 14 evaluation: ran live on a8-free (baseline, blocked stale candidate, released refreshed candidate, traces with tool spans, judge cell, cleanup of the experiment). Fixed after the first run: `search_traces` returns the trace column as text, so spans are read with `mlflow.get_trace`. Not exercised: the endpoint as the predict function (no endpoint existed), and the judge's mark and run means were cut from the exported output. The evaluation experiment is in cleanup but not in `OBJECTS`, as with the attendance experiment. Production monitoring is described, not run |
 | S33 | Implemented, canary probed, notebook not live validated | Module 15 release gate and rollback: candidate versions, gate, alias move, release record and rollback are offline checked only. The optional canary's platform calls were probed on a8-free on 24 November 2026: a 90/10 split on one endpoint works, field names confirmed, the split update takes about 6 minutes. The notebook has not been run live (the harness task `release` keeps the canary off until a run is approved) |
+
+## S34: audit remediation, 24 November 2026
+
+**Symptoms:** endpoint-only cleanup removed app/job/pipeline objects; retained CSV batches broke the Module 13
+rebuild; later evaluations still used historical seats and the refresh changed only a timestamp. Malformed tool
+types could raise exceptions, numerical checks lost precision or disagreed across Decimal/float, seat substrings
+could pass, asynchronous SQL responses failed the app, and reordered SQL rows could attach the wrong RAG citation.
+
+**Fix:** endpoint-only cleanup now inspects/deletes only serving and Vector Search resources; full cleanup retains
+the ownership preflight for everything else. Module 13 validates and counts all retained course batches without
+overwriting them. Modules 11/14/15 select retained gold explicitly (otherwise the historical view), and their
+exercises use the selected session-variable source. Module 14 rereads snapshots; the app redeployment refreshes
+its source/settings and grants the selected aggregate. App SQL polls transient states, cancels at its time limit
+and reports real failures; grant-revocation errors are no longer swallowed. Tool names/arguments are type-checked,
+seat counts compared as signed whole numbers, numerical exercises normalised consistently to nine decimal
+places, and RAG sources matched by question. Vector Search reuses eight top-three results for both hit rates.
+
+**Guidance:** fixed runnable-copy advice, SQL-route claims, navigation, alias-versus-endpoint explanations,
+overbooking independence assumptions and contradictory delivery/live-status statements. No new module, cloud run,
+model request, commit or push was part of this correction.
+
+**Evidence and limits:** regression tests include same-state reruns/rebuilds, the cross-module pipeline/evaluation/
+release path, asynchronous app states, malformed replies, numeric types and reordered citations. See the current
+section at the top of [validation](validation.md) for final offline checks and learner retest steps. All these
+revisions are awaiting Databricks validation; earlier live evidence is not a pass for the revised code.

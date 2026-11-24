@@ -11,6 +11,7 @@ import json
 import re
 from dataclasses import asdict, dataclass, fields
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 
 from . import exercises
@@ -529,8 +530,10 @@ class Course:
 
 
 def _normal(value):
-    if isinstance(value, float):
-        return round(value, 2)
+    # Spark DECIMAL and pandas floats must compare alike without losing an exercise's third decimal.
+    if isinstance(value, (int, float, Decimal)) and not isinstance(value, bool):
+        number = Decimal(str(value))
+        return round(number, 9).normalize() if number.is_finite() else number
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value

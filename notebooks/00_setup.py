@@ -103,7 +103,8 @@
 # MAGIC dashboards and AI Functions, so the platform features are taught in SQL. **Python** (pandas, PySpark,
 # MAGIC scikit-learn) is where most analysis and machine learning is done.
 # MAGIC
-# MAGIC Every lesson works in SQL. Where the analysis could equally be done in Python, the lesson adds a **Python
+# MAGIC Data-query exercises support SQL; ML training, simulation, agents and deployment also use Python.
+# MAGIC Where the analysis could equally be done in Python, the lesson adds a **Python
 # MAGIC route** (cells marked `PYTHON ROUTE`) that builds the same result in pandas or the Python SDK and **checks it
 # MAGIC against the SQL result**. You do not need to do both.
 # MAGIC
@@ -123,8 +124,8 @@
 # MAGIC 1. To update: click the **main** branch button next to the notebook name → check the changed-files list is empty
 # MAGIC    (discard your own edits if you do not need them) → **Pull**.
 # MAGIC 2. After a pull: compute menu → **Reset environment**, then run the notebook from the top.
-# MAGIC 3. Never commit or push. To keep your own experiments, use **File → Clone** and save the copy outside the Git
-# MAGIC   folder.
+# MAGIC 3. Never commit or push. To keep runnable experiments, clone the **whole repository into a second Git folder**
+# MAGIC   with a different name. A single notebook cloned outside the repository is only a record, not a runnable copy.
 # MAGIC
 # MAGIC Lines such as `<<<<<<<` or `>>>>>>>` in a notebook mean an unresolved conflict. Your tables and settings are
 # MAGIC not in the Git folder, so the safe fix is always available: move the Git folder to Trash and clone it again.

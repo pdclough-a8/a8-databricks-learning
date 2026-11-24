@@ -88,7 +88,7 @@ from pathlib import Path
 
 import mlflow
 import pandas as pd
-from a8learn import release
+from a8learn import release, sql_string
 from a8learn import evaluation as ev
 from a8learn.lifecycle import endpoint_for_cleanup
 from databricks.sdk import WorkspaceClient
@@ -99,8 +99,10 @@ from mlflow.genai.scorers import scorer
 
 # WHAT: checks the prerequisites, resolves the names and finds the version that is Champion now.
 # LOOK FOR: one Ready line naming the model and its Champion version; "none" means Module 12 section 4 is not done.
-A8.require("event_availability", "doc_chunks")
-availability = A8.t("event_availability")
+availability_key = "seats_live" if spark.catalog.tableExists(A8.t("seats_live")) else "event_availability"
+A8.require(availability_key, "doc_chunks")
+availability = A8.t(availability_key)
+spark.sql(f"DECLARE OR REPLACE VARIABLE a8_current_availability STRING DEFAULT {sql_string(availability)}")
 chunks_table = A8.t("doc_chunks")
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
@@ -113,7 +115,7 @@ except Exception as error:  # no model or no alias: the lesson explains and skip
     champion = None
     print("No Champion found:", type(error).__name__)
 print(f"Ready | model: {MODEL} | Champion: {champion or 'none (run Module 12 section 4 first)'} | "
-      f"experiment: {A8.evaluation_experiment_path}")
+      f"source: {availability} | experiment: {A8.evaluation_experiment_path}")
 
 # COMMAND ----------
 # MAGIC %md
@@ -121,6 +123,8 @@ print(f"Ready | model: {MODEL} | Champion: {champion or 'none (run Module 12 sec
 # MAGIC The same five tasks as Modules 9, 12 and 14, with the expected facts read from your view. A gate compares
 # MAGIC versions on a fixed set, so we do not change it. We also take a **snapshot** of your tables now: the fresh
 # MAGIC candidate will answer from it. **I expect:** 32 chunks and 60 seat rows, as in Module 12.
+# MAGIC Setup selects retained Module 13 gold (`seats_live`), falling back to Module 1's historical view if absent.
+# MAGIC `IDENTIFIER(a8_current_availability)` in the exercise refers to that same selected source.
 
 # COMMAND ----------
 
@@ -314,7 +318,8 @@ else:
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 5. Release one, refuse the other
-# MAGIC Releasing moves the alias, and every consumer of `@Champion` changes with it, so it has its own switch. For
+# MAGIC Releasing moves the alias, so consumers that **load `@Champion` again** get the new version. Already-loaded
+# MAGIC models and the numeric-version-pinned Module 12 endpoint do not change. The alias move has its own switch. For
 # MAGIC each candidate we first write its **release record** (gate result, reasons, evaluation run id and the version
 # MAGIC it was compared with), then move the alias only if the gate passed.
 # MAGIC
@@ -405,13 +410,13 @@ else:
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 7. Optional: a canary on your endpoint
-# MAGIC A careful team would not move the alias for everyone at once. A **canary** gives the candidate a small share of
-# MAGIC real requests first. On **Model Serving** one endpoint can serve several versions and split traffic between
-# MAGIC them. If your Module 12 endpoint exists, we change it to serve the running version at 90% and the fresh
+# MAGIC An endpoint deployment is separate from moving a registry alias. A **canary** gives the candidate a small
+# MAGIC share of real requests first. On **Model Serving** one endpoint can serve several versions and split traffic.
+# MAGIC If your Module 12 endpoint exists, we change it to serve the running version at 90% and the fresh
 # MAGIC candidate at 10%, send 20 requests, and **always** put it back to the running version, even if a request fails.
 # MAGIC
-# MAGIC **What you can and cannot see.** Both versions answer from the same data, so their answers are identical and a
-# MAGIC reply does not say which version produced it. We show the split by reading the endpoint's traffic routes back,
+# MAGIC **What you can and cannot see.** Versions may answer differently if their snapshots differ, but a reply does
+# MAGIC not identify which version produced it. We show the split by reading the endpoint's traffic routes back,
 # MAGIC and that all 20 requests were answered. The update waits for the endpoint to be ready, which took about six
 # MAGIC minutes on Free Edition. **This lesson does not create an endpoint:** if yours is absent it says so and
 # MAGIC moves on.
@@ -491,7 +496,7 @@ else:
 # MAGIC The stale candidate would have told customers wrong seat counts. This exercise reproduces what it would say:
 # MAGIC 1. Exercise 15.1: the true and the stale seat count for the two seat questions, as a table.
 # MAGIC
-# MAGIC Use `IDENTIFIER(a8_event_availability)` for the view name. A blank answer shows the task and a hint.
+# MAGIC Use `IDENTIFIER(a8_current_availability)` for the selected source. A blank answer shows the task and a hint.
 # MAGIC `A8.solution("15.1")` shows a worked answer. You can also answer with a Spark or pandas DataFrame.
 
 # COMMAND ----------

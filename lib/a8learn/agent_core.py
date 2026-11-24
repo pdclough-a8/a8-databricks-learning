@@ -45,11 +45,12 @@ TOOLS = {"search_docs": ("query", search_docs), "check_availability": ("event_na
 
 
 def run_tool(snapshot, name, arguments):
-    if name not in TOOLS:
+    if not isinstance(name, str) or name not in TOOLS:
         return {"error": f"Unknown tool {name!r}. Allowed: {sorted(TOOLS)}"}
     field, function = TOOLS[name]
     value = arguments.get(field) if isinstance(arguments, dict) else None
-    if set(arguments) != {field} or not isinstance(value, str) or not 2 <= len(value.strip()) <= 80:
+    if (not isinstance(arguments, dict) or set(arguments) != {field}
+            or not isinstance(value, str) or not 2 <= len(value.strip()) <= 80):
         return {"error": f"{name} takes one text input called {field!r}, 2 to 80 characters."}
     try:
         return {"result": function(snapshot, value)}

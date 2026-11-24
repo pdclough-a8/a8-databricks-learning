@@ -3,7 +3,7 @@
 from . import COURSE_ID, quote
 
 
-def app_yaml(course, warehouse_resource="warehouse"):
+def app_yaml(course, warehouse_resource="warehouse", availability_key="event_availability"):
     """The app.yaml written next to app.py: the command, and the two settings the app reads."""
     return (
         'command: ["streamlit", "run", "app.py"]\n'
@@ -11,7 +11,7 @@ def app_yaml(course, warehouse_resource="warehouse"):
         "  - name: A8_WAREHOUSE_ID\n"
         f"    valueFrom: {warehouse_resource}\n"
         "  - name: A8_VIEW\n"
-        f'    value: "{course.t("event_availability")}"\n'
+        f'    value: "{course.t(availability_key)}"\n'
     )
 
 
@@ -35,13 +35,13 @@ def app_for_cleanup(course, workspace):
 def revoke_app_grants(course, workspace, app):
     """Revoke what Module 11 granted to the app's service principal. A missing grant is not an error."""
     principal = f"`{app.service_principal_client_id}`"
-    for statement in (f"REVOKE SELECT ON VIEW {course.t('event_availability')} FROM {principal}",
-                      f"REVOKE USE SCHEMA ON SCHEMA {course.schema_fqn} FROM {principal}",
+    # Either source may have been granted by an earlier deployment.
+    for key, kind in (("event_availability", "VIEW"), ("seats_live", "TABLE")):
+        if course.exists(key):
+            course.spark.sql(f"REVOKE SELECT ON {kind} {course.t(key)} FROM {principal}")
+    for statement in (f"REVOKE USE SCHEMA ON SCHEMA {course.schema_fqn} FROM {principal}",
                       f"REVOKE USE CATALOG ON CATALOG {quote(course.cfg.catalog)} FROM {principal}"):
-        try:
-            course.spark.sql(statement)
-        except Exception:  # shortcut: broad catch, an already-missing grant must not block deletion
-            pass
+        course.spark.sql(statement)
 
 
 def delete_app(course, workspace):

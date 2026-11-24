@@ -57,7 +57,7 @@
 import time
 import urllib.request
 
-from a8learn import quote
+from a8learn import quote, sql_string
 from a8learn.app_deploy import app_description, app_for_cleanup, app_yaml, delete_app
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.apps import App, AppDeployment, AppResource, AppResourceSqlWarehouse
@@ -70,7 +70,10 @@ from databricks.sdk.service.workspace import ImportFormat
 # LOOK FOR: one Ready line naming your app, the view it reads and the warehouse.
 A8.require("events", "bookings", "event_availability")
 w = WorkspaceClient()
-availability = A8.t("event_availability")
+availability_key = "seats_live" if spark.catalog.tableExists(A8.t("seats_live")) else "event_availability"
+availability = A8.t(availability_key)
+availability_kind = "TABLE" if availability_key == "seats_live" else "VIEW"
+spark.sql(f"DECLARE OR REPLACE VARIABLE a8_current_availability STRING DEFAULT {sql_string(availability)}")
 warehouse_id = A8.cfg.warehouse_id
 if not warehouse_id:
     warehouses = list(w.warehouses.list())
@@ -82,7 +85,8 @@ print(f"Ready | app {A8.app_name} | reads {availability} | warehouse {warehouse_
 # MAGIC %md
 # MAGIC ## 1. Read the app
 # MAGIC The app is one Python file in your Git folder. It is **read-only**: one `SELECT` on the availability view
-# MAGIC from Module 1, a city filter, a threshold, a chart and a panel that names the two identities. **Look for:** the
+# MAGIC (Module 13 gold if retained, otherwise the historical Module 1 view), a city filter, a threshold, a chart and
+# MAGIC a panel that names the two identities. Setup prints the selected source. **Look for:** the
 # MAGIC two settings it reads from the environment (`A8_WAREHOUSE_ID` and `A8_VIEW`), and the one header it reads to
 # MAGIC find the viewer.
 # MAGIC
@@ -98,7 +102,7 @@ print((ROOT / "app" / "a8_events" / "app.py").read_text(encoding="utf-8"))
 
 # WHAT: prints the settings file generated for your app, with your own view name.
 # LOOK FOR: the start command, the warehouse taken from the resource with valueFrom, and your view name.
-print(app_yaml(A8))
+print(app_yaml(A8, availability_key=availability_key))
 
 # COMMAND ----------
 # MAGIC %md
@@ -135,7 +139,7 @@ if create_approved:
         w.workspace.mkdirs(A8.app_folder)
         w.workspace.upload(f"{A8.app_folder}/app.py", (ROOT / "app" / "a8_events" / "app.py").read_bytes(),
                            format=ImportFormat.AUTO, overwrite=True)
-        w.workspace.upload(f"{A8.app_folder}/app.yaml", app_yaml(A8).encode(),
+        w.workspace.upload(f"{A8.app_folder}/app.yaml", app_yaml(A8, availability_key=availability_key).encode(),
                            format=ImportFormat.AUTO, overwrite=True)
         app = w.apps.create_and_wait(app=App(
             name=A8.app_name, description=app_description(A8),
@@ -163,7 +167,9 @@ else:
 # MAGIC ## 3. Give the app access to one view
 # MAGIC The app's service principal starts with **no** access to your data. A view is the right thing to share: it
 # MAGIC shows seats left without exposing the bookings table or anyone's email. The three grants are `USE CATALOG` and
-# MAGIC `USE SCHEMA` (permission to reach the view) and `SELECT` on the view itself. Nothing else is granted.
+# MAGIC `USE SCHEMA` (permission to reach the source) and `SELECT` on the selected view or aggregate gold table.
+# MAGIC If you previously deployed against the historical view, rerun setup, grants and deployment to switch to gold.
+# MAGIC Deletion revokes access to either source. Do not delete gold while an app still reads it.
 # MAGIC
 # MAGIC Set `grant_app_access` to **yes** to apply them. **Undo:** the last section revokes them.
 
@@ -182,7 +188,7 @@ if grant_approved and app is not None:
     principal = f"`{app.service_principal_client_id}`"
     for statement in (f"GRANT USE CATALOG ON CATALOG {quote(A8.cfg.catalog)} TO {principal}",
                       f"GRANT USE SCHEMA ON SCHEMA {A8.schema_fqn} TO {principal}",
-                      f"GRANT SELECT ON VIEW {availability} TO {principal}"):
+                      f"GRANT SELECT ON {availability_kind} {availability} TO {principal}"):
         print(statement)
         spark.sql(statement)
 else:
@@ -193,7 +199,7 @@ else:
 # WHAT: lists what the app's service principal holds on the view.
 # LOOK FOR: one row with SELECT and nothing else.
 if grant_approved and app is not None:
-    display(spark.sql(f"SHOW GRANTS `{app.service_principal_client_id}` ON VIEW {availability}"))
+    display(spark.sql(f"SHOW GRANTS `{app.service_principal_client_id}` ON {availability_kind} {availability}"))
 
 # COMMAND ----------
 # MAGIC %md
@@ -203,13 +209,13 @@ if grant_approved and app is not None:
 # MAGIC
 # MAGIC **Predict:** if you had deployed *before* the grants, what would the page have shown? Open the app and look:
 # MAGIC the page should show a table, not an error. A red "Could not read seats left" message means the grants in
-# MAGIC section 3 are missing. **Undo:** the last section.
+# MAGIC section 3 are missing or a query failed; read the displayed reason. **Undo:** the last section.
 
 # COMMAND ----------
 
 # WHAT: asks for your approval before the app is deployed.
 # LOOK FOR: a deploy_app widget above the notebook, defaulting to no. Set it to yes, then rerun this cell.
-deploy_approved = A8.gate("deploy_app", "Deploy your app (it starts running)?")
+deploy_approved = A8.gate("deploy_app", "Refresh your app source/settings and deploy (it starts running)?")
 print("Approved." if deploy_approved else "Not approved yet: set the widget to yes and rerun this cell.")
 
 # COMMAND ----------
@@ -218,6 +224,10 @@ print("Approved." if deploy_approved else "Not approved yet: set the widget to y
 # LOOK FOR: deployment state SUCCEEDED and the app RUNNING; a failure message is printed, not hidden.
 state = None
 if deploy_approved and app is not None:
+    w.workspace.upload(f"{A8.app_folder}/app.py", (ROOT / "app" / "a8_events" / "app.py").read_bytes(),
+                       format=ImportFormat.AUTO, overwrite=True)
+    w.workspace.upload(f"{A8.app_folder}/app.yaml", app_yaml(A8, availability_key=availability_key).encode(),
+                       format=ImportFormat.AUTO, overwrite=True)
     deployment = w.apps.deploy_and_wait(
         app_name=A8.app_name, app_deployment=AppDeployment(source_code_path=f"/Workspace{A8.app_folder}"))
     print("Deployment:", deployment.status.state.value, "|", deployment.status.message)
@@ -270,7 +280,8 @@ else:
 # MAGIC 1. Exercise 11.1: how many scheduled events have fewer than 30 seats left? That is the app's second metric at
 # MAGIC    its default threshold.
 # MAGIC
-# MAGIC Use `IDENTIFIER(a8_event_availability)`. A blank answer shows the task and a hint. `A8.solution("11.1")` shows
+# MAGIC Use `IDENTIFIER(a8_current_availability)`, declared by setup for the selected source.
+# MAGIC A blank answer shows the task and a hint. `A8.solution("11.1")` shows
 # MAGIC a worked answer.
 
 # COMMAND ----------
@@ -283,7 +294,8 @@ A8.check("11.1", answer_11_1)
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 7. Remove what you created
-# MAGIC The app is what keeps compute running, so remove it. This revokes the three grants, deletes the app after
+# MAGIC The app is what keeps compute running, so remove it. This revokes the source/schema/catalog grants,
+# MAGIC then deletes the app after
 # MAGIC checking its name, creator and course marker, and deletes the source folder. Deletion finishes a few
 # MAGIC seconds after the call. **Undo:** to build it again, run sections 2 to 4 again.
 
@@ -316,7 +328,7 @@ else:
 # MAGIC that outcome as complete.
 # MAGIC
 # MAGIC **Pause:** this lesson created an app and a folder. Delete them above; `99_pause_and_cleanup` removes both.
-# MAGIC **Next:** `99_pause_and_cleanup`.
+# MAGIC **Next:** `14_evaluate_and_monitor`, or `99_pause_and_cleanup` if pausing.
 
 # COMMAND ----------
 # WHAT: asks why the service principal, not the viewer, needs the grants.

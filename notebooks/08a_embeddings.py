@@ -431,4 +431,4 @@ A8.reflect("8a.b", my_answer_8a_b)
 # LOOK FOR: the outcomes you can explain and the cleanup notebook.
 A8.next_step(["Distinct feedback comments", "Bag-of-words vectors and cosine similarity",
               "Keyword search versus similarity search", "Optional real embeddings from a Foundation Model endpoint"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "08b_rag", "Retrieve knowledge-base passages and build a grounded answer")

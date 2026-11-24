@@ -77,6 +77,7 @@ class FakeWorkspace:
     def delete_pipeline(self, pipeline_id):
         self.calls.append(("pipelines.delete", pipeline_id))
         self.pipeline_specs.pop(pipeline_id)
+        self.processed.clear()
 
     def run_pipeline_model(self):
         config = next(iter(self.pipeline_specs.values()))["configuration"]
@@ -150,15 +151,16 @@ class PipelineTests(unittest.TestCase):
         self.course = Course(Config("workspace", "default", "offline13", "synthetic@example.com",
                                     "https://example.com"), answers="solutions")
 
-    def run_lesson(self, existing_pipeline=False, **approvals):
-        self.spark = PipelineSpark(self.course, lambda prompt: None)
-        self.addCleanup(self.spark.db.close)
-        self.course.spark = self.spark
-        self.volume = tempfile.TemporaryDirectory()
-        self.addCleanup(self.volume.cleanup)
-        self.incoming = Path(self.volume.name) / "incoming"
-        self.w = FakeWorkspace(self.course.cfg.user, self.incoming, self.spark.db)
-        self.w.course_clean = "bookings_clean"
+    def run_lesson(self, existing_pipeline=False, reuse=False, **approvals):
+        if not reuse:
+            self.spark = PipelineSpark(self.course, lambda prompt: None)
+            self.addCleanup(self.spark.db.close)
+            self.course.spark = self.spark
+            self.volume = tempfile.TemporaryDirectory()
+            self.addCleanup(self.volume.cleanup)
+            self.incoming = Path(self.volume.name) / "incoming"
+            self.w = FakeWorkspace(self.course.cfg.user, self.incoming, self.spark.db)
+            self.w.course_clean = "bookings_clean"
 
         class Dbutils:
             pass
@@ -266,6 +268,23 @@ class PipelineTests(unittest.TestCase):
                          ["bookings_batch_1.csv", "bookings_batch_2.csv"])
         self.assertEqual(self.spark.db.execute("SELECT count(DISTINCT source_file) FROM bookings_bronze").fetchone()[0],
                          2)
+
+    def test_rerun_and_rebuild_accept_retained_batches_without_duplicates(self):
+        gates = {"create_pipeline": True, "run_pipeline": True, "run_job": True}
+        self.run_lesson(**gates)
+        namespace = self.run_lesson(reuse=True, **gates, delete_pipeline_objects=True)
+        self.assertEqual(namespace["counts"]["bronze"], 129)
+        files = {p.name: p.read_bytes() for p in self.incoming.glob("*.csv")}
+        namespace = self.run_lesson(reuse=True, **gates)
+        self.assertEqual(namespace["counts"], {"bronze": 129, "silver": 120, "gold": 60})
+        self.assertTrue(namespace["gold_matches"]([1, 2, 3])[0])
+        self.assertEqual({p.name: p.read_bytes() for p in self.incoming.glob("*.csv")}, files)
+
+    def test_job_can_run_without_the_manual_updates(self):
+        namespace = self.run_lesson(create_pipeline=True, run_job=True)
+        self.assertEqual(namespace["job_state"], "SUCCESS")
+        self.assertEqual(self.spark.table("bookings_bronze").count(), 86)  # files 1 and 3 only
+        self.assertTrue(namespace["gold_matches"]([1, 3])[0])
 
     def test_gold_agrees_with_an_independent_python_calculation(self):
         namespace = self.run_lesson(create_pipeline=True, run_pipeline=True)
@@ -412,9 +431,24 @@ class PipelineCleanupTests(unittest.TestCase):
         self.w.pipelines.get.return_value = self.info
         self.w.jobs.list.return_value = [self.job]
 
-    def test_job_then_pipeline_are_deleted_for_their_owner(self):
+    def full_cleanup(self):
+        from a8learn.lifecycle import cleanup
+        self.client.get_experiment_by_name.return_value = None
+        with patch("a8learn.lifecycle.model_for_cleanup", return_value=None), \
+             patch.object(self.course, "exists", return_value=False):
+            return cleanup(self.course, self.w, self.client, "smoke", tables=True)
+
+    def test_endpoint_only_does_not_inspect_or_delete_apps_jobs_or_pipelines(self):
         from a8learn.lifecycle import cleanup
         result = cleanup(self.course, self.w, self.client, "smoke")
+        self.assertFalse(result["app_deleted"] or result["job_deleted"] or result["pipeline_deleted"])
+        self.w.apps.get.assert_not_called()
+        self.w.jobs.list.assert_not_called()
+        self.w.pipelines.list_pipelines.assert_not_called()
+        self.w.workspace.delete.assert_not_called()
+
+    def test_job_then_pipeline_are_deleted_for_their_owner(self):
+        result = self.full_cleanup()
         self.assertTrue(result["pipeline_deleted"] and result["job_deleted"])
         self.w.jobs.delete.assert_called_once_with(5)
         self.w.pipelines.delete.assert_called_once_with("p1")
@@ -422,14 +456,13 @@ class PipelineCleanupTests(unittest.TestCase):
         self.assertEqual(order, ["jobs.delete", "pipelines.delete"])
 
     def test_foreign_pipeline_or_job_stops_cleanup_before_any_delete(self):
-        from a8learn.lifecycle import cleanup
         self.info.creator_user_name = "other@example.com"
         with self.assertRaises(PermissionError):
-            cleanup(self.course, self.w, self.client, "smoke")
+            self.full_cleanup()
         self.info.creator_user_name = self.mine
         self.job.settings.tags = {}
         with self.assertRaises(PermissionError):
-            cleanup(self.course, self.w, self.client, "smoke")
+            self.full_cleanup()
         self.w.jobs.delete.assert_not_called()
         self.w.pipelines.delete.assert_not_called()
 

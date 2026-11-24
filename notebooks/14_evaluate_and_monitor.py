@@ -89,7 +89,7 @@ dbutils.library.restartPython()
 
 import mlflow
 import pandas as pd
-from a8learn import agent_core
+from a8learn import agent_core, sql_string
 from a8learn import evaluation as ev
 from a8learn.lifecycle import endpoint_for_cleanup
 from databricks.sdk import WorkspaceClient
@@ -100,8 +100,10 @@ from mlflow.genai.scorers import Guidelines, scorer
 
 # WHAT: checks the prerequisites and resolves the names this lesson uses.
 # LOOK FOR: one Ready line naming the source tables, the experiment path and the judge model.
-A8.require("event_availability", "doc_chunks")
-availability = A8.t("event_availability")
+availability_key = "seats_live" if spark.catalog.tableExists(A8.t("seats_live")) else "event_availability"
+A8.require(availability_key, "doc_chunks")
+availability = A8.t(availability_key)
+spark.sql(f"DECLARE OR REPLACE VARIABLE a8_current_availability STRING DEFAULT {sql_string(availability)}")
 chunks_table = A8.t("doc_chunks")
 JUDGE_MODEL = A8.cfg.chat_model or "databricks-meta-llama-3-3-70b-instruct"
 client = MlflowClient()
@@ -118,19 +120,26 @@ print(f"Ready | {availability} | {chunks_table} | experiment: {A8.evaluation_exp
 # MAGIC
 # MAGIC The agent under test is the packaged one from Module 12 (`agent_core`), answering from a **snapshot** of your
 # MAGIC tables taken now. **I expect:** 32 chunks and 60 seat rows, as in Module 12.
+# MAGIC Setup uses Module 13's `seats_live` if retained; otherwise it uses the historical `event_availability`.
+# MAGIC The selected source also backs `IDENTIFIER(a8_current_availability)` in the exercise. Run Module 13 and
+# MAGIC keep its tables to test real freshness. If data changes during this lesson, restart from setup.
 
 # COMMAND ----------
 
 # WHAT: takes the snapshot the baseline agent will answer from, as Module 12 did.
 # LOOK FOR: the number of chunks and seat rows.
-snapshot = {
-    "taken_on": pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d %H:%M UTC"),
-    "chunks": [{"doc_name": r["doc_name"], "section": r["section"], "content": r["content"]} for r in spark.sql(
-        f"SELECT doc_name, section, content FROM {chunks_table} ORDER BY doc_name, section").collect()],
-    "seats": [{"event_name": r["event_name"], "city": r["city"], "event_date": str(r["event_date"]),
-               "status": r["status"], "available": int(r["available"])} for r in spark.sql(
-        f"SELECT event_name, city, event_date, status, available FROM {availability}").collect()],
-}
+def take_snapshot():
+    return {
+        "taken_on": pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d %H:%M UTC"),
+        "chunks": [{"doc_name": r["doc_name"], "section": r["section"], "content": r["content"]} for r in spark.sql(
+            f"SELECT doc_name, section, content FROM {chunks_table} ORDER BY doc_name, section").collect()],
+        "seats": [{"event_name": r["event_name"], "city": r["city"], "event_date": str(r["event_date"]),
+                   "status": r["status"], "available": int(r["available"])} for r in spark.sql(
+            f"SELECT event_name, city, event_date, status, available FROM {availability}").collect()],
+    }
+
+
+snapshot = take_snapshot()
 print(f"{len(snapshot['chunks'])} chunks, {len(snapshot['seats'])} seat rows, taken {snapshot['taken_on']}")
 
 # COMMAND ----------
@@ -322,7 +331,7 @@ else:
 # WHAT: runs a refreshed candidate (a snapshot taken again from the current tables) through the same gate.
 # LOOK FOR: a RELEASE verdict with no reasons.
 if baseline is not None:
-    fresh = {**snapshot, "taken_on": pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d %H:%M UTC")}
+    fresh = take_snapshot()
     with ev.traced_tools(mlflow.trace):
         refreshed = means(evaluate_agent("candidate-refreshed-snapshot", predict_with(fresh)))
     refreshed_verdict = ev.release_gate(baseline, refreshed)
@@ -489,7 +498,7 @@ else:
 # MAGIC The expected values come from your data, not from the agent. This exercise builds them:
 # MAGIC 1. Exercise 14.1: the true seat counts for the two seat questions, as a table.
 # MAGIC
-# MAGIC Use `IDENTIFIER(a8_event_availability)` for the view name. A blank answer shows the task and a hint.
+# MAGIC Use `IDENTIFIER(a8_current_availability)` for the selected source. A blank answer shows the task and a hint.
 # MAGIC `A8.solution("14.1")` shows a worked answer. You can also answer with a Spark or pandas DataFrame.
 
 # COMMAND ----------

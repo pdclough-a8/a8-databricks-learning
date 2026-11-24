@@ -31,8 +31,10 @@ def grounded(outputs, expectations):
     if expectations["expected_tool"] == "none":
         return bool(REFUSAL_WORDS.search(text.lower()))
     fact = expectations["fact"]
-    if expectations["expected_tool"] == "check_availability":  # whole number followed by "seats left", not a substring
-        return bool(re.search(rf"(?<!\d){re.escape(fact)} seats left", text))
+    if expectations["expected_tool"] == "check_availability":
+        # Keep the sign (oversold events can be negative); reject fractions, larger numbers and contradictions.
+        counts = re.findall(r"(?<![\w.+-])(-?\d+)\s+seats left\b", text)
+        return bool(counts) and all(int(count) == int(fact) for count in counts)
     return fact in text
 
 

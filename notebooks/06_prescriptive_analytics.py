@@ -96,7 +96,8 @@ event_forecast = A8.t("event_forecast")
 # MAGIC - **Calibration.** We treat the model's probabilities as correct. Module 5 evidence is the limit of that trust.
 # MAGIC - **Overbooking what-if.** Most scheduled events are far from full. We ask: *if this event sold up to a limit,
 # MAGIC   and the extra buyers behaved like the current bookers, what limit is cheapest?* Late bookers may behave
-# MAGIC   differently.
+# MAGIC   differently. This simplified what-if treats individual tickets as independent with one average probability.
+# MAGIC   Unlike the booking-party catering model below, it ignores parties attending together and can understate risk.
 # MAGIC - **Catering uses existing bookings only.** Bookings not yet made are not in the prediction table, so re-run
 # MAGIC   the decision as bookings arrive.
 # MAGIC - **Humans decide.** Turning attendees away is a customer-fairness question that no cost table settles.

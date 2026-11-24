@@ -35,7 +35,8 @@ documents, retrieves by word overlap and by embeddings, builds a grounded, cited
 offline checked and validated live on Free Edition. It writes nine files and one table; the embedding and chat
 requests each need your approval. A managed Vector Search index follows in 8c.
 
-**Choose your route.** Every lesson works in SQL. Where the analysis could be done in Python, a `PYTHON ROUTE` cell
+**Choose your route.** Data-query exercises support SQL; training, simulation, agents and deployment also use Python.
+Where the same analysis can be done in Python, a `PYTHON ROUTE` cell
 (pandas, or the Databricks SDK in 8a) builds the same result and checks it against the SQL. Data scientists can start
 from those cells and answer exercises with a DataFrame; analysts can follow the SQL. See `00_setup`, "Choose your route".
 
@@ -46,7 +47,7 @@ and delete step needs your approval and `99_pause_and_cleanup` also removes them
 
 Module **9** (agents) builds a small agent that chooses between two read-only tools, with a step cap and a trace. It
 needs the 8b chunk table, creates nothing, and its two model steps (a JSON decider and an optional native tool-calling one) are default-no switches. Supplied and offline checked,
-**not live validated**.
+**validated live on Free Edition**. The revised guardrails and scoring rules still need a Databricks retest.
 
 Module **12** (deploy and govern) packages the Module 9 agent with a snapshot of its data, logs and registers it as a
 Unity Catalog model with a `Champion` alias, serves it on a scale-to-zero endpoint, queries it, reads who can use it and
@@ -56,10 +57,11 @@ deletes the endpoint. Each cloud step is a default-no switch, the endpoint **can
 Module **13** (pipelines and jobs) lands new booking files in a volume and builds a bronze, silver and gold pipeline with
 data-quality rules, so seats left stay current. A scheduled job, created paused, runs it. Creating and running the
 pipeline and job are default-no switches that use compute, and `99_pause_and_cleanup` removes them. Offline checked and
-validated live on Free Edition.
+validated live on Free Edition. Keep its gold table for the app and freshness checks in Modules 14–15; their setup
+selects gold when present and explicitly falls back to Module 1's historical view otherwise.
 
 Module **11** (interactive app) deploys a small read-only Streamlit app on Databricks Apps, gives its service
-principal `SELECT` on one view, and shows the app's identity beside the viewer's. Creating, granting and deploying are
+principal `SELECT` on one aggregate view/table, and shows the app's identity beside the viewer's. Creating, granting and deploying are
 default-no switches, the app keeps compute running while it exists, and `99_pause_and_cleanup` removes it. Offline
 checked and run live on Free Edition; the page content itself was not seen rendered in that run.
 
@@ -93,8 +95,13 @@ decisions over Module 5's predictions. It is read-only, uses assumed teaching co
 The [analytics-level map and full curriculum](docs/index.md) distinguish descriptive (3), diagnostic (4),
 predictive (5) and prescriptive (6) analytics. Modules 7 onwards add AI capabilities (GenAI functions, RAG, agents,
 MCP, an app using your learner tables, deployment and governance). They support the same levels rather than adding new
-ones, and each will say which level it serves. Automation is planned in Modules 9 and 12.
-These later modules are planned, not supplied yet. The earlier fixture-based app has been removed.
+ones, and each names the level it serves. Modules 9 and 12–15 supply agents, deployment and operations.
+Module 10 (MCP) remains planned, not supplied. The earlier fixture-based app has been replaced by Module 11.
+
+**Audit corrections, 24 November 2026:** the affected notebooks have new offline regression coverage but have not
+been rerun in Databricks since those corrections. Earlier live results do not certify the revised code.
+`endpoint_only` cleanup now leaves apps, jobs and pipelines intact; delete those in their lessons or choose
+`all_course_objects`. See the [validation hand-off](docs/validation.md#audit-remediation-24-november-2026).
 
 **Start in Free Edition, fall back to paid.** Clone the course into each workspace you have. Work through it in
 Free Edition first. If a step is blocked by a missing feature, a quota or a permission, repeat that lesson in your

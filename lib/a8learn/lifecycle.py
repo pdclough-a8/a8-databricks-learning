@@ -102,15 +102,15 @@ def model_for_cleanup(course, workspace, client, name=None):
 
 
 def cleanup(course, workspace, client, confirmation, tables=False):
-    """Delete endpoint, optionally tables/model/experiment. Config and source files stay."""
+    """Delete serving/Vector Search endpoints; full cleanup also removes apps, jobs, pipelines and data."""
     if confirmation != course.cfg.tag:
         raise ValueError("Type your exact learner tag to confirm deletion.")
     endpoint = endpoint_for_cleanup(course, workspace)
     agent_endpoint = endpoint_for_cleanup(course, workspace, course.agent_endpoint_name)
     index, vector_endpoint = vector_search_for_cleanup(course, workspace)
-    pipeline = pipeline_for_cleanup(course, workspace)
-    job = job_for_cleanup(course, workspace)
-    app = app_for_cleanup(course, workspace)
+    pipeline = pipeline_for_cleanup(course, workspace) if tables else None
+    job = job_for_cleanup(course, workspace) if tables else None
+    app = app_for_cleanup(course, workspace) if tables else None
     keys = [k for k in reversed(OBJECTS) if OBJECTS[k][0] != "model"] if tables else []
     present = [k for k in keys if course.exists(k)]
     # Preflight every intended target before the first delete.

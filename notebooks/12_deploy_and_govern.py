@@ -85,7 +85,6 @@ dbutils.library.restartPython()
 # WHAT: imports the libraries used in this lesson.
 # LOOK FOR: no output; json and tempfile handle the snapshot file, mlflow does the logging and registering.
 import json
-import re
 import sys
 import tempfile
 from pathlib import Path
@@ -93,6 +92,7 @@ from pathlib import Path
 import mlflow
 import pandas as pd
 from a8learn import agent_core
+from a8learn import evaluation as ev
 from a8learn.lifecycle import endpoint_for_cleanup
 from databricks.sdk import WorkspaceClient
 from mlflow import MlflowClient
@@ -197,9 +197,7 @@ TASKS = [
 
 
 def grounded(answer_text, task):
-    if task["tool"] is None:  # nothing can answer it: the answer must be a refusal, not a guess
-        return bool(re.search(r"can't|cannot|not find|don't|no information", answer_text.lower()))
-    return task["fact"] in answer_text
+    return ev.grounded({"answer": answer_text}, ev.make_expectations(task["tool"], task["fact"]))
 
 # COMMAND ----------
 
@@ -390,8 +388,9 @@ else:
 # MAGIC `EXECUTE` on the model and `CAN QUERY` on the endpoint, and keep change rights to a small team.
 # MAGIC
 # MAGIC **Staleness.** The snapshot holds seat numbers from when you logged. The agent will keep giving those numbers
-# MAGIC until you log a new version and move the alias. That is the cost of a self-contained model, and the reason
-# MAGIC live data is normally read through a governed connection instead.
+# MAGIC until you log a new version and update the endpoint to serve its numeric version. Moving `Champion` changes
+# MAGIC subsequent alias-based loads, not an already-loaded model or this version-pinned endpoint. Module 15 teaches
+# MAGIC alias releases separately from endpoint traffic changes. Live data normally needs a governed connection.
 
 # COMMAND ----------
 

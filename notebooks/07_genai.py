@@ -296,7 +296,7 @@ A8.check("7.2", "")
 # MAGIC Results are in memory, not a table. The platform may retain notebook output and query history under its
 # MAGIC policies; memory-only is not a zero-retention promise. No new course object needs cleanup.
 # MAGIC **Deferred:** prompt registry/versioning, MLflow tracing, production evaluation, automation and deployment.
-# MAGIC **Next:** `08a_embeddings` (find comments by meaning); RAG follows in Module 8b, planned.
+# MAGIC **Next:** `08a_embeddings` (find comments by meaning); `08b_rag` then retrieves knowledge-base passages.
 # MAGIC Pause here; existing optional Module 5 serving still needs scoped cleanup.
 
 # COMMAND ----------

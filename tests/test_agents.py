@@ -67,6 +67,10 @@ GROUP BY e.event_id, e.event_name, e.city, e.event_date, e.status, e.capacity"""
         if "ai_query" in statement:
             self.chat_calls.append(args["prompt"])
             return Replies([{"reply": self.reply(args["prompt"])}])
+        if statement.startswith("DECLARE OR REPLACE VARIABLE "):
+            return super().sql(statement)
+        for name, value in self.variables.items():
+            statement = statement.replace(f"IDENTIFIER({name})", value)
         for key in OBJECTS:
             statement = statement.replace(f"IDENTIFIER(a8_{key})", key).replace(self.course.t(key), key)
         return Result(self.db.execute(statement, args or {}))
@@ -77,6 +81,9 @@ def good_reply(prompt):
     task = re.search(r"Task: (.+)\n", prompt).group(1)
     if "Steps so far: none" not in prompt:
         step = re.search(r"Step 1: (\w+)\(.*? -> (.+)", prompt).group(2)
+        if "Step 1: check_availability(" in prompt:
+            rows = json.loads(step)
+            return {"result": json.dumps({"final": f"{rows[0]['available']} seats left"}), "errorMessage": None}
         return {"result": json.dumps({"final": f"From the tool: {step[:200]}"}), "errorMessage": None}
     if "weather" in task.lower():
         return {"result": json.dumps({"final": "I can't find that in the A8 Events documents."}), "errorMessage": None}
@@ -184,6 +191,31 @@ class AgentTests(unittest.TestCase):
         for bad in ("", None, "no json", '{"tool": "search_docs"}', '{"tool": ', "[1, 2]", '{"a": 1}'):
             self.assertIn("error", parse(bad), bad)
 
+    def test_malformed_tool_types_never_escape_the_guardrails(self):
+        namespace = self.run_lesson()
+        from a8learn import agent_core
+        for name, arguments in (([], {}), ({}, {}), (None, {}), ("search_docs", None),
+                                ("search_docs", 1), ("search_docs", False)):
+            with self.subTest(name=name, arguments=arguments):
+                self.assertIn("error", namespace["run_tool"](name, arguments))
+                self.assertIn("error", agent_core.run_tool({}, name, arguments))
+        for text in ('{"tool":[],"args":{}}', '{"tool":{},"args":{}}', '{"final":null}', 42):
+            self.assertIn("error", namespace["parse_decision"](text))
+        for message in (None, [], {"tool_calls": [None]}, {"tool_calls": [{"function": {
+                "name": "search_docs", "arguments": "null"}}]}):
+            decision = namespace["parse_native"]({"choices": [{"message": message}]})
+            self.assertIn("error", decision)
+            self.assertTrue(namespace["run_agent"]("refund", lambda *_, d=decision: d)["status"].startswith("stopped:"))
+
+    def test_seat_score_rejects_larger_fractional_and_conflicting_numbers(self):
+        namespace = self.run_lesson()
+        task = namespace["TASKS"][0]
+        fact = task["fact"]
+        for answer in (f"1{fact} seats left", f"-{fact} seats left", f"1.{fact} seats left",
+                       f"{fact} seats left, actually 999 seats left"):
+            self.assertFalse(namespace["score"]({"answer": answer, "trace": []}, task)[1], answer)
+        self.assertTrue(namespace["score"]({"answer": f"{fact} seats left", "trace": []}, task)[1])
+
     def test_approved_model_agent_is_scored_and_stays_inside_the_budget(self):
         namespace = self.run_lesson(approve=True)
         self.assertLessEqual(len(self.spark.chat_calls), 12)
@@ -201,6 +233,9 @@ class AgentTests(unittest.TestCase):
         messages = body["messages"]
         task = messages[1]["content"]
         if messages[-1]["role"] == "tool":
+            rows = json.loads(messages[-1]["content"])
+            if isinstance(rows, list) and rows and "available" in rows[0]:
+                return {"choices": [{"message": {"content": f"{rows[0]['available']} seats left"}}]}
             return {"choices": [{"message": {"content": "From the tool: " + messages[-1]["content"][:200]}}]}
         if "weather" in task.lower():
             return {"choices": [{"message": {"content": "I can't find that in the A8 Events documents."}}]}

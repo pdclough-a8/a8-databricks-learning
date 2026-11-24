@@ -27,7 +27,8 @@
 # MAGIC   its versions and aliases, and evaluation runs to the Module 14 experiment. Its optional canary restores your
 # MAGIC   endpoint in the lesson itself; the endpoint is deleted here like any other.
 # MAGIC - **Apps:** a Databricks App keeps compute running while it exists. Module 11 creates one; this notebook revokes
-# MAGIC   its grants and deletes it and its source folder. Later app modules will be taught with their own lifecycle.
+# MAGIC   its grants and deletes it and its source folder only with `all_course_objects`. To remove just the app,
+# MAGIC   use Module 11's delete switch. `endpoint_only` leaves apps, jobs and pipelines untouched.
 # MAGIC
 # MAGIC To resume, reopen the next lesson and run its configuration cell. Saved settings reload from your workspace user
 # MAGIC folder.
@@ -71,6 +72,8 @@ client = MlflowClient()
 # LOOK FOR: your endpoint name and one line per object; nothing is deleted.
 print("Exact serving endpoint candidates:", A8.endpoint_name, "|", A8.agent_endpoint_name)
 print("Exact Vector Search endpoint and index candidates:", A8.vector_endpoint_name, "|", A8.vector_index_name)
+print("Full cleanup also removes app and source folder:", A8.app_name, "|", A8.app_folder)
+print("Full cleanup also removes job and pipeline:", A8.job_name, "|", A8.pipeline_name)
 for key, (kind, _) in OBJECTS.items():
     print(f"{kind:8} {A8.t(key)}")
 
@@ -87,10 +90,12 @@ A8.links(("Serving: check whether your endpoint exists", "serving", ""),
 # MAGIC tags, and your Vector Search index and endpoint from Module 8c after checking their creator (index first, then
 # MAGIC endpoint).
 # MAGIC `all_course_objects` additionally drops the named views/tables/functions/volume, all versions and aliases
-# MAGIC of this course's models (attendance and agent), and soft-deletes this course MLflow experiment.
+# MAGIC of this course's models (attendance and agent), and soft-deletes the training and evaluation experiments.
+# MAGIC It also removes your course app and generated app folder (revoking its grants), job and pipeline.
 # MAGIC It deletes uploaded CSV files inside the course volume too. Delta/model/MLflow retention policies can retain
 # MAGIC underlying storage; this is not a secure erasure or immediate cost-zero guarantee.
-# MAGIC "All course objects" here means the listed UC/MLflow objects and endpoint, not dashboard/Genie UI assets.
+# MAGIC "All course objects" means the previewed data/models/experiments, endpoints, app, job and pipeline,
+# MAGIC not dashboard/Genie UI assets.
 # MAGIC A retained dashboard or Genie space will stop querying successfully after its event_metrics view is dropped.
 # MAGIC A missing object is fine; a permissions failure or ownership mismatch stops deletion.
 # MAGIC

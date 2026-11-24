@@ -118,12 +118,28 @@ def land_batch(number):
 
 # COMMAND ----------
 
+# WHAT: checks which course batches are already present, without overwriting or deleting retained files.
+# LOOK FOR: no output; unfamiliar or edited CSV files stop the lesson rather than being silently counted.
+def landed_batches():
+    known = {incoming / f"bookings_batch_{n}.csv" for n in (1, 2, 3)}
+    A8.expect(set(incoming.glob("*.csv")) <= known, "The incoming folder contains an unfamiliar CSV; inspect it first.")
+    numbers = [n for n in (1, 2, 3) if (incoming / f"bookings_batch_{n}.csv").exists()]
+    for number in numbers:
+        text = (incoming / f"bookings_batch_{number}.csv").read_text(encoding="utf-8")
+        A8.expect(text == batches.to_csv(batches.new_batch(number, scheduled)),
+                  f"Batch {number} differs from the course fixture. Keep your file and use a fresh learner tag.")
+    return numbers
+
+# COMMAND ----------
+
 # WHAT: lands batch 1 and shows the bad rows next to the first good ones.
 # LOOK FOR: 43 rows in the file; the last three are the bad rows (zero or negative tickets, pending, no id).
 A8.guard("raw")
 incoming.mkdir(exist_ok=True)
 batch1 = land_batch(1)
+retained = landed_batches()
 print(f"{len(batch1)} rows landed in {incoming.name}/bookings_batch_1.csv")
+print("Batches already present:", retained, "(reruns reuse them; a new pipeline reads them all)")
 for row in batch1[:2] + batch1[-3:]:
     print({k: row[k] for k in ("booking_id", "event_id", "tickets", "status")})
 
@@ -254,8 +270,9 @@ else:
 # COMMAND ----------
 
 # WHAT: counts the rows in each layer and shows the quality rules' counts.
-# LOOK FOR: bronze 43, silver 40; each rule with its passed and dropped rows (zero dropped for the id rule is a bug).
+# LOOK FOR: 43 bronze / 40 silver per landed batch, plus each rule's passed and dropped rows.
 if state_1 == "COMPLETED":
+    batch_numbers_1 = landed_batches()
     counts = {name: spark.table(table).count() for name, table in (("bronze", bronze), ("silver", silver),
                                                                    ("gold", gold))}
     print(counts)
@@ -269,8 +286,9 @@ else:
 # WHAT: Check: bronze kept every row, silver kept only the valid ones, and gold has a row per event.
 # LOOK FOR: three pass messages; bronze keeping bad rows is deliberate, so you can always see what arrived.
 if state_1 == "COMPLETED":
-    A8.expect(counts["bronze"] == len(batch1), "Bronze holds all 43 rows exactly as received.")
-    A8.expect(counts["silver"] == sum(batches.is_valid(r) for r in batch1), "Silver holds only the 40 valid rows.")
+    A8.expect(counts["bronze"] == len(batch_numbers_1) * (batches.GOOD_ROWS + batches.BAD_ROWS),
+              "Bronze holds every row from the landed batches, once.")
+    A8.expect(counts["silver"] == len(batch_numbers_1) * batches.GOOD_ROWS, "Silver holds only the valid rows.")
     A8.expect(counts["gold"] == spark.table(events).count(), "Gold has one row per event.")
 else:
     print("Skipped: nothing to check.")
@@ -304,11 +322,11 @@ def gold_matches(numbers):
 
 # COMMAND ----------
 
-# WHAT: Check: gold's seats left equal the independent calculation for batch 1.
+# WHAT: Check: gold's seats left equal the independent calculation for all batches present at update 1.
 # LOOK FOR: one pass message; a mismatch means a bad row was counted or a good row was missed.
 if state_1 == "COMPLETED":
-    same, changed = gold_matches([1])
-    print(changed, "events have new bookings in batch 1.")
+    same, changed = gold_matches(batch_numbers_1)
+    print(changed, "events have new bookings in batches", batch_numbers_1)
     A8.expect(same, "Gold's seats left equal the independent calculation for every event.")
 else:
     print("Skipped: nothing to check.")
@@ -317,17 +335,19 @@ else:
 # MAGIC %md
 # MAGIC ## 6. A second batch: only the new file is read
 # MAGIC Now batch 2 arrives. We land it and run the pipeline again. A streaming table remembers which files it has
-# MAGIC already processed, so bronze should grow by 43 rows (not by 86), and gold should now reflect both batches.
+# MAGIC already processed, so on a clean run bronze grows by 43 rows (not by 86), and gold reflects both batches.
+# MAGIC On a rerun batch 2 may already be present: then counts stay unchanged. Checks include all retained batches.
 # MAGIC **Predict:** if you ran the pipeline a third time with no new file, what would change?
 
 # COMMAND ----------
 
 # WHAT: lands batch 2, runs a second update and counts the layers again.
-# LOOK FOR: COMPLETED, then bronze 86, silver 80, and two different source files in bronze.
+# LOOK FOR: COMPLETED; on a clean run bronze 86 / silver 80, otherwise totals include retained batches.
 state_2 = None
 if state_1 == "COMPLETED":
     batch2 = land_batch(2)
     state_2 = refresh()
+    batch_numbers_2 = landed_batches()
     print("Update 2:", state_2)
     if state_2 == "COMPLETED":
         print({name: spark.table(table).count() for name, table in (("bronze", bronze), ("silver", silver))},
@@ -337,14 +357,16 @@ else:
 
 # COMMAND ----------
 
-# WHAT: Check: the second update added only the new rows, and gold agrees with both batches.
-# LOOK FOR: four pass messages; 86 rows in bronze means batch 1 was not read a second time.
+# WHAT: Check: the second update counted each landed file once and gold agrees with those batches.
+# LOOK FOR: four pass messages, including on reruns where batch 2 was already present.
 if state_2 == "COMPLETED":
-    A8.expect(spark.table(bronze).count() == len(batch1) + len(batch2), "Bronze grew by exactly the new file.")
-    A8.expect(spark.table(silver).count() == 2 * batches.GOOD_ROWS, "Silver holds the 80 valid rows from both files.")
-    A8.expect(spark.sql(f"SELECT count(DISTINCT source_file) AS n FROM {bronze}").first()["n"] == 2,
+    A8.expect(spark.table(bronze).count() == len(batch_numbers_2) * (batches.GOOD_ROWS + batches.BAD_ROWS),
+              "Bronze holds the landed files once, including any retained batches.")
+    A8.expect(spark.table(silver).count() == len(batch_numbers_2) * batches.GOOD_ROWS,
+              "Silver holds the valid rows from every landed batch.")
+    A8.expect(spark.sql(f"SELECT count(DISTINCT source_file) AS n FROM {bronze}").first()["n"] == len(batch_numbers_2),
               "Bronze records which file each row came from.")
-    A8.expect(gold_matches([1, 2])[0], "Gold agrees with the independent calculation for both batches.")
+    A8.expect(gold_matches(batch_numbers_2)[0], "Gold agrees with the independent calculation for the landed batches.")
 else:
     print("Skipped: the second update did not complete.")
 
@@ -417,11 +439,12 @@ else:
 # COMMAND ----------
 
 # WHAT: Check: the job run succeeded and the pipeline picked up the third batch.
-# LOOK FOR: two pass messages; bronze should hold 129 rows and gold should agree with all three batches.
+# LOOK FOR: two pass messages; bronze holds 43 rows per landed batch (129 on the full path).
 if job_state is not None:
+    batch_numbers_3 = landed_batches()
     A8.expect(job_state == "SUCCESS", "The job run succeeded.")
-    A8.expect(spark.table(bronze).count() == len(batch1) + len(batch2) + len(batch3)
-              and gold_matches([1, 2, 3])[0], "The job refreshed the pipeline with the third batch.")
+    A8.expect(spark.table(bronze).count() == len(batch_numbers_3) * (batches.GOOD_ROWS + batches.BAD_ROWS)
+              and gold_matches(batch_numbers_3)[0], "The job refreshed the pipeline with every landed batch.")
 else:
     print("Skipped: no job run to check.")
 
@@ -480,6 +503,10 @@ else:
 # MAGIC until `99_pause_and_cleanup` removes the volume.
 # MAGIC
 # MAGIC **Undo:** to build it again, run sections 3 to 7 again.
+# MAGIC Retained batches are read again by a new pipeline; the checks use all landed batches, not just batch 1.
+# MAGIC **Continue to the app/evaluation:** leave this deletion switch at **no** to retain `seats_live` for Modules
+# MAGIC 11, 14 and 15. Their setup prints whether it uses gold or the historical Module 1 view. If you delete gold,
+# MAGIC they fall back to the historical view and cannot demonstrate freshness from these batches.
 
 # COMMAND ----------
 

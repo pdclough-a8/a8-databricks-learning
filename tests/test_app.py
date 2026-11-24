@@ -13,6 +13,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import pandas as pd
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR / "lib"))
 sys.path.insert(0, str(ROOT_DIR / "tests"))
@@ -84,10 +86,13 @@ class AppTests(unittest.TestCase):
         self.course = Course(Config("workspace", "default", "offline11", "synthetic@example.com",
                                     "https://example.com"), answers="solutions")
 
-    def run_lesson(self, existing=False, **approvals):
+    def run_lesson(self, existing=False, live=False, **approvals):
         self.spark = AppSpark(self.course, lambda prompt: None)
         self.addCleanup(self.spark.db.close)
         self.course.spark = self.spark
+        if live:
+            self.spark.db.execute("CREATE TABLE seats_live AS SELECT * FROM event_availability")
+            self.spark.db.execute("UPDATE seats_live SET available = available - 7")
         self.w = FakeWorkspace(self.course.cfg.user, app_description(self.course))
         self.w.apps.exists = existing
         gates = {"create_app": False, "grant_app_access": False, "deploy_app": False, "delete_app": False,
@@ -100,7 +105,7 @@ class AppTests(unittest.TestCase):
         with patch("databricks.sdk.WorkspaceClient", return_value=self.w), patch("time.sleep"), \
              patch("urllib.request.urlopen", return_value=reply), \
              patch.object(self.course, "require"), patch.object(self.course, "links"), \
-             patch.object(self.course, "exists", lambda key: True), \
+             patch.object(self.course, "exists", lambda key: self.spark.catalog.tableExists(self.course.t(key))), \
              patch.object(self.course, "gate", lambda name, label: gates[name]), \
              contextlib.redirect_stdout(io.StringIO()) as out:
             exec(compile(SOURCE, str(NOTEBOOK), "exec"), namespace)
@@ -183,6 +188,24 @@ class AppTests(unittest.TestCase):
         self.assertIn(self.course.t("event_availability"), text)
         self.assertIn('command: ["streamlit", "run", "app.py"]', text)
 
+    def test_retained_gold_is_granted_and_redeployed_for_an_existing_app(self):
+        namespace = self.run_lesson(existing=True, live=True, create_app=True, grant_app_access=True, deploy_app=True)
+        self.assertEqual(namespace["availability"], self.course.t("seats_live"))
+        self.assertIn(self.course.t("seats_live"), self.w.uploads[f"{self.course.app_folder}/app.yaml"].decode())
+        self.assertTrue(any(f"GRANT SELECT ON TABLE {self.course.t('seats_live')}" in q
+                            for q in self.spark.statements))
+        self.assertTrue(any("DECLARE OR REPLACE VARIABLE a8_current_availability" in q for q in self.spark.statements))
+
+    def test_grant_revocation_errors_are_not_hidden_by_app_deletion(self):
+        w = FakeWorkspace(self.course.cfg.user, app_description(self.course))
+        w.apps.exists = True
+        with patch.object(self.course, "exists", return_value=True), \
+             patch.object(self.course, "spark", SimpleNamespace(sql=Mock(side_effect=PermissionError("denied")))):
+            with self.assertRaises(PermissionError):
+                delete_app(self.course, w)
+        self.assertTrue(w.apps.exists)
+        self.assertEqual(w.deleted_folders, [])
+
     def test_app_source_is_read_only_and_carries_no_credentials(self):
         ast.parse(APP_SOURCE)
         for word in ("INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "token", "secret", "password"):
@@ -221,6 +244,51 @@ class AppTests(unittest.TestCase):
             self.assertIn("11_interactive_app", (ROOT / path).read_text(encoding="utf-8"), path)
         self.assertIn("Module 11", (ROOT / "docs/validation.md").read_text(encoding="utf-8"))
         self.assertEqual(COURSE_ID in app_description(self.course), True)
+
+
+class AppRuntimeTests(unittest.TestCase):
+    def setUp(self):
+        tree = ast.parse(APP_SOURCE)
+        function = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "seats_left")
+        function.decorator_list = []
+        self.api, self.clock = Mock(), SimpleNamespace(sleep=Mock())
+        namespace = {"pd": pd, "os": SimpleNamespace(environ={"A8_WAREHOUSE_ID": "wh", "A8_VIEW": "test.view"}),
+                     "time": self.clock, "client": lambda: SimpleNamespace(statement_execution=self.api)}
+        module = ast.fix_missing_locations(ast.Module(body=[function], type_ignores=[]))
+        exec(compile(module, "app.py", "exec"), namespace)
+        self.read = namespace["seats_left"]
+
+    @staticmethod
+    def response(state):
+        columns = ["event_name", "city", "event_date", "capacity", "booked", "available"]
+        return SimpleNamespace(
+            statement_id="s1", status=SimpleNamespace(state=SimpleNamespace(value=state), error="test error"),
+            manifest=SimpleNamespace(schema=SimpleNamespace(columns=[SimpleNamespace(name=c) for c in columns])),
+            result=SimpleNamespace(data_array=[["Test event", "Test city", "2026-12-01", "60", "33", "27"]]))
+
+    def test_completed_and_asynchronous_queries_return_the_same_frame(self):
+        self.api.execute_statement.return_value = self.response("SUCCEEDED")
+        immediate = self.read()
+        self.api.get_statement.assert_not_called()
+        self.api.execute_statement.return_value = self.response("PENDING")
+        self.api.get_statement.side_effect = [self.response("RUNNING"), self.response("SUCCEEDED")]
+        pd.testing.assert_frame_equal(self.read(), immediate)
+        self.assertEqual(self.api.get_statement.call_count, 2)
+        self.assertEqual(immediate["available"].iloc[0], 27)
+
+    def test_failed_query_is_reported(self):
+        self.api.execute_statement.return_value = self.response("FAILED")
+        with self.assertRaisesRegex(RuntimeError, "FAILED"):
+            self.read()
+        self.api.get_statement.assert_not_called()
+
+    def test_timeout_cancels_the_statement_instead_of_leaving_it_running(self):
+        self.api.execute_statement.return_value = self.response("RUNNING")
+        self.api.get_statement.return_value = self.response("RUNNING")
+        with self.assertRaises(TimeoutError):
+            self.read()
+        self.assertEqual(self.clock.sleep.call_count, 150)
+        self.api.cancel_execution.assert_called_once_with("s1")
 
 
 if __name__ == "__main__":

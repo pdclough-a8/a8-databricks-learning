@@ -423,7 +423,9 @@ else:
 # WHAT: shows each answer with the sources it cited, or the error text if a request failed.
 # LOOK FOR: the transfer answer cites the booking document; the weather question gets the refusal sentence.
 if answers is not None:
-    for row, (_, passages) in zip(answers, ask, strict=True):
+    passages_by_question = dict(ask)
+    for row in answers:
+        passages = passages_by_question[row["question"]]
         reply = row["reply"]  # a struct with the fields result and errorMessage
         if reply["errorMessage"]:
             print(row["question"], "->", "ERROR:", reply["errorMessage"])
@@ -540,4 +542,4 @@ A8.reflect("8b.b", my_answer_8b_b)
 A8.next_step(["Nine knowledge-base documents in your volume", "A chunk table with change data feed",
               "Word-overlap and embedding retrieval, scored with hit at k",
               "A grounded, cited prompt and an optional chat answer"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "08c_vector_search", "Replace hand-built retrieval with a managed index")

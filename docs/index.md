@@ -10,6 +10,10 @@ all synthetic, frozen at 20 November 2026. Each lesson explains a concept, demon
 Databricks operation, takes you into the UI, gives checked exercises and finishes with a recap.
 Allow about an hour per lesson, plus deployment waits. These are planning estimates, not measured learner timings.
 
+**Audit remediation, 24 November 2026:** the affected code has been corrected locally and is awaiting a learner
+Databricks retest. Delivery statuses below describe earlier live evidence, not validation of these revisions.
+See the [current hand-off and test order](validation.md#audit-remediation-24-november-2026).
+
 ## The analytics levels
 
 The levels describe the question you are answering, not a ladder of Databricks products.
@@ -37,8 +41,8 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 0. Workbench | Git folders, compute, catalog/schema, permissions and persistent configuration | Stage 1 |
 | 1. Lakehouse data | Volumes, `read_files`, typed Delta tables, SQL and PySpark, joins, views, history/time travel, lineage | Stage 1 |
 | 2. Governance | Grants and identity, comments/tags, real row filters and column masks, lineage and optional audit system tables | Stage 1 |
-| 3. Descriptive AI/BI and Genie | Event-grain reporting view, metrics, draft dashboard datasets/charts/filters, Genie instructions/examples and SQL-checked answers | Supplied; offline checked, no live validation |
-| 4. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; offline checked, no live validation |
+| 3. Descriptive AI/BI and Genie | Event-grain reporting view, metrics, draft dashboard datasets/charts/filters, Genie instructions/examples and SQL-checked answers | Supplied; SQL/Pandas live validated; dashboard and Genie not live validated |
+| 4. Diagnostic analytics | SQL drill-downs by city, topic, format and month; mix-versus-rate split of a gap; a seeded permutation test; a Genie "why" question checked against SQL; pattern versus cause | Supplied; SQL/Pandas live validated; Genie not live validated |
 | 5. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
 | 6. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 5 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 5); offline checked, no live validation |
 | 7. GenAI | Playground, `ai_query`, AI Functions for feedback comments (descriptive, five synthetic comments), human review; prompt registry and tracing deferred | Supplied; offline checked, no live validation; model requests opt-in |
@@ -125,5 +129,7 @@ Two model-free SQL exercises work with every gate closed. RAG, agents and tracin
 - Dashboard filters and Genie instructions are not access controls; Module 2 teaches enforcement.
 
 The previous three-lesson pilot and packaged-fixture app have been superseded, not left as alternative instructions.
-The future app will read learner data; it is not included in Stage 1.
+Module 11 supplies the learner-data app. Modules 11, 14 and 15 select retained Module 13 gold when present;
+otherwise they explicitly fall back to the historical Module 1 view. Keep gold until those lessons are finished.
+`endpoint_only` cleanup leaves apps, jobs and pipelines intact; delete those in their lessons or choose full cleanup.
 See [validation evidence](validation.md), [known issues](issues.md) and [brand application](brand.md).

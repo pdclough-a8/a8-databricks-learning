@@ -169,8 +169,8 @@ class VectorSearchTests(unittest.TestCase):
         names = [c[0] for c in self.fake.calls]
         self.assertEqual(names[:2], ["create_endpoint", "create_index"])
         self.assertEqual(names.count("create_endpoint"), 1)
-        # 1 demo query, 8 questions at k=1, 8 at k=3, then 2 retrievals for the grounded answers.
-        self.assertEqual(names.count("query_index"), 19)
+        # 1 demo query, 8 questions retrieved once at k=3 (reused at k=1), then 2 chat retrievals.
+        self.assertEqual(names.count("query_index"), 11)
         self.assertLess(names.index("delete_index"), names.index("delete_endpoint"))
         self.assertEqual((self.fake.endpoints, self.fake.indexes), ({}, {}))
         self.assertEqual(len(self.spark.chat_calls), 1)

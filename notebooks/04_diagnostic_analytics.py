@@ -425,7 +425,7 @@ print(f"Two-sided permutation p-value, 10,000 shuffles, seed 2026: {p_value:.4f}
 # LOOK FOR: a sentence naming the gap and the p-value, then what that does and does not show.
 verdict = "hard to explain by label-shuffling alone" if p_value < 0.05 else "not clearly different from chance"
 print(f"A gap of {100 * observed_gap:.1f} points with p = {p_value:.4f}: {verdict}.")
-print("This says the gap is unlikely to be luck of the draw. It does not say online format caused it.")
+print("This does not show that online format caused the gap, regardless of the p-value.")
 print("Different audiences, timing or reminders could also produce it; the data holds none of those.")
 
 # COMMAND ----------
