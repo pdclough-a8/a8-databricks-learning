@@ -139,9 +139,14 @@ Dependency versions are direct pins, not a fully locked runtime image.
 
 ## Module 13: Pipelines and jobs
 
-**Supplied, offline checked, not live validated.** A Free Edition write probe (24 November 2026) created, ran and
-deleted a one-table pipeline and a job with a paused schedule on serverless; this module's own three-layer pipeline,
-pipeline settings and system-table reads have not run live.
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the `${...}` pipeline
+settings worked inside table names; update 1 produced bronze 43, silver 40 and gold 60 rows with each rule dropping
+one row; gold matched the independent calculation after batch 1 and after batch 2; update 2 read only the new file
+(bronze 86, two source files); a job with a paused schedule ran the pipeline once with a third batch and succeeded; the
+notebook then deleted the job, the pipeline and the three tables. The event-log quality counts read correctly over REST.
+The static view showed seats left too high for moved events, and one small event came out oversold (-1), which the
+notebook now points out. `system.lakeflow.job_run_timeline` did not list the run within the notebook's few minutes, so
+the notebook says it can lag.
 
 | Check | Evidence |
 |---|---|
@@ -154,8 +159,7 @@ pipeline settings and system-table reads have not run live.
 | Cleanup | The job, then the pipeline, then the three tables (deleting a pipeline leaves them behind) after exact-name, creator and marker checks; `99_pause_and_cleanup` uses the same code |
 | Exercises 13.1, 13.2 | The solutions equal independent Python results; blank and naive answers fail |
 
-Not validated offline: pipeline settings substitution in SQL, update time, the event-log quality counts, the system
-tables and quota.
+Not live validated: paid-workspace behaviour, and the system-table read-out of the run (it lagged).
 
 ## Module 12: Deploy and govern
 

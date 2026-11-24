@@ -23,7 +23,8 @@
 # MAGIC **Cost boundary:** this lesson creates **one pipeline, one job and three tables**, and writes three small
 # MAGIC files to your volume. Each pipeline update uses serverless compute for a minute or two, and uses quota on
 # MAGIC Free or money on a paid workspace. The job's schedule is created **paused**, so nothing runs by itself. Delete
-# MAGIC everything in the last section, or with `99_pause_and_cleanup`. Not live validated yet.
+# MAGIC everything in the last section, or with `99_pause_and_cleanup`. This lesson was validated live on Free
+# MAGIC Edition on 24 November 2026.
 # MAGIC
 # MAGIC ## Pipelines in plain English
 # MAGIC A notebook runs the steps you wrote, in the order you wrote them, every time you press run. A **declarative
@@ -351,6 +352,7 @@ else:
 
 # WHAT: compares today's seats left in Module 1's static view with the pipeline's gold table for the events that moved.
 # LOOK FOR: three events where the static view is too high; that gap is the staleness the pipeline removes.
+# A negative number means the event is oversold: the pipeline reports it rather than hiding it.
 if state_2 == "COMPLETED":
     moved = spark.sql(f"""SELECT g.event_name, g.city, a.available AS static_view, g.available AS pipeline_gold
 FROM {gold} g JOIN {availability} a ON g.event_id = a.event_id

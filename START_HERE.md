@@ -55,8 +55,8 @@ deletes the endpoint. Each cloud step is a default-no switch, the endpoint **can
 
 Module **13** (pipelines and jobs) lands new booking files in a volume and builds a bronze, silver and gold pipeline with
 data-quality rules, so seats left stay current. A scheduled job, created paused, runs it. Creating and running the
-pipeline and job are default-no switches that use compute, and `99_pause_and_cleanup` removes them. Supplied and offline
-checked, **not live validated**.
+pipeline and job are default-no switches that use compute, and `99_pause_and_cleanup` removes them. Offline checked and
+validated live on Free Edition.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft
