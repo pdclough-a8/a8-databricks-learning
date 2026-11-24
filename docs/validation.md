@@ -139,9 +139,12 @@ Dependency versions are direct pins, not a fully locked runtime image.
 
 ## Module 12: Deploy and govern
 
-**Supplied, offline checked, not live validated.** The Free Edition write probe (24 November 2026) showed that a
-trivial model can be registered, served and queried on `a8-free`, and that an app can be created and deleted; this
-module's own packaging, model-from-code logging and endpoint have not run live.
+**Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the packaged agent
+scored 4 of 5 grounded; logging a model from a code file worked once MLflow 3.6.0 was pinned (the serverless default
+rejected `log_model(name=...)`); the released `Champion` model answered exactly as the tested code; the scale-to-zero
+endpoint became ready, answered identically, showed you and `admins` with `CAN_MANAGE`, and was deleted by the
+notebook; cleanup removed the model. The governance read-outs for aliases and grants failed in that run and were
+changed to REST calls, which are checked offline only. A write probe also showed an app can be created and deleted on Free.
 
 | Check | Evidence |
 |---|---|
@@ -153,8 +156,7 @@ module's own packaging, model-from-code logging and endpoint have not run live.
 | Cleanup | The agent endpoint is deleted only for its creator with matching tags; the agent model, its aliases and versions are removed by `99_pause_and_cleanup` after the same ownership check |
 | Exercises 12.1, 12.2 | The solutions equal independent Python results; blank and naive answers fail |
 
-Not validated offline: models-from-code logging, endpoint build time, quota, the real response format, and the
-permission read-outs.
+Not live validated: the revised alias and grants read-outs, and paid-workspace behaviour.
 
 ## Module 9: Agents
 

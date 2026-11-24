@@ -48,7 +48,7 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 9. Agents | Two read-only tools (document search, seats left) with allow-list and input checks, an agent loop with a step cap and a trace, a rule-based decider as baseline, then a language model as decider (12-request budget, default-no switch) scored on five tasks, and an optional native tool-calling decider | Supplied; offline checked; live validated on Free |
 | 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
 | 11. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
-| 12. Deploy and govern | Package the Module 9 agent as code with a data snapshot, test it, log it with MLflow, register it in Unity Catalog with a `Champion` alias, serve it on a scale-to-zero endpoint, query it, read its permissions and delete it; the endpoint and model are in scoped cleanup. Asset Bundles, jobs and release pipelines are deferred | Supplied; offline checked, no live validation |
+| 12. Deploy and govern | Package the Module 9 agent as code with a data snapshot, test it, log it with MLflow, register it in Unity Catalog with a `Champion` alias, serve it on a scale-to-zero endpoint, query it, read its permissions and delete it; the endpoint and model are in scoped cleanup. Asset Bundles, jobs and release pipelines are deferred | Supplied; offline checked; live validated on Free |
 | 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
 ## Start and stop

@@ -22,8 +22,8 @@
 # MAGIC
 # MAGIC **Cost boundary:** this lesson creates **one MLflow run, one Unity Catalog model and one serving endpoint**.
 # MAGIC The endpoint uses the smallest size and scales to zero, but it can take about five minutes to become ready
-# MAGIC and **can bill while it exists**. Delete it in the last section, or with `99_pause_and_cleanup`. Not live
-# MAGIC validated yet.
+# MAGIC and **can bill while it exists**. Delete it in the last section, or with `99_pause_and_cleanup`. This lesson
+# MAGIC was validated live on Free Edition on 24 November 2026.
 # MAGIC
 # MAGIC ## Deployment in plain English
 # MAGIC A recipe in your own notebook is not a restaurant. To serve customers you need the recipe written down
@@ -398,12 +398,13 @@ else:
 # WHAT: prints the model's owner, aliases and grants, and the version the endpoint serves.
 # LOOK FOR: you as the owner, the Champion alias on your version, and no other principals with grants.
 if version is not None:
-    model = w.registered_models.get(A8.agent_model_name)
-    print("Model owner:", model.owner)
-    print("Aliases:", {a.alias_name: a.version_num for a in model.aliases or []})
+    base = "/api/2.1/unity-catalog"  # the REST reads below behave the same in every SDK version
+    model = w.api_client.do("GET", f"{base}/models/{A8.agent_model_name}", query={"include_aliases": "true"})
+    print("Model owner:", model.get("owner"))
+    print("Aliases:", {a["alias_name"]: a["version_num"] for a in model.get("aliases", [])})
     try:
-        grants = w.grants.get("registered_model", A8.agent_model_name).privilege_assignments or []
-        print("Grants:", [(g.principal, [p.value if hasattr(p, "value") else p for p in g.privileges]) for g in grants]
+        grants = w.api_client.do("GET", f"{base}/permissions/registered_model/{A8.agent_model_name}")
+        print("Grants:", [(g["principal"], g["privileges"]) for g in grants.get("privilege_assignments", [])]
               or "none beyond ownership")
     except Exception as error:  # a read failure should not stop the lesson
         print("Grants could not be read:", type(error).__name__)

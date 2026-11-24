@@ -102,9 +102,6 @@ class FakeWorkspace:
     def __init__(self, user):
         self.user, self.endpoints, self.calls = user, {}, []
         self.snapshot = None
-        self.registered_models = SimpleNamespace(get=lambda name: SimpleNamespace(
-            owner=user, aliases=[SimpleNamespace(alias_name="Champion", version_num=1)]))
-        self.grants = SimpleNamespace(get=lambda kind, name: SimpleNamespace(privilege_assignments=[]))
         self.serving_endpoints = SimpleNamespace(
             get=self.get, create_and_wait=self.create_and_wait, delete=self.delete,
             get_permissions=lambda _id: SimpleNamespace(access_control_list=[SimpleNamespace(
@@ -127,7 +124,11 @@ class FakeWorkspace:
         self.calls.append(("delete", name))
         self.endpoints.pop(name)
 
-    def do(self, method, path, body=None):
+    def do(self, method, path, body=None, query=None):
+        if path.startswith("/api/2.1/unity-catalog/models/"):  # read-only governance lookups
+            return {"owner": self.user, "aliases": [{"alias_name": "Champion", "version_num": 1}]}
+        if path.startswith("/api/2.1/unity-catalog/permissions/"):
+            return {"privilege_assignments": []}
         self.calls.append(("do", method, path, body))
         results = [agent_core.answer(self.snapshot, r["question"]) for r in body["dataframe_records"]]
         return {"predictions": [{"answer": r["answer"], "status": r["status"], "steps": ",".join(r["steps"])}
@@ -269,6 +270,8 @@ class DeployTests(unittest.TestCase):
         self.assertEqual(len(query[3]["dataframe_records"]), 5)
         self.assertEqual([p["answer"] for p in namespace["served"]], [r["answer"] for r in namespace["local"]])
         self.assertIn("Who can use it", self.output)
+        self.assertIn("Aliases: {'Champion': 1}", self.output)
+        self.assertIn("none beyond ownership", self.output)
         self.assertEqual([c for c in self.w.calls if c[0] == "delete"], [])  # deletion has its own switch
 
     def test_deploy_without_a_registered_version_does_nothing(self):

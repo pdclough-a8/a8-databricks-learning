@@ -51,7 +51,7 @@ needs the 8b chunk table, creates nothing, and its two model steps (a JSON decid
 Module **12** (deploy and govern) packages the Module 9 agent with a snapshot of its data, logs and registers it as a
 Unity Catalog model with a `Champion` alias, serves it on a scale-to-zero endpoint, queries it, reads who can use it and
 deletes the endpoint. Each cloud step is a default-no switch, the endpoint **can bill while it exists**, and
-`99_pause_and_cleanup` removes the endpoint and model. Supplied and offline checked, **not live validated**.
+`99_pause_and_cleanup` removes the endpoint and model. Offline checked and validated live on Free Edition.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft
