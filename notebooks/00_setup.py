@@ -93,7 +93,8 @@
 # MAGIC   at.
 # MAGIC - **If it differs / Undo** notes sit under cells that write something, so you know what to do if the result is
 # MAGIC   not what is described, and how to reverse it.
-# MAGIC - **In your own words** cells ask for one or two sentences, then show a model answer to compare with.
+# MAGIC - **In your own words** cells ask for one or two sentences, then show the points a strong answer mentions and a
+# MAGIC   model answer. They are not marked: you check your own answer against the points.
 # MAGIC - Lines starting `A8.` call small course helpers that handle names and safety checks, so the Databricks
 # MAGIC   code stays in view. Lesson 1 explains them.
 # MAGIC - Run one cell at a time with **Shift+Enter**. Avoid **Run all** until you have read a lesson's cost notes.

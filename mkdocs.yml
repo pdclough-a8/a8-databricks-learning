@@ -26,6 +26,7 @@ nav:
   - Course overview: index.md
   - Git folders for beginners: git-folders.md
   - Notebook code standard: code-standard.md
+  - Design rationale: design-rationale.md
   - Validation evidence: validation.md
   - Known issues: issues.md
   - Brand application: brand.md

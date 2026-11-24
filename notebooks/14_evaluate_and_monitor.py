@@ -495,11 +495,15 @@ else:
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 9. Your turn
-# MAGIC The expected values come from your data, not from the agent. This exercise builds them:
+# MAGIC The expected values come from your data, not from the agent. The first exercise builds them; the second asks
+# MAGIC you to make the release decision yourself:
 # MAGIC 1. Exercise 14.1: the true seat counts for the two seat questions, as a table.
+# MAGIC 2. Exercise 14.2, a decision: write your own release gate, `my_gate`, for a stricter policy. It is run against
+# MAGIC    eight supplied situations (no cloud calls), and a wrong decision is explained case by case.
 # MAGIC
 # MAGIC Use `IDENTIFIER(a8_current_availability)` for the selected source. A blank answer shows the task and a hint.
-# MAGIC `A8.solution("14.1")` shows a worked answer. You can also answer with a Spark or pandas DataFrame.
+# MAGIC `A8.solution("14.1")` or `A8.solution("14.2")` shows a worked answer. You can also answer 14.1 with a Spark or
+# MAGIC pandas DataFrame.
 
 # COMMAND ----------
 
@@ -509,12 +513,22 @@ answer_14_1 = """"""
 A8.check("14.1", answer_14_1)
 
 # COMMAND ----------
+
+# WHAT: Check: runs your release gate against eight supplied baseline and candidate marks.
+# LOOK FOR: the task while the body is `...`; otherwise "correct on all 8 cases" or the first case it decides wrongly.
+def my_gate(baseline, candidate):
+    ...  # your rule here: return True to release, False to block
+
+
+A8.check_rule("14.2", my_gate)
+
+# COMMAND ----------
 # MAGIC %md
 # MAGIC ## 10. Recap, explain before you move on
 # MAGIC Write your answers in the two cells below. Also think about: which of the five tasks would you add first if
 # MAGIC a customer complained, and what would its expected fact be?
 # MAGIC
-# MAGIC **Completion requires:** the exercise, the checks above, your explanations and, if you approved them, the
+# MAGIC **Completion requires:** the exercises, the checks above, your explanations and, if you approved them, the
 # MAGIC evaluation runs. Being blocked on a cloud step is fine: record it, and do not count that outcome as complete.
 # MAGIC
 # MAGIC **Pause:** this lesson created one MLflow experiment with three runs (four with the judge, five with the

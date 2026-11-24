@@ -343,6 +343,22 @@ WHERE status = 'scheduled' AND available < 30 ORDER BY available, event_name, ci
                    "Compare it with the same question on Module 1's view to see which events the stale numbers hid.",
         "ordered": True,
     },
+    "13.3": {
+        "task": "Return booking_id, event_id, tickets, status and broken_rule for every row in the bronze table that "
+                "the silver table drops. broken_rule is the name of the first quality rule the row breaks, in the "
+                "order the pipeline lists them: booking_id_present, tickets_positive, status_known.",
+        "hint": "Read IDENTIFIER(a8_bookings_bronze). Keep rows where NOT (all three rules pass), and use a CASE that "
+                "tests the rules in order: booking_id IS NULL, then tickets <= 0, otherwise status_known.",
+        "solution": """SELECT booking_id, event_id, tickets, status,
+  CASE WHEN booking_id IS NULL THEN 'booking_id_present'
+       WHEN tickets <= 0 THEN 'tickets_positive'
+       ELSE 'status_known' END AS broken_rule
+FROM IDENTIFIER(a8_bookings_bronze)
+WHERE NOT (booking_id IS NOT NULL AND tickets > 0 AND status IN ('confirmed', 'cancelled'))""",
+        "explain": "You have just made the pipeline's decision yourself: which rows are not fit to count, and why. "
+                   "The rule names match the counts in the pipeline's data-quality panel, so this query is also how "
+                   "you would investigate a sudden rise in dropped rows.",
+    },
 }
 
 
@@ -351,6 +367,109 @@ def get(exercise_id):
         return EXERCISES[exercise_id]
     except KeyError:
         raise KeyError(f"Unknown exercise {exercise_id!r}; choose from {', '.join(EXERCISES)}") from None
+
+
+# Decision tasks: the learner writes a small Python function and it is run against supplied cases.
+# Each case names the situation and says why the expected decision is right, so a wrong answer gets a reason.
+RULES = {
+    "14.2": {
+        "function": "my_gate",
+        "task": "Write my_gate(baseline, candidate) for a stricter release policy than the lesson's. Both arguments "
+                "are dicts of '{scorer}/mean' marks. Return True to release and False to block. Block if any baseline "
+                "metric is missing from the candidate, if grounded/mean has fallen at all, if any other metric has "
+                "fallen by more than 0.05, or if finished/mean is not 1.0.",
+        "hint": "Loop over baseline.items(). Use an allowed fall of 0.0 for 'grounded/mean' and 0.05 for the rest, "
+                "and compare candidate[name] < base - allowed. Check finished/mean last. Return a bool, not a dict.",
+        "solution": '''def my_gate(baseline, candidate):
+    for name, base in baseline.items():
+        if name not in candidate:
+            return False
+        allowed = 0.0 if name == "grounded/mean" else 0.05
+        if candidate[name] < base - allowed:
+            return False
+    return candidate.get("finished/mean", 0.0) == 1.0''',
+        "explain": "This is the lesson's release_gate with a different allowance per metric. A wrong seat count is "
+                   "never acceptable, while a small wobble in another mark on five questions may be noise. Writing the "
+                   "policy as code makes it something a colleague can read, test and challenge.",
+        "cases": [
+            {"name": "the candidate matches the baseline",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 1.0},
+                      {"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 1.0}),
+             "expected": True, "why": "Nothing got worse, so there is no reason to block it."},
+            {"name": "stale seat figures",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0}, {"finished/mean": 1.0, "grounded/mean": 0.6}),
+             "expected": False, "why": "grounded/mean fell, which means customers would get wrong seat counts."},
+            {"name": "a small fall in a non-grounding mark",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 1.0},
+                      {"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 0.96}),
+             "expected": True, "why": "A fall of 0.04 is inside the 0.05 allowance for metrics other than grounding."},
+            {"name": "a large fall in a non-grounding mark",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 1.0},
+                      {"finished/mean": 1.0, "grounded/mean": 1.0, "cites/mean": 0.8}),
+             "expected": False, "why": "A fall of 0.2 is more than the 0.05 allowance."},
+            {"name": "a metric missing from the candidate",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0}, {"finished/mean": 1.0}),
+             "expected": False, "why": "A missing mark is not evidence of quality; treat it as a failure."},
+            {"name": "better grounding but unfinished tasks",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 0.8}, {"finished/mean": 0.8, "grounded/mean": 1.0}),
+             "expected": False, "why": "finished/mean must be 1.0: an agent that runs out of steps is not releasable."},
+            {"name": "an improvement",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 0.8}, {"finished/mean": 1.0, "grounded/mean": 1.0}),
+             "expected": True, "why": "Rising marks are fine; the rule only blocks falls."},
+            {"name": "an extra metric only the candidate has",
+             "args": ({"finished/mean": 1.0, "grounded/mean": 1.0},
+                      {"finished/mean": 1.0, "grounded/mean": 1.0, "judge/mean": 0.4}),
+             "expected": True, "why": "There is no baseline to compare a new metric with, so it cannot show a fall."},
+        ],
+    },
+    "15.2": {
+        "function": "choose_champion",
+        "task": "Write choose_champion(current, candidates). current is the version number that holds Champion now. "
+                "candidates is a list of dicts like {'version': 3, 'passed': True}, where passed is that version's "
+                "gate result. Return the version number that should hold Champion: the newest candidate that passed "
+                "and is newer than current, or current if there is none.",
+        "hint": "Collect c['version'] for candidates where c['passed'] is True and c['version'] > current, then "
+                "return max(those, default=current).",
+        "solution": '''def choose_champion(current, candidates):
+    passing = [c["version"] for c in candidates if c["passed"] and c["version"] > current]
+    return max(passing, default=current)''',
+        "explain": "A release only moves forward to a version that has passed its gate; if nothing passes, the "
+                   "alias stays where it is. Going back to an older version is a rollback, a separate and deliberate "
+                   "decision, so a release rule should never do it as a side effect.",
+        "cases": [
+            {"name": "no candidates", "args": (2, []), "expected": 2,
+             "why": "With nothing to release, Champion stays where it is."},
+            {"name": "one candidate that passed", "args": (2, [{"version": 3, "passed": True}]), "expected": 3,
+             "why": "A newer version that passed its gate may take the alias."},
+            {"name": "one candidate that failed", "args": (2, [{"version": 3, "passed": False}]), "expected": 2,
+             "why": "A failed gate never moves the alias."},
+            {"name": "two candidates that passed",
+             "args": (1, [{"version": 2, "passed": True}, {"version": 3, "passed": True}]), "expected": 3,
+             "why": "Both passed, so release the newest."},
+            {"name": "the newest candidate failed",
+             "args": (1, [{"version": 2, "passed": True}, {"version": 3, "passed": False}]), "expected": 2,
+             "why": "Newest is not best: version 3 failed, so release version 2, which passed."},
+            {"name": "a passing version older than Champion",
+             "args": (3, [{"version": 2, "passed": True}]), "expected": 3,
+             "why": "Moving to an older version is a rollback, not a release, and needs its own decision."},
+        ],
+    },
+}
+
+
+def get_rule(rule_id):
+    try:
+        return RULES[rule_id]
+    except KeyError:
+        raise KeyError(f"Unknown decision task {rule_id!r}; choose from {', '.join(RULES)}") from None
+
+
+def rule_solution(rule_id):
+    """The supplied solution as a callable, for instructor runs and tests."""
+    rule = get_rule(rule_id)
+    namespace = {}
+    exec(rule["solution"], namespace)  # trusted course source, not learner input
+    return namespace[rule["function"]]
 
 
 # Short "in your own words" prompts. The learner writes first; the model answer is shown afterwards.
@@ -544,9 +663,100 @@ REFLECTIONS = {
     },
 }
 
+# What a strong answer to each reflection mentions. Shown after the learner writes, for self-checking; not marked.
+REFLECTION_CRITERIA = {
+    "0.1": ["An event is one occasion; a booking is one order for it",
+            "One booking can hold several tickets",
+            "Seats taken are counted in tickets, not bookings"],
+    "0.2": ["Names predictive", "Says why: it estimates what is likely to happen, rather than what did happen"],
+    "1.a": ["Tables and files are stored separately from compute (in Unity Catalog storage)",
+            "Compute only reads and writes them, so stopping it deletes nothing"],
+    "1.b": ["Future or unknown outcomes would be counted as no-shows",
+            "Counts or a model built on them would be biased",
+            "'Not known yet' is a different state from 'did not attend'"],
+    "2.a": ["A tag describes or labels an object", "Access is controlled by privileges (grants), not tags"],
+    "2.b": ["Other columns, such as the name, can still identify the person",
+            "Masking limits what is displayed; it does not remove the link to a person"],
+    "3.a": ["Each metric gets one agreed definition",
+            "Charts and Genie then reuse that definition instead of counting their own way"],
+    "3.b": ["Events have different numbers of responses",
+            "Averaging averages over-weights small events",
+            "Sum divided by count weights every response equally"],
+    "4.a": ["A pattern is things moving together in the data",
+            "A cause means changing one would change the other",
+            "Showing a cause needs a designed comparison or evidence beyond this data"],
+    "4.b": ["Mix: segments hold different proportions of kinds of events",
+            "Rate: the same kind of event behaves differently between segments",
+            "A gap can be partly both"],
+    "5.a": ["Attendance and rating are only known after the event",
+            "Using them inflates test results",
+            "They are not available when predicting a future booking"],
+    "5.b": ["A baseline is the simplest honest guess",
+            "A model that cannot beat it adds cost and complexity for no gain"],
+    "6.a": ["The costs of having too few and too many people are different (lopsided)",
+            "So the decision needs the likelihood of each outcome, not only the average"],
+    "6.b": ["The course has no measured cost figures",
+            "The recommendation depends on these inputs",
+            "Sensitivity to the assumptions is shown so a reader can judge it"],
+    "7.a": ["The star rating is another noisy signal, not the truth",
+            "Agreement shows consistency, not correctness",
+            "Accuracy needs comments checked by a person against a reliable label"],
+    "8a.a": ["A word count only matches the exact words used",
+             "Different wording can mean the same thing",
+             "Embeddings place similar meanings close together"],
+    "8a.b": ["Embeddings mostly capture topic", "Similar topic does not mean the same opinion",
+             "Sentiment has to be checked separately"],
+    "8b.a": ["The model has not seen A8's own documents and may guess",
+             "Retrieved passages ground the answer in our documents",
+             "Answers can cite sources and follow document updates"],
+    "8b.b": ["Gives two distinct reasons",
+             "For example chunk size, different wording from the document, ranking, or a missing or out-of-date "
+             "document"],
+    "8c.a": ["Searching by hand compares the question with every vector",
+             "That is fine for small collections but slow at scale",
+             "A managed index adds fast nearest-neighbour search and keeps in sync with the table"],
+    "8c.b": ["The endpoint is compute and bills while it exists",
+             "The table is stored data, and the index can be rebuilt from it"],
+    "9.a": ["The model's choice of tool and inputs is untrusted",
+            "run_tool enforces the allow-list and input checks",
+            "Failures become messages instead of uncontrolled actions"],
+    "9.b": ["An agent chooses among tools and acts on live data over several steps",
+            "Acting means a wrong choice has consequences",
+            "Names a control: limits, read-only or approved tools, or a trace to review"],
+    "12.a": ["Other systems can call it by name without the notebook",
+             "Versions are numbered, permissioned and recorded",
+             "The alias says which version is live and can be moved forward or back"],
+    "12.b": ["Seat numbers and documents are frozen at logging time",
+             "Names a fix: release new versions on a schedule, or read live data through a governed connection"],
+    "11.a": ["The app's code and query run as the service principal",
+             "The viewer's identity is only passed along for display",
+             "So data access is whatever the service principal has been granted"],
+    "11.b": ["They see what the app can read, not what they can read",
+             "Grant the app only what it needs",
+             "Decide deliberately who may open the app"],
+    "13.a": ["Bronze is the record of what arrived, so nothing is lost",
+             "Silver is what the business counts, so bad rows must not be in it",
+             "Keeping both lets you fix a rule, rerun and measure what was dropped"],
+    "13.b": ["Processes only new files and remembers what it has done",
+             "Works out the order of tables and records quality-rule counts",
+             "Runs on a schedule with a history, not by someone pressing run"],
+    "14.a": ["Names the grounded scorer",
+             "It compares the number in the answer with the true value read from the data",
+             "A wording-only judge has no fact to check the number against"],
+    "14.b": ["A fixed pass mark can hide a regression while the score stays above it",
+             "Comparing with the baseline asks whether the change made anything worse than what runs now"],
+    "15.a": ["The alias says what is released, not why",
+             "The tags record the gate result, the comparison and the run that proves it",
+             "Anyone can audit or challenge the decision later"],
+    "15.b": ["Versions never change, so the earlier one is exactly what was tested",
+             "Moving the alias is instant, reversible and leaves a record",
+             "Editing or deleting would destroy the evidence and the thing to return to"],
+}
+
 
 def get_reflection(reflection_id):
     try:
-        return REFLECTIONS[reflection_id]
+        item = REFLECTIONS[reflection_id]
     except KeyError:
         raise KeyError(f"Unknown reflection {reflection_id!r}; choose from {', '.join(REFLECTIONS)}") from None
+    return {**item, "criteria": REFLECTION_CRITERIA.get(reflection_id, [])}

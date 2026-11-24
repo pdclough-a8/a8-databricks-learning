@@ -466,13 +466,14 @@ else:
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 8. Your turn
-# MAGIC Two exercises on the tables the pipeline built. They need the pipeline to have run (section 4), but no model.
+# MAGIC Three exercises on the tables the pipeline built. They need the pipeline to have run (section 4), but no model.
 # MAGIC 1. Exercise 13.1: which events have the most new confirmed tickets in the cleaned bookings?
 # MAGIC 2. Exercise 13.2: which scheduled events now have fewer than 30 seats left in the gold table?
+# MAGIC 3. Exercise 13.3, a decision: which bronze rows does the pipeline refuse to count, and which rule refuses each?
 # MAGIC
-# MAGIC Use `IDENTIFIER(a8_bookings_clean)` and `IDENTIFIER(a8_seats_live)` for the table names. A blank answer
-# MAGIC shows the task and a hint. `A8.solution("13.1")` shows a worked answer. You can also answer with a Spark
-# MAGIC or pandas DataFrame.
+# MAGIC Use `IDENTIFIER(a8_bookings_bronze)`, `IDENTIFIER(a8_bookings_clean)` and `IDENTIFIER(a8_seats_live)` for the
+# MAGIC table names. A blank answer shows the task and a hint. `A8.solution("13.1")` shows a worked answer. You can
+# MAGIC also answer with a Spark or pandas DataFrame.
 
 # COMMAND ----------
 
@@ -493,6 +494,16 @@ if A8.exists("seats_live"):
     A8.check("13.2", answer_13_2)
 else:
     print("Skipped: the gold table does not exist yet. Run the pipeline in section 4 first.")
+
+# COMMAND ----------
+
+# WHAT: Check: compares your exercise 13.3 answer (dropped rows and the rule each breaks) with the course solution.
+# LOOK FOR: a hint for a blank answer, otherwise feedback on your query; skipped if the pipeline has not run.
+answer_13_3 = """"""
+if A8.exists("bookings_bronze"):
+    A8.check("13.3", answer_13_3)
+else:
+    print("Skipped: the bronze table does not exist yet. Run the pipeline in section 4 first.")
 
 # COMMAND ----------
 # MAGIC %md
@@ -546,7 +557,7 @@ else:
 # MAGIC Who should find out about them, and what would you do if the dropped count suddenly jumped from three to
 # MAGIC three hundred?
 # MAGIC
-# MAGIC **Completion requires:** both exercises, the checks above, your explanations and, if you approved them, the
+# MAGIC **Completion requires:** all three exercises, the checks above, your explanations and, if you approved them, the
 # MAGIC create, run and job steps and the deletion. Being blocked on a cloud step is fine: record it, and do not
 # MAGIC count that outcome as complete.
 # MAGIC

@@ -1,4 +1,5 @@
 import ast
+import html
 import importlib.util
 import json
 import re
@@ -103,6 +104,76 @@ class ConfigTests(unittest.TestCase):
         from a8learn.exercises import REFLECTIONS
         for key in REFLECTIONS:
             self.assertIn(f'A8.reflect("{key}"', source)
+
+    def test_reflection_shows_criteria_and_is_not_presented_as_marked(self):
+        from a8learn.exercises import REFLECTION_CRITERIA, REFLECTIONS
+        self.assertEqual(set(REFLECTION_CRITERIA), set(REFLECTIONS))
+        for key, points in REFLECTION_CRITERIA.items():
+            self.assertTrue(2 <= len(points) <= 3, key)
+        shown = []
+        self.course._html = shown.append
+        self.assertTrue(self.course.reflect("4.a", "Correlation is not causation."))
+        self.assertIn("not marked", shown[-1])
+        self.assertIn("A strong answer mentions", shown[-1])
+        self.assertIn(html.escape(REFLECTION_CRITERIA["4.a"][1]), shown[-1])
+        self.assertNotIn("#1b7f3b", shown[-1])  # the green "correct" tone is reserved for checked answers
+
+    def test_decision_tasks_check_the_learners_rule_case_by_case(self):
+        from a8learn.exercises import RULES, rule_solution
+        source = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "notebooks").glob("*.py"))
+        shown = []
+        self.course._html = shown.append
+        for key, rule in RULES.items():
+            self.assertIn(f'A8.check_rule("{key}", {rule["function"]})', source)
+            self.assertEqual(set(rule), {"function", "task", "hint", "solution", "explain", "cases"})
+            for case in rule["cases"]:
+                self.assertEqual(set(case), {"name", "args", "expected", "why"})
+            self.assertTrue(self.course.check_rule(key, rule_solution(key)))
+            self.assertIn(f"correct on all {len(rule['cases'])} cases", shown[-1])
+
+            def stub(*args):
+                ...
+            self.assertFalse(self.course.check_rule(key, stub))
+            self.assertIn("not attempted yet", shown[-1])
+            self.assertFalse(self.course.check_rule(key, None))
+            self.assertFalse(self.course.check_rule(key, "my answer"))
+            self.assertIn("not a function", shown[-1])
+
+            def broken(*args):
+                raise ValueError("oops")
+            self.assertFalse(self.course.check_rule(key, broken))
+            self.assertIn("raised an error", shown[-1])
+        self.course.solution("14.2")
+        self.assertIn("def my_gate", shown[-1])
+
+    def test_decision_task_feedback_names_the_misconception(self):
+        shown = []
+        self.course._html = shown.append
+
+        def lesson_gate(baseline, candidate):  # the lesson's single tolerance, not the stricter policy
+            return all(candidate.get(k, -1) >= v for k, v in baseline.items())
+        self.assertFalse(self.course.check_rule("14.2", lesson_gate))
+        self.assertIn("a small fall in a non-grounding mark", shown[-1])
+
+        def newest(current, candidates):  # ignores the gate result
+            return max([c["version"] for c in candidates], default=current)
+        self.assertFalse(self.course.check_rule("15.2", newest))
+        self.assertIn("A failed gate never moves the alias", shown[-1])
+
+        def gate_dict(baseline, candidate):  # returns release_gate's dict instead of a decision
+            return {"passed": True}
+        self.assertFalse(self.course.check_rule("14.2", gate_dict))
+
+    def test_instructor_mode_fills_an_unfinished_rule_with_the_solution(self):
+        self.course.test_with_solutions = True
+        try:
+            def stub(*args):
+                ...
+            self.assertTrue(self.course.check_rule("15.2", stub))
+            with self.assertRaises(AssertionError):
+                self.course.check_rule("15.2", lambda current, candidates: current)
+        finally:
+            self.course.test_with_solutions = False
 
     def test_gate_defaults_to_no_and_preview_is_non_destructive(self):
         self.course.dbutils = Mock()

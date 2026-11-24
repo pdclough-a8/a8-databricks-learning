@@ -1,5 +1,20 @@
 # Validation evidence
 
+## Design review changes, 24 November 2026
+
+**Offline checked only; no cloud operations or model requests were made.** Added the
+[design rationale](design-rationale.md), decision tasks 13.3 (SQL), 14.2 and 15.2 (Python rules checked by
+`A8.check_rule`), and self-check criteria with a neutral, explicitly unmarked card for every reflection.
+
+Tests cover: the 13.3 solution against an independent Python calculation of the dropped batch rows and their rules,
+and a single-rule answer failing; every rule solution passing all cases; unfinished (`...`), missing,
+non-function and error-raising answers; feedback naming the case for typical wrong rules (the lesson's single
+tolerance, ignoring the gate result, returning a dict); instructor mode; and reflection criteria and styling.
+Not yet observed: 13.3 against a real bronze table, and how learners respond to the new tasks and criteria.
+
+Final checks on Python **3.12.13**: **244 tests passed**, including Ruff, in **16.802 seconds**;
+`python -m mkdocs build --strict` passed.
+
 ## Audit remediation, 24 November 2026
 
 **Current changes are offline checked only; Databricks retesting is for the learner.** The earlier live runs below

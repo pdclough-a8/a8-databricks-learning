@@ -382,6 +382,17 @@ class PipelineTests(unittest.TestCase):
         rows = [tuple(r) for r in self.spark.sql(EXERCISES["13.2"]["solution"]).collect()]
         self.assertEqual(rows, sorted((r for r in left if r[2] < 30), key=lambda r: (r[2], r[0], r[1])))
         self.assertTrue(rows)
+        dropped = []
+        for number in (1, 2):
+            for row in batches.new_batch(number, scheduled):
+                if not batches.is_valid(row):
+                    rule = ("booking_id_present" if not row["booking_id"] else
+                            "tickets_positive" if int(row["tickets"]) <= 0 else "status_known")
+                    dropped.append((row["booking_id"] or None, row["event_id"], int(row["tickets"]),
+                                    row["status"], rule))
+        rows = [tuple(r) for r in self.spark.sql(EXERCISES["13.3"]["solution"]).collect()]
+        self.assertEqual(sorted(rows, key=repr), sorted(dropped, key=repr))
+        self.assertEqual({r[4] for r in rows}, {"booking_id_present", "tickets_positive", "status_known"})
 
     def test_blank_and_naive_exercise_answers_fail(self):
         self.run_lesson(create_pipeline=True, run_pipeline=True)
@@ -391,6 +402,10 @@ class PipelineTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertFalse(self.course.check("13.1", ""))
             self.assertFalse(self.course.check("13.1", naive))
+            only_tickets = ("SELECT booking_id, event_id, tickets, status, 'tickets_positive' AS broken_rule "
+                            "FROM IDENTIFIER(a8_bookings_bronze) WHERE tickets <= 0")  # misses two of the rules
+            self.assertFalse(self.course.check("13.3", only_tickets))
+            self.assertTrue(self.course.check("13.3", EXERCISES["13.3"]["solution"]))
 
     def test_exercises_are_skipped_not_failed_before_the_pipeline_has_run(self):
         self.run_lesson()

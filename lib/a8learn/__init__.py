@@ -6,6 +6,7 @@ import time; every write is an explicit method call made from a notebook cell.
 
 from __future__ import annotations
 
+import copy
 import html
 import json
 import re
@@ -489,8 +490,53 @@ class Course:
             return columns, [tuple(r) for r in answer.collect()]
         return ["value"], [(answer,)]
 
+    def check_rule(self, rule_id: str, function=None) -> bool:
+        """Run a learner's decision function against the task's cases and explain the first wrong decision."""
+        rule = exercises.get_rule(rule_id)
+        cases = rule["cases"]
+        stub = callable(function) and _returns_nothing(function, cases[0]["args"])
+        if (function is None or stub) and self.test_with_solutions:
+            function, stub = exercises.rule_solution(rule_id), False
+        if function is None or stub:
+            self.card(f"{rule_id}: not attempted yet",
+                      f"<p>{html.escape(rule['task'])}</p><p><b>Hint:</b> {html.escape(rule['hint'])}</p>"
+                      f"<p>Replace the <code>...</code> in <code>{rule['function']}</code> with your rule, then run "
+                      f"the cell again. Stuck? Run <code>A8.solution('{rule_id}')</code>.</p>", tone="warn")
+            return False
+        if not callable(function):
+            self.card(f"{rule_id}: not a function",
+                      f"<p>Pass the function itself, <code>{rule['function']}</code>, without brackets.</p>",
+                      tone="bad")
+            return False
+        for case in cases:
+            try:
+                got = function(*copy.deepcopy(case["args"]))
+            except Exception as error:  # learner code errors are expected while learning
+                self.card(f"{rule_id}: your function raised an error",
+                          f"<p>Case: {html.escape(case['name'])}.</p>"
+                          f"<pre style='white-space:pre-wrap'>{html.escape(repr(error)[:600])}</pre>"
+                          f"<p><b>Hint:</b> {html.escape(rule['hint'])}</p>", tone="bad")
+                ok = False
+                break
+            if got != case["expected"] or type(got) is not type(case["expected"]):
+                args = ", ".join(repr(a) for a in case["args"])
+                self.card(f"{rule_id}: not quite",
+                          f"<p>Case: <b>{html.escape(case['name'])}</b>.</p>"
+                          f"<p>Called with <code>{html.escape(args)}</code>, your function returned "
+                          f"<code>{html.escape(repr(got))}</code>; the right decision is "
+                          f"<code>{html.escape(repr(case['expected']))}</code>.</p>"
+                          f"<p><b>Why:</b> {html.escape(case['why'])}</p>", tone="bad")
+                ok = False
+                break
+        else:
+            ok = True
+            self.card(f"{rule_id}: correct on all {len(cases)} cases",
+                      f"<p>{html.escape(rule['explain'])}</p>", tone="ok")
+        if self.test_with_solutions and not ok:
+            raise AssertionError(f"Instructor validation failed for {rule_id}")
+        return ok
     def reflect(self, reflection_id: str, answer: str = ""):
-        """Ask for an answer in the learner's own words, then show a model answer to compare with."""
+        """Ask for an answer in the learner's own words, then show points to self-check against. Not marked."""
         item = exercises.get_reflection(reflection_id)
         if not (answer or "").strip():
             self.card(f"{reflection_id}: in your own words",
@@ -498,14 +544,17 @@ class Course:
                       "<p>Write one or two sentences between the quotes above, then run this cell again.</p>",
                       tone="warn")
             return False
-        self.card(f"{reflection_id}: compare",
+        points = "".join(f"<li>{html.escape(point)}</li>" for point in item["criteria"])
+        self.card(f"{reflection_id}: check your own answer (not marked)",
                   f"<p><b>Your answer:</b> {html.escape(answer.strip())}</p>"
+                  f"<p><b>A strong answer mentions:</b></p><ul style='margin:4px 0'>{points}</ul>"
                   f"<p><b>One good answer:</b> {html.escape(item['model'])}</p>"
-                  "<p>Different wording is fine. Check that you have the same idea.</p>", tone="ok")
+                  "<p>This is not marked. Different wording is fine; tick off each point you covered, and reread the "
+                  "lesson section for any you missed.</p>")
         return True
 
     def solution(self, exercise_id: str):
-        ex = exercises.get(exercise_id)
+        ex = exercises.RULES.get(exercise_id) or exercises.get(exercise_id)
         self.card(f"Solution, {exercise_id}", f"<p>{html.escape(ex['explain'])}</p>")
         self.code(ex["solution"].strip())
 
@@ -527,6 +576,14 @@ class Course:
         self.card("Module complete", f"<p>You built:</p><ul>{items}</ul>{nxt}"
                   "<p>Pausing? Optional serving endpoints remain billable until deleted, even if "
                   "compute idles. See <code>notebooks/99_pause_and_cleanup</code>.</p>", tone="ok")
+
+
+def _returns_nothing(function, args) -> bool:
+    """True for an unfinished decision function, such as one whose body is still `...`."""
+    try:
+        return function(*copy.deepcopy(args)) is None
+    except Exception:
+        return False  # an error is reported by the case loop, with the case that caused it
 
 
 def _normal(value):

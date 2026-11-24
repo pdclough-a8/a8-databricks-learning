@@ -32,6 +32,7 @@ Stage 1 replaces the pilot. Historical pilot evidence is not carried over as acc
 | S25 | Open | Analytics8 logo supplied by the course owner and added to the docs site, README and START_HERE; the file is not confirmed as the approved master, and notebooks keep text branding because Git-folder image rendering is unverified |
 | S22 | Implemented, not live validated | Module 3 now starts with a short manual dashboard, then an opt-in learner-bound `.lvdash.json` file; workspace file recognition and import need learner observation |
 | S34 | Fixed locally, Databricks retest pending | Audit remediation: cleanup scope, pipeline reruns and data freshness, tool validation, seat scoring, numeric exercises, app polling, RAG citations and conflicting guidance |
+| S35 | Partly addressed, offline only | Design review: outcomes and assessment misaligned in later modules; reflections looked marked. Added decision tasks 13.3, 14.2 and 15.2 and reflection criteria; fading, spacing, readiness and accessibility remain open |
 
 ## S01: persistent settings
 
@@ -232,6 +233,19 @@ The live results below precede S34; the revised code still needs its Databricks 
 | S31 | Live validated, one gap | Module 11 app: the notebook ran live on a8-free (create, grants, deploy, 200 response, delete, clean list). Not seen: the rendered page, so the in-app warehouse query and `valueFrom` are unconfirmed; open the app once in a browser. Streamlit started without a requirements.txt. The app is read-only: the booking-request form named in the first plan was left out so the service principal needs no write access |
 | S32 | Live validated, one gap | Module 14 evaluation: ran live on a8-free (baseline, blocked stale candidate, released refreshed candidate, traces with tool spans, judge cell, cleanup of the experiment). Fixed after the first run: `search_traces` returns the trace column as text, so spans are read with `mlflow.get_trace`. Not exercised: the endpoint as the predict function (no endpoint existed), and the judge's mark and run means were cut from the exported output. The evaluation experiment is in cleanup but not in `OBJECTS`, as with the attendance experiment. Production monitoring is described, not run |
 | S33 | Implemented, canary probed, notebook not live validated | Module 15 release gate and rollback: candidate versions, gate, alias move, release record and rollback are offline checked only. The optional canary's platform calls were probed on a8-free on 24 November 2026: a 90/10 split on one endpoint works, field names confirmed, the split update takes about 6 minutes. The notebook has not been run live (the harness task `release` keeps the canary off until a run is approved) |
+
+## S35: instructional-design review, 24 November 2026
+
+**Symptoms:** later modules promise creation and judgement (pipelines, release gates, rollback) but checked only
+data retrieval; any non-blank reflection was shown in the green "correct" style although it is not marked.
+
+**Fix:** decision tasks 13.3, 14.2 and 15.2 with case-by-case feedback (`A8.check_rule` for Python rules), an
+alignment matrix, and two or three self-check criteria per reflection with a neutral card that says it is not
+marked. See [Design rationale](design-rationale.md).
+
+**Still open:** support does not fade in later modules; no spaced or cumulative practice; no prerequisite
+self-check or per-role core path; no accessibility pass of the site or notebook output; no learner evidence. Most
+modules before 13 still check retrieval rather than their stated outcomes.
 
 ## S34: audit remediation, 24 November 2026
 
