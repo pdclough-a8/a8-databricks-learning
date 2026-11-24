@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search` and `09_agents` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents` and `12_deploy_and_govern` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -47,6 +47,11 @@ and delete step needs your approval and `99_pause_and_cleanup` also removes them
 Module **9** (agents) builds a small agent that chooses between two read-only tools, with a step cap and a trace. It
 needs the 8b chunk table, creates nothing, and its two model steps (a JSON decider and an optional native tool-calling one) are default-no switches. Supplied and offline checked,
 **not live validated**.
+
+Module **12** (deploy and govern) packages the Module 9 agent with a snapshot of its data, logs and registers it as a
+Unity Catalog model with a `Champion` alias, serves it on a scale-to-zero endpoint, queries it, reads who can use it and
+deletes the endpoint. Each cloud step is a default-no switch, the endpoint **can bill while it exists**, and
+`99_pause_and_cleanup` removes the endpoint and model. Supplied and offline checked, **not live validated**.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

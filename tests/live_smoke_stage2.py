@@ -1,9 +1,9 @@
-"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-9 and the Python routes. Not a unit test.
+"""Maintainer-only, explicitly authorised a8-free validation of Modules 8a-12 and the Python routes. Not a unit test.
 
 Run with Python and the Databricks SDK installed, using the browser OAuth profile a8-free. Uploads the course to a
-unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b, 08c and 09 as serverless notebook tasks under its
-own learner tag and saved-settings profile, then always runs scoped cleanup, deletes the uploaded folder and its
-settings file, and writes the notebook outputs to .local-validation/stage2-validation.txt (git-ignored).
+unique, non-Git workspace folder, runs 00, 01, 03, 04, 05, 08a, 08b, 08c, 09 and 12 as serverless notebook tasks
+under its own learner tag and saved-settings profile, then always runs scoped cleanup, deletes the uploaded
+folder and its settings file, and writes the notebook outputs to .local-validation/stage2-validation.txt (git-ignored).
 
 Model requests and a billable Vector Search endpoint are approved by whoever runs this, with --approve-cloud-writes.
 """
@@ -40,7 +40,7 @@ def upload(w, remote):
                                language=Language.PYTHON if notebook else None, overwrite=False)
 
 
-def build_tasks(remote, tag, wait_minutes, skip_vector=False):
+def build_tasks(remote, tag, wait_minutes, skip_vector=False, only=None):
     common = {"config_profile": PROFILE, "answers": "solutions"}
     plan = [
         ("setup", "00_setup",
@@ -55,10 +55,12 @@ def build_tasks(remote, tag, wait_minutes, skip_vector=False):
                                          "delete_vector_search": "yes", "wait_minutes": str(wait_minutes)},
          wait_minutes * 60 * 2 + 1800),
         ("agents", "09_agents", {"ask_agent": "yes", "native_tools": "yes"}, 1800),
+        ("deploy", "12_deploy_and_govern",
+         {"register_agent": "yes", "deploy_agent": "yes", "delete_agent_endpoint": "yes"}, 3000),
     ]
     tasks = []
     for key, notebook, extra, timeout in plan:
-        if skip_vector and key == "vector":
+        if (skip_vector and key == "vector") or (only and key not in only):
             continue
         tasks.append(SubmitTask(
             task_key=key,
@@ -107,6 +109,7 @@ def main():
     parser.add_argument("--approve-cloud-writes", action="store_true", required=True)
     parser.add_argument("--tag", default="val8")
     parser.add_argument("--wait-minutes", type=int, default=25)
+    parser.add_argument("--only", help="comma-separated task keys to run, in the usual order")
     parser.add_argument("--skip-vector", action="store_true", help="do not create the billable Vector Search endpoint")
     args = parser.parse_args()
     w = WorkspaceClient(profile="a8-free")
@@ -114,7 +117,8 @@ def main():
     remote = f"/Users/{user}/a8learn_stage2_validation_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     upload(w, remote)
     run_id = w.jobs.submit(run_name="A8 Stage 2 notebook validation",
-                           tasks=build_tasks(remote, args.tag, args.wait_minutes, args.skip_vector)).run_id
+                           tasks=build_tasks(remote, args.tag, args.wait_minutes, args.skip_vector,
+                                              set(args.only.split(",")) if args.only else None)).run_id
     print(json.dumps({"run_id": run_id, "folder": remote, "tag": args.tag}), flush=True)
     while True:
         run = w.jobs.get_run(run_id)

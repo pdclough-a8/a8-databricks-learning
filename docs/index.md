@@ -21,7 +21,7 @@ Using an LLM does not automatically make an answer predictive or prescriptive.
 | Diagnostic | Why did it happen? | Module 4: drill-downs, mix versus rate and a chance test; association alone is not causation |
 | Predictive | What is likely to happen? | Module 5: attendance probabilities and expected turnout |
 | Prescriptive | What should we do, given objectives and constraints? | Module 6: choose ticket limits and meal orders |
-| Automation | How can approved work run repeatedly or take bounded actions? | Modules 9 and 12, planned |
+| Automation | How can approved work run repeatedly or take bounded actions? | Modules 9 and 12 |
 
 The course follows the order of analytical complexity: Modules 0–2 provide the platform, data and governance
 foundations, then Modules 3–6 climb from descriptive to diagnostic, predictive and prescriptive analytics.
@@ -48,7 +48,7 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 9. Agents | Two read-only tools (document search, seats left) with allow-list and input checks, an agent loop with a step cap and a trace, a rule-based decider as baseline, then a language model as decider (12-request budget, default-no switch) scored on five tasks, and an optional native tool-calling decider | Supplied; offline checked; live validated on Free |
 | 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
 | 11. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
-| 12. Deploy and govern | Declarative Automation/Asset Bundles, jobs, dashboard deployment and programmatic Genie creation, dev→prod configuration, Unity/AI Gateway capabilities, cost, evaluation/release gates and rollback | Planned next |
+| 12. Deploy and govern | Package the Module 9 agent as code with a data snapshot, test it, log it with MLflow, register it in Unity Catalog with a `Champion` alias, serve it on a scale-to-zero endpoint, query it, read its permissions and delete it; the endpoint and model are in scoped cleanup. Asset Bundles, jobs and release pipelines are deferred | Supplied; offline checked, no live validation |
 | 99. Lifecycle | Pause/resume, endpoint deletion and exact scoped cleanup | Stage 1; extends with later modules |
 
 ## Start and stop
@@ -57,7 +57,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `12_deploy_and_govern` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.

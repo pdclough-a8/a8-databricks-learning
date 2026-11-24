@@ -5,10 +5,11 @@ import time
 from . import COURSE_ID, OBJECTS
 
 
-def endpoint_for_cleanup(course, workspace):
+def endpoint_for_cleanup(course, workspace, name=None):
     from databricks.sdk.errors import NotFound
+    name = name or course.endpoint_name
     try:
-        endpoint = workspace.serving_endpoints.get(course.endpoint_name)
+        endpoint = workspace.serving_endpoints.get(name)
     except NotFound:
         return None
     tags = {t.key: t.value for t in endpoint.tags or []}
@@ -56,9 +57,9 @@ def delete_vector_search(course, workspace, index, endpoint, wait_seconds=180):
         workspace.vector_search_endpoints.delete_endpoint(course.vector_endpoint_name)
 
 
-def model_for_cleanup(course, workspace, client):
+def model_for_cleanup(course, workspace, client, name=None):
     import mlflow
-    name = course.model_name
+    name = name or course.model_name
     try:
         model = client.get_registered_model(name)
     except mlflow.exceptions.MlflowException as error:
@@ -77,6 +78,7 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     if confirmation != course.cfg.tag:
         raise ValueError("Type your exact learner tag to confirm deletion.")
     endpoint = endpoint_for_cleanup(course, workspace)
+    agent_endpoint = endpoint_for_cleanup(course, workspace, course.agent_endpoint_name)
     index, vector_endpoint = vector_search_for_cleanup(course, workspace)
     keys = [k for k in reversed(OBJECTS) if OBJECTS[k][0] != "model"] if tables else []
     present = [k for k in keys if course.exists(k)]
@@ -84,6 +86,7 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     for key in present:
         course.guard(key)
     model = model_for_cleanup(course, workspace, client) if tables else None
+    agent_model = model_for_cleanup(course, workspace, client, course.agent_model_name) if tables else None
     experiment = client.get_experiment_by_name(course.experiment_path) if tables else None
     if experiment and (experiment.tags.get("a8learn_course") != COURSE_ID or
                        experiment.tags.get("a8learn_tag") != course.cfg.tag):
@@ -91,17 +94,21 @@ def cleanup(course, workspace, client, confirmation, tables=False):
     if endpoint:
         endpoint_for_cleanup(course, workspace)
         workspace.serving_endpoints.delete(course.endpoint_name)
+    if agent_endpoint:
+        endpoint_for_cleanup(course, workspace, course.agent_endpoint_name)
+        workspace.serving_endpoints.delete(course.agent_endpoint_name)
     if index is not None or vector_endpoint is not None:
         vector_search_for_cleanup(course, workspace)
         delete_vector_search(course, workspace, index, vector_endpoint)
     if tables:
-        if model:
-            model_for_cleanup(course, workspace, client)
-            for alias in list(model.aliases):
-                client.delete_registered_model_alias(model.name, alias)
-            for version in client.search_model_versions(f"name='{model.name}'"):
-                client.delete_model_version(model.name, version.version)
-            client.delete_registered_model(model.name)
+        for found, name in ((agent_model, course.agent_model_name), (model, course.model_name)):
+            if found:
+                model_for_cleanup(course, workspace, client, name)
+                for alias in list(found.aliases):
+                    client.delete_registered_model_alias(found.name, alias)
+                for version in client.search_model_versions(f"name='{found.name}'"):
+                    client.delete_model_version(found.name, version.version)
+                client.delete_registered_model(found.name)
         # Reverse creation order: views and governed table before its UDF dependencies.
         order = ["doc_chunks", "event_forecast", "attendance_predictions", "booking_features",
                  "bookings_governed", "city_filter", "mask_email", "event_metrics", "event_availability",
@@ -114,5 +121,6 @@ def cleanup(course, workspace, client, confirmation, tables=False):
         if experiment and experiment.lifecycle_stage != "deleted":
             client.delete_experiment(experiment.experiment_id)
     return {"endpoint_deleted": bool(endpoint), "data_objects_deleted": len(present),
-            "model_deleted": bool(model), "vector_index_deleted": index is not None,
+            "model_deleted": bool(model), "agent_endpoint_deleted": bool(agent_endpoint),
+            "agent_model_deleted": bool(agent_model), "vector_index_deleted": index is not None,
             "vector_endpoint_deleted": vector_endpoint is not None}

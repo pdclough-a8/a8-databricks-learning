@@ -190,10 +190,20 @@ class LifecycleTests(unittest.TestCase):
         from databricks.sdk.errors import NotFound
         self.w.vector_search_indexes.get_index.side_effect = NotFound("none")
         self.w.vector_search_endpoints.get_endpoint.side_effect = NotFound("none")
-        self.w.serving_endpoints.get.return_value = SimpleNamespace(
+        from databricks.sdk.errors import NotFound as Missing
+        mine = SimpleNamespace(
             creator=self.course.cfg.user,
             tags=[SimpleNamespace(key="a8learn_course", value="a8-databricks-learning"),
                   SimpleNamespace(key="a8learn_tag", value="smoke")])
+        self.mine = mine
+
+        def get_endpoint(name):  # only the attendance endpoint exists by default; the agent endpoint is absent
+            if name == "a8-smoke-attendance":
+                return self.mine
+            raise Missing("none")
+
+        self.get_endpoint = get_endpoint
+        self.w.serving_endpoints.get.side_effect = get_endpoint
 
     def test_wrong_confirmation_does_nothing(self):
         from a8learn.lifecycle import cleanup
@@ -203,7 +213,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_endpoint_owner_and_tag_required(self):
         from a8learn.lifecycle import cleanup
-        self.w.serving_endpoints.get.return_value.creator = "other@example.com"
+        self.mine.creator = "other@example.com"
         with self.assertRaises(PermissionError):
             cleanup(self.course, self.w, self.client, "smoke")
         self.w.serving_endpoints.delete.assert_not_called()
@@ -296,7 +306,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_vector_search_foreign_or_shared_resources_are_refused(self):
         from a8learn.lifecycle import cleanup
-        self.w.serving_endpoints.get.side_effect = None
+        self.w.serving_endpoints.get.side_effect = self.get_endpoint
         index = SimpleNamespace(creator="other@example.com", endpoint_name="a8-smoke-vs")
         self.w.vector_search_indexes.get_index.side_effect = None
         self.w.vector_search_indexes.get_index.return_value = index
@@ -390,7 +400,7 @@ class NotebookTests(unittest.TestCase):
             "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
             "06_prescriptive_analytics", "02_governance", "07_genai",
             "05_predictive_ml", "08a_embeddings", "08b_rag", "08c_vector_search", "09_agents",
-            "99_pause_and_cleanup", "_config",
+            "12_deploy_and_govern", "99_pause_and_cleanup", "_config",
         })
         for path in paths:
             source = path.read_text(encoding="utf-8")

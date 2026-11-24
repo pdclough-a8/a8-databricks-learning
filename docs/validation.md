@@ -137,6 +137,25 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 12: Deploy and govern
+
+**Supplied, offline checked, not live validated.** The Free Edition write probe (24 November 2026) showed that a
+trivial model can be registered, served and queried on `a8-free`, and that an app can be created and deleted; this
+module's own packaging, model-from-code logging and endpoint have not run live.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_deploy.py` | The notebook runs against recording stand-ins for MLflow, the SDK client and Spark; the agent code is real |
+| Packaged agent | `agent_core.py` matches the Module 9 baseline (four of five grounded) and keeps the allow-list, input checks and step cap; the wrapper loads a snapshot and returns one row per question |
+| Gates | The default run makes no MLflow write and no SDK call; register, deploy and delete are separate default-no switches |
+| Registration | One run with course tags, the code, the snapshot and an input example; a new version each time; the `Champion` alias; the released model must answer as the tested code did |
+| Serving | The endpoint is pinned to the registered version, tagged, scale to zero, never updated if it exists, and refused if it is not yours; its answers must equal the local ones |
+| Cleanup | The agent endpoint is deleted only for its creator with matching tags; the agent model, its aliases and versions are removed by `99_pause_and_cleanup` after the same ownership check |
+| Exercises 12.1, 12.2 | The solutions equal independent Python results; blank and naive answers fail |
+
+Not validated offline: models-from-code logging, endpoint build time, quota, the real response format, and the
+permission read-outs.
+
 ## Module 9: Agents
 
 **Supplied and offline checked. Live validated on `a8-free` on 24 November 2026.** Live result: the tools, guardrails and loop ran as designed. The rule-based agent scored tool choice 5/5 and grounded 4/5 (it ranks the wrong section first for "take over my seat"). The JSON model decider scored 5/5 and 5/5 in 9 of 12 requests, and refused the weather question. **Native tool-calling works on Free** with `databricks-meta-llama-3-3-70b-instruct`: tool choice 5/5, grounded 4/5 in 9 of 12 requests; the miss is the same retrieval miss, not a tool-calling failure. Nothing was created.

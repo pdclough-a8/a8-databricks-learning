@@ -19,8 +19,9 @@
 # MAGIC   conversations or cached results. Follow Module 3's exact-URL/ID UI cleanup before dropping its
 # MAGIC   reporting view. Remove any generated dashboard file by its exact printed path too; keep saved settings.
 # MAGIC - **Custom model serving and Vector Search endpoints:** can keep billing even when your notebook is closed.
-# MAGIC   Delete them when not needed. Module 8c creates a Vector Search endpoint and index; this notebook removes both.
-# MAGIC - **Later Vector Search/app modules:** not created by this release; their lifecycle will be taught with them.
+# MAGIC   Delete them when not needed. Module 8c creates a Vector Search endpoint and index; Module 12 creates an agent
+# MAGIC   endpoint. This notebook removes them.
+# MAGIC - **Later app modules:** not created by this release; their lifecycle will be taught with them.
 # MAGIC
 # MAGIC To resume, reopen the next lesson and run its configuration cell. Saved settings reload from your workspace user
 # MAGIC folder.
@@ -62,7 +63,7 @@ client = MlflowClient()
 # COMMAND ----------
 # WHAT: previews the exact names this course can clean up for your tag.
 # LOOK FOR: your endpoint name and one line per object; nothing is deleted.
-print("Exact serving endpoint candidate:", A8.endpoint_name)
+print("Exact serving endpoint candidates:", A8.endpoint_name, "|", A8.agent_endpoint_name)
 print("Exact Vector Search endpoint and index candidates:", A8.vector_endpoint_name, "|", A8.vector_index_name)
 for key, (kind, _) in OBJECTS.items():
     print(f"{kind:8} {A8.t(key)}")
@@ -76,10 +77,11 @@ A8.links(("Serving: check whether your endpoint exists", "serving", ""),
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Choose deliberately
-# MAGIC `endpoint_only` deletes the exact serving endpoint after checking creator and course tags, and your Vector
-# MAGIC Search index and endpoint from Module 8c after checking their creator (index first, then endpoint).
+# MAGIC `endpoint_only` deletes your exact serving endpoints (attendance and agent) after checking creator and course
+# MAGIC tags, and your Vector Search index and endpoint from Module 8c after checking their creator (index first, then
+# MAGIC endpoint).
 # MAGIC `all_course_objects` additionally drops the named views/tables/functions/volume, all versions and aliases
-# MAGIC of this course model, and soft-deletes this course MLflow experiment.
+# MAGIC of this course's models (attendance and agent), and soft-deletes this course MLflow experiment.
 # MAGIC It deletes uploaded CSV files inside the course volume too. Delta/model/MLflow retention policies can retain
 # MAGIC underlying storage; this is not a secure erasure or immediate cost-zero guarantee.
 # MAGIC "All course objects" here means the listed UC/MLflow objects and endpoint, not dashboard/Genie UI assets.

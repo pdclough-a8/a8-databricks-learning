@@ -620,4 +620,4 @@ A8.reflect("9.b", my_answer_9_b)
 A8.next_step(["Two read-only tools with checked inputs", "An agent loop with a step cap and a trace",
               "A rule-based decider as the baseline",
               "A model decider with a fixed request budget, scored on five tasks"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "12_deploy_and_govern", "Package, register, serve and govern the agent")

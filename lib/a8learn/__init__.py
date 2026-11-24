@@ -35,6 +35,7 @@ OBJECTS = {
     "attendance_predictions": ("table", "05_predictive_ml"),
     "event_forecast": ("view", "05_predictive_ml"),
     "doc_chunks": ("table", "08b_rag"),
+    "agent_model": ("model", "12_deploy_and_govern"),
 }
 
 
@@ -161,6 +162,16 @@ class Course:
     @property
     def endpoint_name(self) -> str:
         return f"a8-{self.cfg.tag}-attendance"
+
+    @property
+    def agent_endpoint_name(self) -> str:
+        """This learner's agent serving endpoint (Module 12). Billable while it exists."""
+        return f"a8-{self.cfg.tag}-agent"
+
+    @property
+    def agent_model_name(self) -> str:
+        """Three-part Unity Catalog name of this learner's registered agent model (Module 12)."""
+        return f"{self.cfg.catalog}.{self.cfg.schema}.{self.name('agent_model')}"
 
     @property
     def vector_endpoint_name(self) -> str:
@@ -297,19 +308,20 @@ class Course:
         for key, value in self.course_tags.items():
             client.set_experiment_tag(experiment.experiment_id, key, value)
 
-    def claim_model(self, client, workspace):
+    def claim_model(self, client, workspace, name=None):
         """Create the registered model with course tags, or confirm an existing one is ours."""
+        name = name or self.model_name
         try:
-            existing = client.get_registered_model(self.model_name)
+            existing = client.get_registered_model(name)
         except Exception as error:
             if getattr(error, "error_code", None) != "RESOURCE_DOES_NOT_EXIST":
                 raise
-            client.create_registered_model(self.model_name, tags=self.course_tags)
+            client.create_registered_model(name, tags=self.course_tags)
             return
         if not self._is_course_run(existing.tags):
-            raise PermissionError(f"{self.model_name} is not marked as this course run. Choose another tag.")
-        if workspace.registered_models.get(self.model_name).owner != self.cfg.user:
-            raise PermissionError(f"{self.model_name} is not owned by you. Choose another tag.")
+            raise PermissionError(f"{name} is not marked as this course run. Choose another tag.")
+        if workspace.registered_models.get(name).owner != self.cfg.user:
+            raise PermissionError(f"{name} is not owned by you. Choose another tag.")
 
     # ---------- running SQL ----------
     def sql(self, sql: str):

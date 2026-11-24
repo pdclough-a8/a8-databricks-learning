@@ -265,6 +265,26 @@ WHERE status = 'scheduled' AND available > 0 GROUP BY city ORDER BY open_events 
                    "most open events would need exactly this query, and you can check its answer yourself.",
         "ordered": True,
     },
+    "12.1": {
+        "task": "Return event_name, city and available for scheduled events with fewer than 40 seats left, ordered by "
+                "available from lowest to highest, then event_name, then city.",
+        "hint": "Filter status = 'scheduled' AND available < 40. Read from IDENTIFIER(a8_event_availability).",
+        "solution": """SELECT event_name, city, available FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND available < 40 ORDER BY available, event_name, city""",
+        "explain": "These are the events whose seat numbers matter most to a customer, and the ones a stale snapshot "
+                   "would get most wrong: a few late bookings can turn 'some left' into 'full'.",
+        "ordered": True,
+    },
+    "12.2": {
+        "task": "Return city and seats_left (the sum of available) for scheduled events in each city, ordered by "
+                "seats_left from highest to lowest, then city.",
+        "hint": "Filter status = 'scheduled', GROUP BY city and sum(available).",
+        "solution": """SELECT city, sum(available) AS seats_left FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' GROUP BY city ORDER BY seats_left DESC, city""",
+        "explain": "Summing seats per city is a question the agent's two tools cannot answer directly. A new tool, or "
+                   "a new version of the model, would be needed, which is why releases are numbered.",
+        "ordered": True,
+    },
 }
 
 
@@ -399,6 +419,18 @@ REFLECTIONS = {
         "model": "An agent can choose among sources and act on live data, such as checking seat numbers, and combine "
                  "several steps. Because it acts, a wrong choice has consequences, so it needs limits, read-only or "
                  "approved tools, and a trace to review.",
+    },
+    "12.a": {
+        "question": "Why is a registered model with an alias better than the notebook agent for other systems to use?",
+        "model": "Other systems can call it by name without your notebook. Each release is a numbered, permissioned "
+                 "version with a record of how it was built, the alias says which version is live, and moving the "
+                 "alias is a controlled way to roll forward or back.",
+    },
+    "12.b": {
+        "question": "What goes stale in a model that carries a snapshot, and how would you fix it?",
+        "model": "The seat numbers and documents are frozen at the time of logging, so answers drift from reality. "
+                 "Either log and release a new version on a schedule, or have the served agent read live data "
+                 "through a governed connection, which needs its own authentication and access review.",
     },
 }
 
