@@ -59,7 +59,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `12_deploy_and_govern` (optional) → `13_pipelines_and_jobs` (optional) → `11_interactive_app` (optional) → `14_evaluate_and_monitor` (optional) → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `08b_rag` (optional) → `08c_vector_search` (optional) → `09_agents` (optional) → `12_deploy_and_govern` (optional) → `13_pipelines_and_jobs` (optional) → `11_interactive_app` (optional) → `14_evaluate_and_monitor` (optional) → `15_release_and_rollback` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.

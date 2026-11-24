@@ -367,3 +367,28 @@ and the other judges, were exercised by the live run.
 Not live validated: the endpoint test (no endpoint existed in the run, so it was skipped), the `Correctness` and
 `Safety` judges, paid-workspace behaviour, and production trace ingestion into Unity Catalog and scheduled monitors,
 which the notebook describes and does not run.
+
+## Module 15: Release gate and rollback
+
+**Supplied and offline checked. Not live validated.** The notebook, `lib/a8learn/release.py` and
+`tests/test_release.py` exist, and the harness task `release` in `tests/live_smoke_stage2.py` is ready (canary off), but
+no live run has happened. The harness needs the `deploy` task before it, because the lesson releases the Champion that
+Module 12 registers (for example `--only setup,data,rag,deploy,release`).
+
+| Check | Evidence |
+|---|---|
+| `tests/test_release.py` | The notebook runs against a stand-in registry that keeps versions, tags and the alias, and a stand-in serving API that keeps the endpoint's served entities and routes; evaluation really runs the agent and the scorers. It does not show how MLflow 3.6 or Model Serving behave |
+| Release order | The fresh candidate is released first and the stale one is gated against the new Champion. A test builds a stale Champion and shows the stale candidate would tie with it and pass if gated against it, which is why the order matters |
+| Alias | `Champion` moves only for a candidate that passed; the blocked version never holds it; every version gets its gate result, reasons, evaluation run id and the version compared with, and the released one a `replaces` tag |
+| Rollback | Moves the alias to `replaces`, tags the withdrawn version, refuses when no `replaces` tag exists, and the notebook checks the restored Champion gives the five answers recorded before the release |
+| Gates (switches) | The default run writes nothing; `log_candidates`, `release_candidate`, `roll_back` and `canary_endpoint` are separate default-no switches; the notebook never creates or deletes an endpoint, model or experiment |
+| Canary | Splits 90/10, sends 20 requests and restores in a `finally` block (tested with a failing request); skips when the endpoint is absent, not yours, or does not serve one version of the agent model |
+| Cleanup | No new object type: the model with all its versions and aliases is removed by the existing cleanup. The evaluation experiment is deleted only when data objects are also removed (`tables=True`), as for Module 14 |
+| Exercise 15.1 | The solution equals an independent result computed from the CSV files; blank and naive answers fail |
+
+Not live validated, and unknown until a write probe is approved: the canary. It is unconfirmed whether Free Edition
+allows two served versions with a traffic split on one endpoint, what the update time is, whether the route field is
+`served_model_name`, and whether the endpoint state fields are `config_update` and `ready`. Also unconfirmed live:
+`get_model_version_by_alias` and version tags in Unity Catalog, loading `models:/<name>/<n>`, and `mlflow.genai.evaluate`
+on a loaded model. Loaded models do not produce tool spans, so the lesson does not assert them. A gate only compares:
+if the Champion's own figures are out of date, an equally stale candidate would pass, which the notebook says.

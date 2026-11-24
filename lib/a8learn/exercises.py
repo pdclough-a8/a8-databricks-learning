@@ -308,6 +308,20 @@ ORDER BY event_name, city""",
                    "the agent cannot mark its own work, and when seats change the expected values change with them.",
         "ordered": True,
     },
+    "15.1": {
+        "task": "Return event_name, city, available and stale_available (available plus 7) for the scheduled events "
+                "called 'Pipelines in Practice' and 'Analytics Breakfast', ordered by event_name then city. These "
+                "are the true seat counts and the ones a week-old release would report.",
+        "hint": "Filter status = 'scheduled' AND event_name IN (...), read from IDENTIFIER(a8_event_availability) "
+                "and add a column available + 7 AS stale_available.",
+        "solution": """SELECT event_name, city, available, available + 7 AS stale_available
+FROM IDENTIFIER(a8_event_availability)
+WHERE status = 'scheduled' AND event_name IN ('Pipelines in Practice', 'Analytics Breakfast')
+ORDER BY event_name, city""",
+        "explain": "The stale column is what customers would be told if the bad version were released. The gate "
+                   "catches it because the true column is read from the data, not from either version.",
+        "ordered": True,
+    },
     "13.1": {
         "task": "Return event_id and new_tickets (the sum of tickets) for confirmed rows in the cleaned bookings, "
                 "ordered by new_tickets from highest to lowest, then event_id.",
@@ -502,6 +516,19 @@ REFLECTIONS = {
         "model": "A fixed mark hides regressions while the score stays above it, and fails a release for questions "
                  "that were already hard. Comparing with the baseline asks the useful question: did this change make "
                  "anything worse than what is running now?",
+    },
+    "15.a": {
+        "question": "Why write the gate result and the evaluation run id on the model version, when the alias "
+                    "already says which version is released?",
+        "model": "The alias says what is released, not why. The tags say whether the version passed, what it was "
+                 "compared with and which run proves it, so anyone can check or challenge the decision later "
+                 "without asking the person who made it.",
+    },
+    "15.b": {
+        "question": "Why is a rollback done by moving the alias instead of editing or deleting a version?",
+        "model": "A version never changes, so the earlier one is exactly what was tested and is still there. Moving "
+                 "the alias is instant, can be undone, and leaves a record of what was released and withdrawn. "
+                 "Editing or deleting would destroy the evidence and the thing you want to return to.",
     },
     "13.a": {
         "question": "Why are bad rows kept in bronze but dropped from silver?",

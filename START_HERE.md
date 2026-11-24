@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern`, `13_pipelines_and_jobs`, `11_interactive_app` and `14_evaluate_and_monitor` are optional and make no model request unless you approve it.
+   `07_genai`, `08a_embeddings`, `08b_rag`, `08c_vector_search`, `09_agents`, `12_deploy_and_govern`, `13_pipelines_and_jobs`, `11_interactive_app`, `14_evaluate_and_monitor` and `15_release_and_rollback` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,

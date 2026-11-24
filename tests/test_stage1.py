@@ -404,6 +404,7 @@ class NotebookTests(unittest.TestCase):
             "06_prescriptive_analytics", "02_governance", "07_genai",
             "05_predictive_ml", "08a_embeddings", "08b_rag", "08c_vector_search", "09_agents",
             "11_interactive_app", "12_deploy_and_govern", "13_pipelines_and_jobs", "14_evaluate_and_monitor",
+            "15_release_and_rollback",
             "99_pause_and_cleanup", "_config",
         })
         for path in paths:

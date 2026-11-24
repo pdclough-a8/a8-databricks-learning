@@ -510,7 +510,7 @@ A8.check("14.1", answer_14_1)
 # MAGIC
 # MAGIC **Pause:** this lesson created one MLflow experiment with three runs (four with the judge, five with the
 # MAGIC endpoint). It costs nothing to keep; `99_pause_and_cleanup` deletes it.
-# MAGIC **Next:** `99_pause_and_cleanup`.
+# MAGIC **Next:** `15_release_and_rollback`.
 
 # COMMAND ----------
 # WHAT: asks which scorer catches stale numbers and why a wording-only judge would not.
@@ -532,4 +532,4 @@ A8.next_step(["Scoring rules that compare answers with facts read from your data
               "MLflow evaluation runs with traces, and a release gate against a baseline",
               "A stale candidate blocked, a refreshed one released",
               "A monitoring summary of traces, an optional judge and an optional endpoint test"],
-             "99_pause_and_cleanup", "Pause safely or remove only your course work")
+             "15_release_and_rollback", "Release a new agent version through the gate, and roll it back")

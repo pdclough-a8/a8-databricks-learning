@@ -23,6 +23,9 @@
 # MAGIC   endpoint. This notebook removes them.
 # MAGIC - **Evaluation runs:** Module 14 writes one MLflow experiment with its runs and traces. It costs nothing to
 # MAGIC   keep; this notebook deletes it with your other MLflow work.
+# MAGIC - **Release versions:** Module 15 adds candidate versions to your agent model, which is removed here with all
+# MAGIC   its versions and aliases, and evaluation runs to the Module 14 experiment. Its optional canary restores your
+# MAGIC   endpoint in the lesson itself; the endpoint is deleted here like any other.
 # MAGIC - **Apps:** a Databricks App keeps compute running while it exists. Module 11 creates one; this notebook revokes
 # MAGIC   its grants and deletes it and its source folder. Later app modules will be taught with their own lifecycle.
 # MAGIC
