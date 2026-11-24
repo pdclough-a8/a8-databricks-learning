@@ -74,7 +74,7 @@ Module **15** (release gate and rollback) logs two candidate versions of the Mod
 gate on each against the `Champion`, and moves the alias only for the one that passes. The gate result and evaluation
 run are written on the version as a release record, and a rollback moves the alias back. Logging versions, releasing,
 rolling back and an optional 90/10 canary on your endpoint (which changes it, then restores it) are separate default-no
-switches, and `99_pause_and_cleanup` removes the model. Offline checked only; not yet run live.
+switches, and `99_pause_and_cleanup` removes the model. Offline checked; the traffic split was probed live on Free Edition, but the notebook has not yet been run live.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

@@ -25,7 +25,8 @@
 # MAGIC optional canary **changes your existing endpoint** (it creates no new one): it adds a second served version for
 # MAGIC a few minutes, sends 20 small requests and puts the endpoint back, and the endpoint's compute may be billed
 # MAGIC while it updates on a paid workspace. `99_pause_and_cleanup` removes the model with all its versions.
-# MAGIC The canary has not been validated live: see `docs/validation.md`.
+# MAGIC The traffic split was probed live on Free Edition on 24 November 2026 with throwaway models, and the update
+# MAGIC took about six minutes; this notebook has not yet been run live: see `docs/validation.md`.
 # MAGIC
 # MAGIC ## Release in plain English
 # MAGIC A **version** of a registered model never changes once it exists. A **release** is a decision about which
@@ -411,8 +412,9 @@ else:
 # MAGIC
 # MAGIC **What you can and cannot see.** Both versions answer from the same data, so their answers are identical and a
 # MAGIC reply does not say which version produced it. We show the split by reading the endpoint's traffic routes back,
-# MAGIC and that all 20 requests were answered. The update waits for the endpoint to be ready, which may take several
-# MAGIC minutes. **This lesson does not create an endpoint:** if yours is absent it says so and moves on.
+# MAGIC and that all 20 requests were answered. The update waits for the endpoint to be ready, which took about six
+# MAGIC minutes on Free Edition. **This lesson does not create an endpoint:** if yours is absent it says so and
+# MAGIC moves on.
 # MAGIC
 # MAGIC **If it differs:** a message that the update is not allowed means your workspace cannot split traffic; the
 # MAGIC rest of the lesson stands. If the restore fails, run `99_pause_and_cleanup` or delete the endpoint in Module 12.

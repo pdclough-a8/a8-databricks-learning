@@ -370,7 +370,8 @@ which the notebook describes and does not run.
 
 ## Module 15: Release gate and rollback
 
-**Supplied and offline checked. Not live validated.** The notebook, `lib/a8learn/release.py` and
+**Supplied and offline checked. The traffic split was probed live on `a8-free` on 24 November 2026; the notebook itself
+has not been run live.** The notebook, `lib/a8learn/release.py` and
 `tests/test_release.py` exist, and the harness task `release` in `tests/live_smoke_stage2.py` is ready (canary off), but
 no live run has happened. The harness needs the `deploy` task before it, because the lesson releases the Champion that
 Module 12 registers (for example `--only setup,data,rag,deploy,release`).
@@ -386,9 +387,19 @@ Module 12 registers (for example `--only setup,data,rag,deploy,release`).
 | Cleanup | No new object type: the model with all its versions and aliases is removed by the existing cleanup. The evaluation experiment is deleted only when data objects are also removed (`tables=True`), as for Module 14 |
 | Exercise 15.1 | The solution equals an independent result computed from the CSV files; blank and naive answers fail |
 
-Not live validated, and unknown until a write probe is approved: the canary. It is unconfirmed whether Free Edition
-allows two served versions with a traffic split on one endpoint, what the update time is, whether the route field is
-`served_model_name`, and whether the endpoint state fields are `config_update` and `ready`. Also unconfirmed live:
-`get_model_version_by_alias` and version tags in Unity Catalog, loading `models:/<name>/<n>`, and `mlflow.genai.evaluate`
-on a loaded model. Loaded models do not produce tool spans, so the lesson does not assert them. A gate only compares:
-if the Champion's own figures are out of date, an equally stale candidate would pass, which the notebook says.
+Canary probe (24 November 2026, `a8-free`, approved, throwaway model with two versions and one endpoint, all deleted
+afterwards; nothing was left in the workspace). Confirmed: Free Edition accepts two served versions with a 90/10
+traffic split on one endpoint through `PUT /api/2.0/serving-endpoints/<name>/config`. The route field is
+`served_model_name` (replies also carry `served_entity_name`), and the state fields are `config_update` and `ready`, as
+the notebook reads them. The API names a served entity `<model>-<version>`, which is why the notebook reads the name
+from the endpoint and does not assume one. Timing: creating the endpoint took about 6 minutes, the split update about
+6 minutes, the restore 15 seconds. Twenty requests to the split endpoint returned both versions (19 and 1) when the
+two versions gave different answers, so a split is observable; in the lesson both versions give identical answers, so
+it is shown by the routes only. The notebook's own canary cells have not been run live.
+
+Not live validated: the notebook itself (versions, evaluation of loaded models, the alias move, the rollback and its
+answer check, the canary cells), paid-workspace behaviour, and these calls that no probe touched:
+`get_model_version_by_alias` and version tags in Unity Catalog, loading `models:/<name>/<n>`, and
+`mlflow.genai.evaluate` on a loaded model. Loaded models do not produce tool spans, so the lesson does not assert them.
+A gate only compares: if the Champion's own figures are out of date, an equally stale candidate would pass, which the
+notebook says.

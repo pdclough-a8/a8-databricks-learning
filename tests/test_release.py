@@ -323,7 +323,7 @@ class NotebookTests(unittest.TestCase):
     def test_notebook_standard_scope_and_navigation(self):
         text = SOURCE.replace("# MAGIC ", "")
         for phrase in ("**Where this sits:**", "Free first", "Terms in this lesson", "If it differs", "Cost boundary",
-                       "has not been validated live"):
+                       "has not yet been run live"):
             self.assertIn(phrase, text)
         self.assertEqual(len(re.findall(r'A8\.gate\("', SOURCE)), 4)
         self.assertEqual({"15.a", "15.b"} - set(REFLECTIONS), set())
