@@ -70,6 +70,12 @@ optional test sends five requests to your Module 12 endpoint; writing the runs, 
 default-no switches, and `99_pause_and_cleanup` deletes the experiment. Offline checked and validated live on Free
 Edition, except the endpoint test.
 
+Module **15** (release gate and rollback) logs two candidate versions of the Module 12 agent model, runs the Module 14
+gate on each against the `Champion`, and moves the alias only for the one that passes. The gate result and evaluation
+run are written on the version as a release record, and a rollback moves the alias back. Logging versions, releasing,
+rolling back and an optional 90/10 canary on your endpoint (which changes it, then restores it) are separate default-no
+switches, and `99_pause_and_cleanup` removes the model. Offline checked only; not yet run live.
+
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft
 and a Genie space (called **Genie Agent** in newer UIs). Both use your existing SQL warehouse.
