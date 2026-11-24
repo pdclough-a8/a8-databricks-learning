@@ -9,7 +9,7 @@
 2. Open [`notebooks/00_setup.py`](notebooks/00_setup.py), select Serverless compute and follow its cells.
 3. Continue with `01_lakehouse_data` and `02_governance`, then climb the analytics levels: `03_descriptive_analytics`,
    `04_diagnostic_analytics`, `05_predictive_ml` and `06_prescriptive_analytics`.
-   `07_genai` is optional and makes no model request unless you approve it.
+   `07_genai` and `08a_embeddings` are optional and make no model request unless you approve it.
 4. Before leaving, open `99_pause_and_cleanup`, especially if you created a serving endpoint.
 
 Allow 30–45 minutes for setup and about an hour per lesson. Code, concepts, UI links,
@@ -24,6 +24,10 @@ Modules 3, 4 and 6 are supplied and offline checked, **not live validated**.
 Module **7** (GenAI) interprets five synthetic feedback comments. It is supplied and offline checked, **not live
 validated**. Each model request needs separate approval and may use quota or incur charges; the SQL-only exercises
 need none. Nothing is written.
+
+Module **8a** (embeddings) turns the 27 distinct feedback comments into vectors, first by hand and then with a
+Foundation Model embedding endpoint, and compares keyword and similarity search. It is supplied and offline checked,
+**not live validated**. The embedding request needs your approval and writes nothing. RAG over documents follows in 8b.
 
 Module **3** adds a Free Edition-first descriptive AI/BI dashboard and Genie learning path.
 It builds one tagged event-metrics view, then guides you through a private dashboard draft

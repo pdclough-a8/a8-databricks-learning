@@ -185,6 +185,32 @@ ORDER BY example_id""",
                    "Agreement with a rating is a sanity check, not accuracy.",
         "ordered": True,
     },
+    "8a.1": {
+        "task": "Return comment and rows (the number of feedback rows) for each distinct comment that mentions "
+                "'stream' or 'audio' in any capitalisation, ordered by rows from highest to lowest, then comment.",
+        "hint": "Use lower(comment) LIKE '%stream%' OR lower(comment) LIKE '%audio%', then GROUP BY comment and "
+                "count(*). Read from IDENTIFIER(a8_feedback).",
+        "solution": """SELECT comment, count(*) AS rows FROM IDENTIFIER(a8_feedback)
+WHERE lower(comment) LIKE '%stream%' OR lower(comment) LIKE '%audio%'
+GROUP BY comment ORDER BY rows DESC, comment""",
+        "explain": "A keyword search finds every comment with the word, including praise such as 'Stream quality was "
+                   "excellent'. It cannot tell a complaint from a compliment, and it misses synonyms.",
+        "ordered": True,
+    },
+    "8a.2": {
+        "task": "Return event_id and stream_audio_comments, the number of feedback rows mentioning 'stream' or "
+                "'audio', for events whose format is 'online'. Only include events with at least one such comment, "
+                "ordered by event_id.",
+        "hint": "Join IDENTIFIER(a8_feedback) to IDENTIFIER(a8_events) USING (event_id), filter format = 'online' "
+                "and the keyword test, then GROUP BY event_id.",
+        "solution": """SELECT e.event_id, count(*) AS stream_audio_comments
+FROM IDENTIFIER(a8_feedback) f JOIN IDENTIFIER(a8_events) e USING (event_id)
+WHERE e.format = 'online' AND (lower(f.comment) LIKE '%stream%' OR lower(f.comment) LIKE '%audio%')
+GROUP BY e.event_id ORDER BY e.event_id""",
+        "explain": "The grain is one row per event. Filtering before grouping keeps only online events with a match, "
+                   "so events with no stream or audio comment do not appear.",
+        "ordered": True,
+    },
 }
 
 
@@ -273,6 +299,18 @@ REFLECTIONS = {
         "question": "Why is agreement between a model's sentiment and the star rating not accuracy?",
         "model": "The rating is another noisy signal, not the truth. Agreement shows they are consistent; "
                  "accuracy needs comments checked by a person against a reliable label.",
+    },
+    "8a.a": {
+        "question": "Why does counting words miss comments that mean the same thing?",
+        "model": "A word count only sees the exact words used, so 'audio dropped out' and 'the stream kept buffering' "
+                 "share nothing. An embedding model places texts with similar meaning close together even when no "
+                 "word matches.",
+    },
+    "8a.b": {
+        "question": "Why can two comments with similar vectors still express opposite opinions?",
+        "model": "Embeddings mostly capture topic. 'The stream kept buffering' and 'Stream quality was excellent' are "
+                 "both about the stream, so they can sit close together. Similarity is not agreement, so check "
+                 "sentiment separately.",
     },
 }
 

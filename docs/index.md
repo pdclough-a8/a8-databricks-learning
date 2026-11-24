@@ -42,7 +42,8 @@ that a query or a classical model does not. Automation is a delivery capability,
 | 5. Predictive ML | Booking-time features, temporal holdout, baseline, MLflow evidence, UC model versions/aliases, batch inference and optional custom model serving | Stage 1 |
 | 6. Prescriptive analytics | Overbooking and catering decisions: seeded Monte Carlo over Module 5 predictions, expected-cost search, cost and probability sensitivity, human-judgement checkpoint; read-only | Supplied (run after Module 5); offline checked, no live validation |
 | 7. GenAI | Playground, `ai_query`, AI Functions for feedback comments (descriptive, five synthetic comments), human review; prompt registry and tracing deferred | Supplied; offline checked, no live validation; model requests opt-in |
-| 8. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
+| 8a. Embeddings | Vectors by hand (bag of words, cosine similarity), keyword versus similarity search, real embeddings from a Foundation Model endpoint behind a default-no switch; nothing written | Supplied; offline checked, no live validation |
+| 8b. RAG | Document/chunk tables, managed embeddings, Vector Search retrieval, grounded citations, refusal and MLflow evaluation | Planned next |
 | 9. Agent | UC functions as tools, structured tool calls, constrained actions and traces | Planned next |
 | 10. MCP | Model Context Protocol clients/servers, Databricks managed MCP, authentication and tool boundaries | Planned next |
 | 11. Interactive app | Streamlit on Databricks Apps, query **your UC tables**, Genie conversation API over an existing space, grounded answers, resources, service principal versus user identity, grants, logs and redeployment | Planned next |
@@ -55,7 +56,7 @@ First time in Databricks? [Git folders for beginners](git-folders.md) shows how 
 pull updates and recover from conflicts.
 
 Use the notebook file browser: `00_setup` → `01_lakehouse_data` → `02_governance` → `03_descriptive_analytics` → `04_diagnostic_analytics`
-→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `99_pause_and_cleanup`.
+→ `05_predictive_ml` → `06_prescriptive_analytics` → `07_genai` (optional) → `08a_embeddings` (optional) → `99_pause_and_cleanup`.
 
 Keep the whole repository together. `_config` reloads saved settings; it is not a lesson.
 Do not run all notebooks blindly: read the write/cost notices and opt in separately to serving.

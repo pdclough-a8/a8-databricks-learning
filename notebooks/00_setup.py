@@ -71,7 +71,8 @@
 # MAGIC 5. `05_predictive_ml`: predict who will turn up, and track the model
 # MAGIC 6. `06_prescriptive_analytics`: decide how many tickets to sell and meals to order
 # MAGIC 7. `07_genai` (optional): read feedback comments with a foundation model
-# MAGIC 8. `99_pause_and_cleanup`: stop safely and remove what you created
+# MAGIC 8. `08a_embeddings` (optional): find comments by meaning with embeddings
+# MAGIC 9. `99_pause_and_cleanup`: stop safely and remove what you created
 # MAGIC
 # MAGIC ## How to read these notebooks
 # MAGIC - **Text cells** like this one explain the idea. **Code cells** do the work.

@@ -137,6 +137,21 @@ multi-user separation. The demo mask is not anonymisation. This synthetic turnou
 production forecasting product. Feature availability, quotas, retained storage and costs differ by workspace.
 Dependency versions are direct pins, not a fully locked runtime image.
 
+## Module 8a: embeddings
+
+**Supplied, offline checked, not live validated.** No Databricks workspace, model or endpoint was contacted.
+
+| Check | Evidence |
+|---|---|
+| `tests/test_embeddings.py` | The notebook's Python cells run against synthetic `feedback` and `events` tables with a deterministic stand-in for `ai_query` |
+| Gate | The default run makes zero `ai_query` statements and no writes; an approved run sends exactly 30 texts in one query, as parameters |
+| Vectors by hand | Bag-of-words and cosine results match the lesson text: the top match for the stream complaint is the stream praise, and the audio complaint scores 0 |
+| Exercises 8a.1, 8a.2 | Solutions equal independent Python; blank and naive answers fail |
+
+Not validated: whether `ai_query` accepts an embedding endpoint and returns `ARRAY<FLOAT>` on Free or paid workspaces,
+endpoint names and quota, the quality of real embeddings on these comments, and notebook rendering. The comments repeat
+27 templates, so results look cleaner than real feedback. The lesson states the expected ranking only as a prediction.
+
 ## Module 7: GenAI
 
 **Supplied, offline checked, not live validated.** No workspace, model or AI Function was contacted.

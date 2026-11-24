@@ -342,7 +342,7 @@ class NotebookTests(unittest.TestCase):
         self.assertEqual({p.stem for p in paths}, {
             "00_setup", "01_lakehouse_data", "03_descriptive_analytics", "04_diagnostic_analytics",
             "06_prescriptive_analytics", "02_governance", "07_genai",
-            "05_predictive_ml", "99_pause_and_cleanup", "_config",
+            "05_predictive_ml", "08a_embeddings", "99_pause_and_cleanup", "_config",
         })
         for path in paths:
             source = path.read_text(encoding="utf-8")
